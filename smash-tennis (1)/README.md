@@ -2,15 +2,15 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/smash-tennis/
+Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, tennis-style scoring, and lightweight arcade match presentation.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
-- Serve: click or press Space when it is your serve.
+- Serve: wait for the quick serve countdown, then click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 
@@ -21,12 +21,15 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
+- Short match intro overlay showing Blake, Hidalgo, and the selected court before the first serve.
+- Serve countdown overlay before each point so the next rally feels staged and readable.
+- Point reward feedback showing point winner, rally length, style bonus, combo bonus, and XP gained.
+- Victory/results panel with final stats, local-only match XP progress, points won, longest rally, and best combo.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
-- Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
-- Start screen, point-result banner, scoreboard, server indicator, and replay button.
+- Start screen, point-result reward banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
@@ -70,13 +73,13 @@ Current check notes:
 
 - `src/App.tsx` starts the main app screen.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, and HUD together.
-- `src/components/GameHud.tsx` shows the in-game overlays and scoreboard.
+- `src/components/GameHud.tsx` shows the in-game overlays, reward feedback, serve countdown, and scoreboard.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the start and game-over screens.
+- `src/components/GameMenus.tsx` shows the start screen, match intro overlay, and upgraded game-over results panel.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
-- `src/serve/useTennisGame.ts` manages tennis scoring and match state.
+- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
 - `src/physics/ShotPhysics.ts` calculates shot direction and speed.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
@@ -84,7 +87,7 @@ Current check notes:
 
 ## Deployment notes
 
-This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/.
 
 Important GitHub Pages settings:
 
@@ -92,6 +95,6 @@ Important GitHub Pages settings:
 2. Go to **Settings → Pages**.
 3. Set **Build and deployment → Source** to **GitHub Actions**.
 4. Push or merge changes into `main`, or start the workflow manually from the GitHub Actions tab.
-5. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
+5. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
 
-The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
+The Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.

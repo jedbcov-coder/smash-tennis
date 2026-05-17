@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
+import type { PointReward } from '../serve/useTennisGame';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -16,6 +17,7 @@ interface GameHudProps {
   serverFaults: number;
   courtSurface: CourtSurface;
   arcadeHudStats: ArcadeHudStats;
+  pointReward: PointReward | null;
 }
 
 export function GameHud({
@@ -28,14 +30,28 @@ export function GameHud({
   lastPointWinner,
   serverFaults,
   courtSurface,
-  arcadeHudStats
-  courtSurface
+  arcadeHudStats,
+  pointReward
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
+  const [serveCountdown, setServeCountdown] = useState(3);
 
+  useEffect(() => {
+    if (gameState !== GameState.SERVE_COUNTDOWN) {
+      setServeCountdown(3);
+      return;
+    }
+
+    setServeCountdown(3);
+    const countdownTimer = window.setInterval(() => {
+      setServeCountdown((current) => Math.max(1, current - 1));
+    }, 500);
+
+    return () => window.clearInterval(countdownTimer);
+  }, [gameState]);
 
   return (
     <>
@@ -149,8 +165,29 @@ export function GameHud({
       {/* Point Result Banner */}
       {gameState === GameState.SCORING && lastPointWinner && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className={`px-8 py-5 text-5xl font-black italic uppercase tracking-tighter text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.35)] ${lastPointWinner === 'PLAYER' ? 'bg-blue-600' : 'bg-red-600'}`}>
-            {lastPointWinner === 'PLAYER' ? 'Blake Point' : 'Hidalgo Point'}
+          <div className={`max-w-xl px-8 py-5 text-center text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.35)] ${lastPointWinner === 'PLAYER' ? 'bg-blue-600' : 'bg-red-600'}`}>
+            <div className="text-5xl font-black italic uppercase tracking-tighter">
+              {lastPointWinner === 'PLAYER' ? 'Blake Point' : 'Hidalgo Point'}
+            </div>
+            {pointReward && (
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-black uppercase tracking-widest md:grid-cols-4">
+                <div className="rounded bg-black/25 px-3 py-2">Rally {pointReward.rallyLength}</div>
+                <div className="rounded bg-black/25 px-3 py-2">{pointReward.styleBonus}</div>
+                <div className="rounded bg-black/25 px-3 py-2">Combo +{pointReward.comboBonus}</div>
+                <div className="rounded bg-black/25 px-3 py-2">+{pointReward.xpGained} XP</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Serve Countdown */}
+      {gameState === GameState.SERVE_COUNTDOWN && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="rounded-3xl border border-orange-300/50 bg-black/75 px-10 py-8 text-center text-white shadow-[0_0_40px_rgba(251,146,60,0.35)]">
+            <div className="text-xs font-black uppercase tracking-[0.4em] text-orange-200">Next Serve</div>
+            <div className="my-2 text-8xl font-black italic text-white">{serveCountdown}</div>
+            <div className="text-sm font-black uppercase tracking-widest text-white/60">{servingPlayer === 'PLAYER' ? 'Blake to serve' : 'Hidalgo to serve'}</div>
           </div>
         </div>
       )}

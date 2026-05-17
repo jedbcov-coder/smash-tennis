@@ -6,7 +6,40 @@ import {
   type GameStatus
 } from './scoringRules';
 
-const POINT_RESULT_PAUSE_MS = 1400;
+const INTRO_DURATION_MS = 3200;
+const SERVE_COUNTDOWN_MS = 1600;
+const POINT_RESULT_PAUSE_MS = 2200;
+
+export interface PointRewardInput {
+  rallyCount: number;
+  comboCount: number;
+  energyPercent: number;
+  serveSpeedMph: number;
+}
+
+export interface PointReward {
+  winner: PlayerType;
+  rallyLength: number;
+  styleBonus: string;
+  comboBonus: number;
+  xpGained: number;
+}
+
+export interface MatchStats {
+  playerPointsWon: number;
+  aiPointsWon: number;
+  longestRally: number;
+  bestCombo: number;
+  totalXp: number;
+}
+
+const createInitialMatchStats = (): MatchStats => ({
+  playerPointsWon: 0,
+  aiPointsWon: 0,
+  longestRally: 0,
+  bestCombo: 0,
+  totalXp: 0
+});
 
 function getReceiver(server: PlayerType): PlayerType {
   return server === 'PLAYER' ? 'AI' : 'PLAYER';
@@ -28,44 +61,114 @@ function getDifficultyStats(status: GameStatus) {
   };
 }
 
+function calculatePointReward(winner: PlayerType, input?: PointRewardInput): PointReward {
+  const rallyLength = input?.rallyCount ?? 0;
+  const comboCount = input?.comboCount ?? 0;
+  const energyPercent = input?.energyPercent ?? 0;
+  const serveSpeedMph = input?.serveSpeedMph ?? 0;
+
+  let styleBonus = 'Clean Point';
+  if (serveSpeedMph >= 100) styleBonus = 'Rocket Serve';
+  if (rallyLength >= 8) styleBonus = 'Rally Hero';
+  if (comboCount >= 4) styleBonus = 'Combo Artist';
+  if (energyPercent >= 100) styleBonus = 'Power Finish';
+  if (winner === 'AI') styleBonus = rallyLength >= 6 ? 'Brave Defense' : 'Reset and Rally';
+
+  const comboBonus = Math.max(0, comboCount - 1) * 5;
+  const rallyBonus = Math.min(30, rallyLength * 3);
+  const winnerBonus = winner === 'PLAYER' ? 25 : 10;
+  const styleXp = styleBonus === 'Clean Point' || styleBonus === 'Reset and Rally' ? 0 : 15;
+
+  return {
+    winner,
+    rallyLength,
+    styleBonus,
+    comboBonus,
+    xpGained: winnerBonus + rallyBonus + comboBonus + styleXp
+  };
+}
+
 export function useTennisGame() {
   const [status, setStatus] = useState<GameStatus>(() => getInitialGameState());
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
   const [lastPointWinner, setLastPointWinner] = useState<PlayerType | null>(null);
+  const [pointReward, setPointReward] = useState<PointReward | null>(null);
+  const [matchStats, setMatchStats] = useState<MatchStats>(() => createInitialMatchStats());
+  const introTimerRef = useRef<number | null>(null);
+  const serveCountdownTimerRef = useRef<number | null>(null);
   const nextPointTimerRef = useRef<number | null>(null);
 
-  const clearNextPointTimer = useCallback(() => {
-    if (nextPointTimerRef.current !== null) {
-      window.clearTimeout(nextPointTimerRef.current);
-      nextPointTimerRef.current = null;
+  const clearTimer = useCallback((timerRef: React.MutableRefObject<number | null>) => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
   }, []);
 
+  const clearTimers = useCallback(() => {
+    clearTimer(introTimerRef);
+    clearTimer(serveCountdownTimerRef);
+    clearTimer(nextPointTimerRef);
+  }, [clearTimer]);
+
+  const queueServeCountdown = useCallback(() => {
+    clearTimer(serveCountdownTimerRef);
+    setGameState(GameState.SERVE_COUNTDOWN);
+    serveCountdownTimerRef.current = window.setTimeout(() => {
+      serveCountdownTimerRef.current = null;
+      setGameState(GameState.SERVING);
+    }, SERVE_COUNTDOWN_MS);
+  }, [clearTimer]);
+
   const queueNextPoint = useCallback((nextStatus: GameStatus) => {
-    clearNextPointTimer();
+    clearTimer(nextPointTimerRef);
     setGameState(GameState.SCORING);
 
     nextPointTimerRef.current = window.setTimeout(() => {
       nextPointTimerRef.current = null;
-      setGameState(nextStatus.winner ? GameState.GAME_OVER : GameState.SERVING);
+      if (nextStatus.winner) {
+        setGameState(GameState.GAME_OVER);
+      } else {
+        queueServeCountdown();
+      }
     }, POINT_RESULT_PAUSE_MS);
-  }, [clearNextPointTimer]);
+  }, [clearTimer, queueServeCountdown]);
 
   const startGame = useCallback(() => {
-    clearNextPointTimer();
+    clearTimers();
     setStatus(getInitialGameState());
     setLastPointWinner(null);
-    setGameState(GameState.SERVING);
-  }, [clearNextPointTimer]);
+    setPointReward(null);
+    setMatchStats(createInitialMatchStats());
+    setGameState(GameState.INTRO);
 
-  const addPoint = useCallback((winner: PlayerType) => {
+    introTimerRef.current = window.setTimeout(() => {
+      introTimerRef.current = null;
+      queueServeCountdown();
+    }, INTRO_DURATION_MS);
+  }, [clearTimers, queueServeCountdown]);
+
+  const recordPointPresentation = useCallback((winner: PlayerType, rewardInput?: PointRewardInput) => {
+    const reward = calculatePointReward(winner, rewardInput);
+    setPointReward(reward);
+    setMatchStats((current) => ({
+      playerPointsWon: current.playerPointsWon + (winner === 'PLAYER' ? 1 : 0),
+      aiPointsWon: current.aiPointsWon + (winner === 'AI' ? 1 : 0),
+      longestRally: Math.max(current.longestRally, reward.rallyLength),
+      bestCombo: Math.max(current.bestCombo, rewardInput?.comboCount ?? 0),
+      totalXp: current.totalXp + reward.xpGained
+    }));
+  }, []);
+
+  const addPoint = useCallback((winner: PlayerType, rewardInput?: PointRewardInput) => {
     setLastPointWinner(winner);
+    recordPointPresentation(winner, rewardInput);
     setStatus((currentStatus) => {
       const nextStatus = updateScoreOnPoint(currentStatus, winner);
       queueNextPoint(nextStatus);
       return nextStatus;
     });
-  }, [queueNextPoint]);
+  }, [queueNextPoint, recordPointPresentation]);
 
   const addFault = useCallback(() => {
     setStatus((currentStatus) => {
@@ -75,13 +178,19 @@ export function useTennisGame() {
 
       const pointWinner = getReceiver(currentStatus.servingPlayer);
       setLastPointWinner(pointWinner);
+      recordPointPresentation(pointWinner, {
+        rallyCount: 0,
+        comboCount: 0,
+        energyPercent: 0,
+        serveSpeedMph: 0
+      });
       const nextStatus = updateScoreOnPoint(currentStatus, pointWinner);
       queueNextPoint(nextStatus);
       return nextStatus;
     });
-  }, [queueNextPoint]);
+  }, [queueNextPoint, recordPointPresentation]);
 
-  useEffect(() => clearNextPointTimer, [clearNextPointTimer]);
+  useEffect(() => clearTimers, [clearTimers]);
 
   const difficultyStats = useMemo(() => getDifficultyStats(status), [status]);
   const targetRallyLength = Math.min(8, 3 + getTotalGames(status));
@@ -95,6 +204,8 @@ export function useTennisGame() {
     startGame,
     winner: status.winner,
     lastPointWinner,
+    pointReward,
+    matchStats,
     servingPlayer: status.servingPlayer,
     serveSide: status.serveSide,
     serverFaults: status.serverFaults,

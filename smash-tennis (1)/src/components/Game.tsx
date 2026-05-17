@@ -8,7 +8,7 @@ import { Ball, type BallHandle } from '../environment/Ball';
 import { GameHud } from './GameHud';
 import { GameMenus } from './GameMenus';
 import { useGameplayLoop, type ArcadeHudStats } from '../hooks/useGameplayLoop';
-import { useTennisGame } from '../serve/useTennisGame';
+import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
@@ -47,9 +47,8 @@ function GameScene({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
-  courtSurface
 }: {
-  onScore: (winner: PlayerType) => void;
+  onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
   gameState: GameState;
   setGameState: (state: GameState) => void;
@@ -86,7 +85,6 @@ function GameScene({
     difficultyStats,
     courtSurface,
     onArcadeHudStatsChange
-    courtSurface
   });
 
   return (
@@ -153,6 +151,8 @@ export function Game() {
     startGame,
     winner,
     lastPointWinner,
+    pointReward,
+    matchStats,
     servingPlayer,
     serveSide,
     serverFaults,
@@ -161,11 +161,20 @@ export function Game() {
     difficultyStats
   } = useTennisGame();
 
+  const scorePoint = (winner: PlayerType) => {
+    addPoint(winner, {
+      rallyCount: arcadeHudStats.rallyCount,
+      comboCount: arcadeHudStats.comboCount,
+      energyPercent: arcadeHudStats.energyPercent,
+      serveSpeedMph: arcadeHudStats.serveSpeedMph
+    });
+  };
+
   return (
     <div className="w-full h-full relative font-mono overflow-hidden bg-black select-none">
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <GameScene
-          onScore={addPoint}
+          onScore={scorePoint}
           onFault={addFault}
           gameState={gameState}
           setGameState={setGameState}
@@ -189,6 +198,7 @@ export function Game() {
         serverFaults={serverFaults}
         courtSurface={courtSurface}
         arcadeHudStats={arcadeHudStats}
+        pointReward={pointReward}
       />
 
       <GameMenus
@@ -197,6 +207,9 @@ export function Game() {
         startGame={startGame}
         courtSurface={courtSurface}
         setCourtSurface={setCourtSurface}
+        score={score}
+        pointReward={pointReward}
+        matchStats={matchStats}
       />
     </div>
   );

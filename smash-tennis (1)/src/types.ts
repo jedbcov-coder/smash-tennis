@@ -1,5 +1,7 @@
 export enum GameState {
   MENU = 'MENU',
+  INTRO = 'INTRO',
+  SERVE_COUNTDOWN = 'SERVE_COUNTDOWN',
   SERVING = 'SERVING',
   PLAYING = 'PLAYING',
   SCORING = 'SCORING',
