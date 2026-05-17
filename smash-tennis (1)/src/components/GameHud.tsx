@@ -52,6 +52,14 @@ export function GameHud({
       ? 'Tap again when the marker reaches the big blue zone'
       : 'Tap once to toss, then tap again to serve';
   const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
+  const shotStyleCallouts = ['FLAT SHOT', 'LOB', 'SLICE', 'POWER DRIVE', 'CROSS-COURT'];
+  const calloutHelper = arcadeHudStats.callout
+    ? shotStyleCallouts.includes(arcadeHudStats.callout)
+      ? 'Shot type'
+      : ['EARLY', 'GOOD', 'PERFECT', 'LATE'].includes(arcadeHudStats.callout)
+        ? 'Swing timing'
+        : 'Arcade bonus'
+    : null;
 
   useEffect(() => {
     if (gameState !== GameState.SERVE_COUNTDOWN) {
@@ -113,10 +121,11 @@ export function GameHud({
       {/* Arcade Callout */}
       {arcadeHudStats.callout && (
         <div className="absolute inset-x-0 top-28 flex justify-center pointer-events-none">
-          <div className="neon-callout rounded-2xl border border-white/50 bg-black/80 px-8 py-3 text-4xl font-black italic uppercase tracking-tighter text-white">
+          <div className="neon-callout flex flex-col items-center rounded-2xl border border-white/50 bg-black/80 px-8 py-3 text-4xl font-black italic uppercase tracking-tighter text-white">
             <span className="bg-gradient-to-r from-cyan-200 via-fuchsia-300 to-orange-300 bg-clip-text text-transparent">
               {arcadeHudStats.callout}
             </span>
+            {calloutHelper && <span className="mt-1 text-[10px] not-italic tracking-[0.3em] text-white/65">{calloutHelper}</span>}
           </div>
         </div>
       )}

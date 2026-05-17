@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { BallHandle } from '../environment/Ball';
-import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
+import { calculateLegalShot, calculateShotOutcome, type ServeSide, type ShotDifficultyStats, type ShotType, type TimingGrade } from '../physics/ShotPhysics';
 import {
   AI_BASELINE_POSITION,
   AI_MISS_DRAMA,
@@ -22,7 +22,20 @@ export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
-export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | 'FLAME SMASH' | `COMBO x${number}`;
+export type ArcadeCallout =
+  | 'EARLY'
+  | 'GOOD'
+  | 'PERFECT'
+  | 'LATE'
+  | 'FLAT SHOT'
+  | 'LOB'
+  | 'SLICE'
+  | 'POWER DRIVE'
+  | 'CROSS-COURT'
+  | 'MEGA SMASH'
+  | 'POWER READY'
+  | 'FLAME SMASH'
+  | `COMBO x${number}`;
 
 export type ArcadeHudServeMeterPhase = 'idle' | 'charging' | 'confirmed';
 
@@ -93,6 +106,58 @@ const createEmptySmashOpportunity = (): SmashOpportunity => ({
 });
 
 type SpecialMoveName = 'FLAME_SMASH';
+
+function gradePlayerReturnTiming(ballPos: THREE.Vector3, playerPosition: THREE.Vector3, racketAccuracyRadius: number): TimingGrade {
+  const sidewaysDistance = Math.abs(ballPos.x - playerPosition.x);
+  const forwardDistance = ballPos.z - playerPosition.z;
+
+  if (sidewaysDistance <= racketAccuracyRadius * 0.45 && Math.abs(forwardDistance) <= 0.85) {
+    return 'perfect';
+  }
+
+  if (forwardDistance < -1.15) {
+    return 'early';
+  }
+
+  if (forwardDistance > 1.25) {
+    return 'late';
+  }
+
+  return 'good';
+}
+
+function choosePlayerShotType(timingGrade: TimingGrade, ballPos: THREE.Vector3, playerPosition: THREE.Vector3, racketAccuracyRadius: number): ShotType {
+  const sidewaysDistance = Math.abs(ballPos.x - playerPosition.x);
+
+  if (timingGrade === 'perfect' && ballPos.y <= 2.3) {
+    return 'power';
+  }
+
+  if (playerPosition.z >= 8.2 && ballPos.y >= 1.25) {
+    return 'lob';
+  }
+
+  if (sidewaysDistance > racketAccuracyRadius * 1.35 || timingGrade === 'early' || timingGrade === 'late') {
+    return 'slice';
+  }
+
+  if (Math.abs(playerPosition.x) >= 2.4) {
+    return 'crossCourt';
+  }
+
+  return 'flat';
+}
+
+function getReturnCallout(timingGrade: TimingGrade, shotType: ShotType): ArcadeCallout {
+  if (shotType === 'power') return 'POWER DRIVE';
+  if (shotType === 'lob') return 'LOB';
+  if (shotType === 'slice') return 'SLICE';
+  if (shotType === 'crossCourt') return 'CROSS-COURT';
+  if (timingGrade === 'perfect') return 'PERFECT';
+  if (timingGrade === 'early') return 'EARLY';
+  if (timingGrade === 'late') return 'LATE';
+  return 'GOOD';
+}
 
 function triggerGameplayEvent(name: string) {
   window.dispatchEvent(new CustomEvent(name));
@@ -567,16 +632,17 @@ export function useGameplayLoop({
     if (!smashOpportunity.current.active && isSwinging && ballPos.z > 3.0 && ballPos.z < 11.0 && lastHitter !== 'PLAYER' && ballPos.y < 4.0) {
       // Hit radius shrinks as games progress.
       if (Math.abs(ballPos.x - playerPos.current.x) < difficultyStats.racketAccuracyRadius * 2.8) {
-        const playerReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface);
-        const playerSpin = THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.55, -1.6, 1.6);
-        ballRef.current?.setVelocity(playerReturnVel, playerSpin);
-        const hitDistance = Math.abs(ballPos.x - playerPos.current.x);
-        const isPerfectReturn = hitDistance < difficultyStats.racketAccuracyRadius * 0.45;
-        recordShot(playerReturnVel, {
+        const timingGrade = gradePlayerReturnTiming(ballPos, playerPos.current, difficultyStats.racketAccuracyRadius);
+        const shotType = choosePlayerShotType(timingGrade, ballPos, playerPos.current, difficultyStats.racketAccuracyRadius);
+        const playerReturn = calculateShotOutcome(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface, { shotType, timingGrade });
+        const playerSpin = THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.55 + playerReturn.spinBonus, -2.4, 2.4);
+        ballRef.current?.setVelocity(playerReturn.velocity, playerSpin);
+        const isPerfectReturn = timingGrade === 'perfect';
+        recordShot(playerReturn.velocity, {
           combo: true,
           rally: true,
-          energy: isPerfectReturn ? 16 : 10,
-          callout: isPerfectReturn ? 'PERFECT RETURN' : undefined
+          energy: isPerfectReturn ? 16 : shotType === 'power' ? 14 : 10,
+          callout: getReturnCallout(timingGrade, shotType)
         });
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
