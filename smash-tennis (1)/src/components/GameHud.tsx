@@ -35,6 +35,7 @@ export function GameHud({
   arcadeHudStats,
   pointReward
 }: GameHudProps) {
+  const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];

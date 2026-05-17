@@ -5,6 +5,7 @@ import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
+import { playAudioEvent } from '../audio/audioManager';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -71,7 +72,7 @@ export function GameMenus({
             Neon Smash<br /><span>Tennis</span>
           </h1>
           <p className="mb-6 max-w-md text-sm uppercase tracking-widest text-slate-200">
-            Pick a readable neon court, then move with the mouse and click or press Space to serve, swing, and smash.
+            Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
