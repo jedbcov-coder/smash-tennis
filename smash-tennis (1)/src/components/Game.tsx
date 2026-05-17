@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Sky } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,10 +7,11 @@ import { Character } from '../character/Character';
 import { Ball, type BallHandle } from '../environment/Ball';
 import { GameHud } from './GameHud';
 import { GameMenus } from './GameMenus';
-import { useGameplayLoop } from '../hooks/useGameplayLoop';
+import { useGameplayLoop, type ArcadeHudStats } from '../hooks/useGameplayLoop';
 import { useTennisGame } from '../serve/useTennisGame';
-import { GameState, type PlayerType } from '../types';
+import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
+import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
 
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
@@ -43,7 +44,9 @@ function GameScene({
   servingPlayer,
   serveSide,
   targetRallyLength,
-  difficultyStats
+  difficultyStats,
+  courtSurface,
+  onArcadeHudStatsChange
 }: {
   onScore: (winner: PlayerType) => void;
   onFault: () => void;
@@ -57,6 +60,8 @@ function GameScene({
     pointDifficultyMultiplier: number;
     racketAccuracyRadius: number;
   };
+  courtSurface: CourtSurface;
+  onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
 }) {
   const {
     ballRef,
@@ -77,7 +82,9 @@ function GameScene({
     servingPlayer,
     serveSide,
     targetRallyLength,
-    difficultyStats
+    difficultyStats,
+    courtSurface,
+    onArcadeHudStatsChange
   });
 
   return (
@@ -86,7 +93,7 @@ function GameScene({
       <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow />
       <Sky sunPosition={[100, 20, 100]} />
 
-      <Court />
+      <Court courtSurface={courtSurface} />
       <Character
         initialPosition={[0, 0, 9]}
         positionRef={playerPos}
@@ -108,6 +115,7 @@ function GameScene({
         isActive={gameState === GameState.PLAYING}
         timeScale={ballTimeScale}
         isHighlighted={isSmashOpportunityVisible}
+        courtSurface={courtSurface}
       />
 
       <VFXController ballRef={ballRef} />
@@ -125,6 +133,15 @@ function GameScene({
 }
 
 export function Game() {
+  const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
+    serveSpeedMph: 0,
+    energyPercent: 0,
+    comboCount: 0,
+    rallyCount: 0,
+    callout: null
+  });
+
   const {
     score,
     addPoint,
@@ -154,6 +171,8 @@ export function Game() {
           serveSide={serveSide}
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
+          courtSurface={courtSurface}
+          onArcadeHudStatsChange={setArcadeHudStats}
         />
       </Canvas>
 
@@ -166,9 +185,17 @@ export function Game() {
         difficultyStats={difficultyStats}
         lastPointWinner={lastPointWinner}
         serverFaults={serverFaults}
+        courtSurface={courtSurface}
+        arcadeHudStats={arcadeHudStats}
       />
 
-      <GameMenus gameState={gameState} winner={winner} startGame={startGame} />
+      <GameMenus
+        gameState={gameState}
+        winner={winner}
+        startGame={startGame}
+        courtSurface={courtSurface}
+        setCourtSurface={setCourtSurface}
+      />
     </div>
   );
 }

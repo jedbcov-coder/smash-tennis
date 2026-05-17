@@ -2,12 +2,13 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
+Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, on a bright 3D court with arcade movement and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, and tennis-style scoring.
 
 ## Controls
 
+- Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
 - Serve: click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
@@ -15,11 +16,16 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Main features
 
-- Low-poly 3D tennis court, ball, rackets, players, net, and camera.
+- Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
+- Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
+- Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
+- Stronger overhead smash acceleration for more dramatic finishing shots.
+- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
+- Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
-- Net-front overhead smash chance with ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
-- Start screen, point-result banner, scoreboard, server indicator, and replay button.
+- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
+- Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
@@ -77,7 +83,7 @@ Current check notes:
 
 ## Deployment notes
 
-This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
 
 Important GitHub Pages settings:
 
@@ -85,6 +91,6 @@ Important GitHub Pages settings:
 2. Go to **Settings → Pages**.
 3. Set **Build and deployment → Source** to **GitHub Actions**.
 4. Push or merge changes into `main`, or start the workflow manually from the GitHub Actions tab.
-5. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
+5. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
 
-The Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.
+The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.

@@ -10,16 +10,35 @@ import {
   PLAYER_MOVEMENT_LIMITS,
   SERVE_POSITIONS,
   OUT_OF_BOUNDS_LIMITS,
-  NET_HEIGHT
+  NET_HEIGHT,
+  COURT_SURFACE_SETTINGS
 } from '../gameplay/gameTuning';
 import { playAudioEvent } from '../audio/audioManager';
-import { GameState, type PlayerType } from '../types';
+import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
 import { useServeMechanics } from '../serve/useServeMechanics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
+
+export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY';
+
+export interface ArcadeHudStats {
+  serveSpeedMph: number;
+  energyPercent: number;
+  comboCount: number;
+  rallyCount: number;
+  callout: ArcadeCallout | null;
+}
+
+const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
+  serveSpeedMph: 0,
+  energyPercent: 0,
+  comboCount: 0,
+  rallyCount: 0,
+  callout: null
+});
 
 interface UseGameplayLoopOptions {
   onScore: (winner: PlayerType) => void;
@@ -30,6 +49,8 @@ interface UseGameplayLoopOptions {
   serveSide: ServeSide;
   targetRallyLength: number;
   difficultyStats: GameplayDifficultyStats;
+  courtSurface: CourtSurface;
+  onArcadeHudStatsChange?: (stats: ArcadeHudStats) => void;
 }
 
 type SmashOpportunity = {
@@ -60,7 +81,9 @@ export function useGameplayLoop({
   servingPlayer,
   serveSide,
   targetRallyLength,
-  difficultyStats
+  difficultyStats,
+  courtSurface,
+  onArcadeHudStatsChange
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -68,6 +91,7 @@ export function useGameplayLoop({
   const playerFacingY = useRef(Math.PI);
   const { camera } = useThree();
   const { isSwinging, isVisualSwinging, mouseX, mouseY, clearSwingInput } = usePlayerInput();
+  const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
 
   const smashOpportunity = useRef<SmashOpportunity>(createEmptySmashOpportunity());
   const smashCooldownUntil = useRef(0);
@@ -78,12 +102,58 @@ export function useGameplayLoop({
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
   const aiSwingTimeout = useRef<number | null>(null);
+  const calloutTimeout = useRef<number | null>(null);
 
   const [lastHitter, setLastHitter] = useState<PlayerType | null>(null);
   const [isVisualSmashing, setIsVisualSmashing] = useState(false);
   const [isAiSwinging, setIsAiSwinging] = useState(false);
   const [isAiMissing, setIsAiMissing] = useState(false);
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
+  const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
+
+
+  const showCallout = useCallback((callout: ArcadeCallout) => {
+    if (calloutTimeout.current !== null) {
+      window.clearTimeout(calloutTimeout.current);
+    }
+
+    setArcadeHudStats((current) => ({ ...current, callout }));
+    calloutTimeout.current = window.setTimeout(() => {
+      setArcadeHudStats((current) => ({ ...current, callout: null }));
+      calloutTimeout.current = null;
+    }, 1200);
+  }, []);
+
+  const addEnergy = useCallback((amount: number) => {
+    setArcadeHudStats((current) => {
+      const nextEnergy = Math.min(100, current.energyPercent + amount);
+      if (current.energyPercent < 100 && nextEnergy >= 100) {
+        window.setTimeout(() => showCallout('POWER READY'), 0);
+      }
+      return { ...current, energyPercent: nextEnergy };
+    });
+  }, [showCallout]);
+
+  const recordShot = useCallback((velocity: THREE.Vector3, options: { combo?: boolean; rally?: boolean; energy?: number; callout?: ArcadeCallout } = {}) => {
+    setArcadeHudStats((current) => ({
+      ...current,
+      serveSpeedMph: Math.round(velocity.length() * 14),
+      comboCount: options.combo ? current.comboCount + 1 : current.comboCount,
+      rallyCount: options.rally ? current.rallyCount + 1 : current.rallyCount
+    }));
+
+    if (options.energy) {
+      addEnergy(options.energy);
+    }
+
+    if (options.callout) {
+      showCallout(options.callout);
+    }
+  }, [addEnergy, showCallout]);
+
+  useEffect(() => {
+    onArcadeHudStatsChange?.(arcadeHudStats);
+  }, [arcadeHudStats, onArcadeHudStatsChange]);
 
   const triggerAiSwing = useCallback((missing = false) => {
     if (aiSwingTimeout.current !== null) {
@@ -112,6 +182,7 @@ export function useGameplayLoop({
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
     consecutiveReturns.current = 0;
+    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
     smashOpportunity.current = createEmptySmashOpportunity();
     setIsSmashOpportunityVisible(false);
     setIsVisualSmashing(false);
@@ -122,6 +193,14 @@ export function useGameplayLoop({
       aiSwingTimeout.current = null;
     }
     playerFacingY.current = Math.PI;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (calloutTimeout.current !== null) {
+        window.clearTimeout(calloutTimeout.current);
+      }
+    };
   }, []);
 
   const endSmashOpportunity = () => {
@@ -149,9 +228,13 @@ export function useGameplayLoop({
       (targetX - ballPos.x) / travelTime,
       OVERHEAD_SMASH_CONFIG.smashDownwardVelocity,
       (targetZ - ballPos.z) / travelTime
-    ).multiplyScalar(OVERHEAD_SMASH_CONFIG.smashSpeedMultiplier * difficultyStats.gameDifficultyMultiplier);
+    ).multiplyScalar(
+      OVERHEAD_SMASH_CONFIG.smashSpeedMultiplier * difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier
+    );
 
-    ballRef.current?.setVelocity(smashVelocity);
+    const smashSpin = THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.8, -2.4, 2.4);
+    ballRef.current?.setVelocity(smashVelocity, smashSpin);
+    recordShot(smashVelocity, { combo: true, rally: true, energy: 28, callout: 'MEGA SMASH' });
     setLastHitter('PLAYER');
     consecutiveReturns.current++;
     cameraShakeUntil.current = now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration;
@@ -166,10 +249,11 @@ export function useGameplayLoop({
   };
 
   const performWeakSmashFailReturn = (ballPos: THREE.Vector3) => {
-    const weakReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats).multiplyScalar(
+    const weakReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface).multiplyScalar(
       OVERHEAD_SMASH_CONFIG.weakReturnSpeedMultiplier
     );
-    ballRef.current?.setVelocity(weakReturnVel);
+    ballRef.current?.setVelocity(weakReturnVel, 0.45);
+    recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
     consecutiveReturns.current++;
     triggerGameplayEvent('smash:weak-return');
@@ -188,13 +272,17 @@ export function useGameplayLoop({
     servingPlayer,
     serveSide,
     difficultyStats,
+    courtSurface,
     ballRef,
     playerPos,
     aiPos,
     isSwinging,
     clearSwingInput,
     setLastHitter,
-    addFault: onFault
+    addFault: onFault,
+    onServeLaunched: (serveVelocity) => {
+      recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
+    }
   });
 
   useFrame((state, delta) => {
@@ -216,8 +304,9 @@ export function useGameplayLoop({
       targetX = serveSide === 'DEUCE' ? PLAYER_MOVEMENT_LIMITS.deuceServeX : PLAYER_MOVEMENT_LIMITS.adServeX;
     }
 
-    playerPos.current.x = THREE.MathUtils.lerp(playerPos.current.x, targetX, 0.95);
-    playerPos.current.z = THREE.MathUtils.lerp(playerPos.current.z, targetZ, 0.95);
+    const playerMovementResponse = THREE.MathUtils.clamp(0.95 * surfaceSettings.playerMovementMultiplier, 0.68, 0.98);
+    playerPos.current.x = THREE.MathUtils.lerp(playerPos.current.x, targetX, playerMovementResponse);
+    playerPos.current.z = THREE.MathUtils.lerp(playerPos.current.z, targetZ, playerMovementResponse);
 
     playerPos.current.x = THREE.MathUtils.clamp(playerPos.current.x, PLAYER_MOVEMENT_LIMITS.minX, PLAYER_MOVEMENT_LIMITS.maxX);
     playerPos.current.z = THREE.MathUtils.clamp(playerPos.current.z, PLAYER_MOVEMENT_LIMITS.minZ, PLAYER_MOVEMENT_LIMITS.maxZ);
@@ -282,6 +371,7 @@ export function useGameplayLoop({
       aiBaseSpeed *
       (isMercyMiss ? AI_MISS_DRAMA.lungeSpeedMultiplier : 1) *
       difficultyStats.gameDifficultyMultiplier *
+      surfaceSettings.playerMovementMultiplier *
       delta;
     const aiTargetX = isBallOnAiSide
       ? isMercyMiss
@@ -321,7 +411,10 @@ export function useGameplayLoop({
         const t = (vy + Math.sqrt(vy * vy + 2 * 1.5 * (ballPos.y - 0.1))) / 1.5;
 
         const aiReturnVel = new THREE.Vector3((tX - ballPos.x) / t, vy, (tZ - ballPos.z) / t);
-        ballRef.current?.setVelocity(aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier));
+        const aiSpin = THREE.MathUtils.clamp((aiPos.current.x - ballPos.x) * 0.45, -1.3, 1.3);
+        const finalAiReturnVel = aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
+        ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
+        recordShot(finalAiReturnVel, { rally: true });
         setLastHitter('AI');
         triggerAiSwing();
         playAudioEvent('hit.normal');
@@ -333,8 +426,17 @@ export function useGameplayLoop({
     if (!smashOpportunity.current.active && isSwinging && ballPos.z > 3.0 && ballPos.z < 11.0 && lastHitter !== 'PLAYER' && ballPos.y < 4.0) {
       // Hit radius shrinks as games progress.
       if (Math.abs(ballPos.x - playerPos.current.x) < difficultyStats.racketAccuracyRadius * 2.8) {
-        const playerReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats);
-        ballRef.current?.setVelocity(playerReturnVel);
+        const playerReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface);
+        const playerSpin = THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.55, -1.6, 1.6);
+        ballRef.current?.setVelocity(playerReturnVel, playerSpin);
+        const hitDistance = Math.abs(ballPos.x - playerPos.current.x);
+        const isPerfectReturn = hitDistance < difficultyStats.racketAccuracyRadius * 0.45;
+        recordShot(playerReturnVel, {
+          combo: true,
+          rally: true,
+          energy: isPerfectReturn ? 16 : 10,
+          callout: isPerfectReturn ? 'PERFECT RETURN' : undefined
+        });
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
         playAudioEvent('hit.normal');
@@ -402,6 +504,7 @@ export function useGameplayLoop({
     isAiSwinging,
     isAiMissing,
     isSmashOpportunityVisible,
-    ballTimeScale: isSmashOpportunityVisible ? OVERHEAD_SMASH_CONFIG.slowdownAmount : 1
+    ballTimeScale: isSmashOpportunityVisible ? OVERHEAD_SMASH_CONFIG.slowdownAmount : 1,
+    arcadeHudStats
   };
 }
