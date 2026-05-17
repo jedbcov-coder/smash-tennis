@@ -22,7 +22,7 @@ export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
-export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY';
+export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | `COMBO x${number}`;
 
 export interface ArcadeHudStats {
   serveSpeedMph: number;
@@ -112,46 +112,63 @@ export function useGameplayLoop({
   const [isAiMissing, setIsAiMissing] = useState(false);
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
+  const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
 
+  const updateArcadeHudStats = useCallback((updater: (current: ArcadeHudStats) => ArcadeHudStats) => {
+    const nextStats = updater(arcadeHudStatsRef.current);
+    arcadeHudStatsRef.current = nextStats;
+    setArcadeHudStats(nextStats);
+  }, []);
 
   const showCallout = useCallback((callout: ArcadeCallout) => {
     if (calloutTimeout.current !== null) {
       window.clearTimeout(calloutTimeout.current);
     }
 
-    setArcadeHudStats((current) => ({ ...current, callout }));
+    updateArcadeHudStats((current) => ({ ...current, callout }));
     calloutTimeout.current = window.setTimeout(() => {
-      setArcadeHudStats((current) => ({ ...current, callout: null }));
+      updateArcadeHudStats((current) => ({ ...current, callout: null }));
       calloutTimeout.current = null;
     }, 1200);
-  }, []);
+  }, [updateArcadeHudStats]);
 
   const addEnergy = useCallback((amount: number) => {
-    setArcadeHudStats((current) => {
-      const nextEnergy = Math.min(100, current.energyPercent + amount);
-      if (current.energyPercent < 100 && nextEnergy >= 100) {
-        window.setTimeout(() => showCallout('POWER READY'), 0);
-      }
-      return { ...current, energyPercent: nextEnergy };
-    });
-  }, [showCallout]);
+    const currentEnergy = arcadeHudStatsRef.current.energyPercent;
+    const nextEnergy = Math.min(100, currentEnergy + amount);
+
+    updateArcadeHudStats((current) => ({ ...current, energyPercent: nextEnergy }));
+
+    if (currentEnergy < 100 && nextEnergy >= 100) {
+      window.setTimeout(() => showCallout('POWER READY'), 0);
+    }
+  }, [showCallout, updateArcadeHudStats]);
 
   const recordShot = useCallback((velocity: THREE.Vector3, options: { combo?: boolean; rally?: boolean; energy?: number; callout?: ArcadeCallout } = {}) => {
-    setArcadeHudStats((current) => ({
+    const currentStats = arcadeHudStatsRef.current;
+    const nextCombo = options.combo ? currentStats.comboCount + 1 : currentStats.comboCount;
+    const nextRally = options.rally ? currentStats.rallyCount + 1 : currentStats.rallyCount;
+
+    updateArcadeHudStats((current) => ({
       ...current,
       serveSpeedMph: Math.round(velocity.length() * 14),
-      comboCount: options.combo ? current.comboCount + 1 : current.comboCount,
-      rallyCount: options.rally ? current.rallyCount + 1 : current.rallyCount
+      comboCount: nextCombo,
+      rallyCount: nextRally
     }));
 
     if (options.energy) {
       addEnergy(options.energy);
     }
 
+    if (options.rally && nextRally > 0 && nextRally % 6 === 0) {
+      addEnergy(8);
+    }
+
     if (options.callout) {
       showCallout(options.callout);
+    } else if (options.combo && nextCombo > 1 && nextCombo % 3 === 0) {
+      showCallout(`COMBO x${nextCombo}`);
     }
-  }, [addEnergy, showCallout]);
+  }, [addEnergy, showCallout, updateArcadeHudStats]);
 
   useEffect(() => {
     onArcadeHudStatsChange?.(arcadeHudStats);
@@ -184,7 +201,7 @@ export function useGameplayLoop({
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
     consecutiveReturns.current = 0;
-    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null, serveMeter: { value: 0, isTiming: false, quality: null } }));
+    updateArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
     smashOpportunity.current = createEmptySmashOpportunity();
     setIsSmashOpportunityVisible(false);
     setIsVisualSmashing(false);
@@ -195,7 +212,7 @@ export function useGameplayLoop({
       aiSwingTimeout.current = null;
     }
     playerFacingY.current = Math.PI;
-  }, []);
+  }, [updateArcadeHudStats]);
 
   useEffect(() => {
     return () => {
@@ -420,10 +437,6 @@ export function useGameplayLoop({
         const finalAiReturnVel = aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
-        ballRef.current?.setVelocity(
-          aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier),
-          aiSpin
-        );
         setLastHitter('AI');
         triggerAiSwing();
         playAudioEvent('hit.normal');

@@ -197,7 +197,7 @@ export function GameHud({
           {surfaceSettings.label}
         </div>
         <div className="mt-1 text-[10px] uppercase leading-snug text-white/70">
-          Ball {(surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(surfaceSettings.bounceMultiplier * 100).toFixed(0)}% · Move {(surfaceSettings.playerMovementMultiplier * 100).toFixed(0)}%
+          Ball {(surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(surfaceSettings.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(surfaceSettings.slideAmount * 100).toFixed(0)}% · Move {(surfaceSettings.playerMovementMultiplier * 100).toFixed(0)}%
         </div>
       </div>
 
