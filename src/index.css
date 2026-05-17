@@ -81,3 +81,33 @@ body {
   from { opacity: 0.76; }
   to { opacity: 1; }
 }
+
+.game-reduced-motion *,
+.game-reduced-motion *::before,
+.game-reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.game-high-contrast .neon-panel,
+.game-high-contrast .neon-card,
+.game-high-contrast section {
+  background-color: rgba(0, 0, 0, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.game-high-contrast button,
+.game-high-contrast input {
+  outline-color: #ffffff;
+}
+
+.game-high-contrast .text-white\/45,
+.game-high-contrast .text-white\/50,
+.game-high-contrast .text-white\/55,
+.game-high-contrast .text-white\/60,
+.game-high-contrast .text-white\/65,
+.game-high-contrast .text-white\/70,
+.game-high-contrast .text-white\/75 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
