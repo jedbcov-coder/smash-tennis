@@ -5,6 +5,7 @@ import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
+import { playAudioEvent } from '../audio/audioManager';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -29,6 +30,7 @@ export function GameMenus({
   pointReward: PointReward | null;
   matchStats: MatchStats;
 }) {
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
@@ -70,7 +72,7 @@ export function GameMenus({
             Neon Smash<br /><span>Tennis</span>
           </h1>
           <p className="mb-6 max-w-md text-sm uppercase tracking-widest text-slate-200">
-            Pick a readable neon court, then move with the mouse and click or press Space to serve, swing, and smash.
+            Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -81,13 +83,13 @@ export function GameMenus({
               return (
                 <button
                   key={surface}
-                  type="button"
                   onClick={() => handleSurfaceSelect(surface)}
-                  className={`rounded-2xl border bg-black/55 p-4 text-left uppercase tracking-widest transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_28px_rgba(255,255,255,0.24)]' : 'border-white/15'}`}
-                  style={{ boxShadow: isSelected ? `0 0 28px ${settings.colors.lines}55` : undefined }}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${settings.colors.lines}66` : undefined }}
                 >
-                  <div className="text-sm font-black text-white" style={{ color: settings.colors.lines }}>{settings.label}</div>
-                  <div className="mt-2 text-[10px] leading-relaxed text-white/60">{settings.description}</div>
+                  <div className="mb-2 h-2 rounded-full" style={{ background: settings.colors.lines }} />
+                  <div className="text-sm font-black uppercase tracking-widest text-white">{settings.label}</div>
+                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{settings.description}</div>
                 </button>
               );
             })}
@@ -153,12 +155,14 @@ export function GameMenus({
           >
             {isWin ? 'Match\nWon!' : 'Match\nLost'}
           </h2>
-          <p className="mb-4 text-xl uppercase tracking-widest text-slate-200">
+          <p className="mb-6 text-xl uppercase tracking-widest text-slate-200">
             {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
           </p>
-          <div className="mb-8 rounded-2xl border border-white/10 bg-black/45 px-5 py-3 text-xs uppercase tracking-widest text-white/70">
-            Sets {score.playerSets}-{score.aiSets} · Games {score.playerGames}-{score.aiGames} · XP {matchStats.totalXp}
-            {pointXp > 0 && <span className="text-cyan-200"> · Last point +{pointXp}</span>}
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
           </div>
           <button
             onClick={handleStartGame}

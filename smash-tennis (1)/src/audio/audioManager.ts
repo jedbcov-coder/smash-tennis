@@ -42,11 +42,11 @@ export const playAudioEvent = (eventName: AudioEventName) => {
       return playCurveHitSound();
     case 'hit.smash':
       return playSmashHitSound();
-    case 'special.flameSmash':
-    case 'smash.mega':
-      return playMegaSmashSound();
     case 'return.perfect':
       return playPerfectReturnSound();
+    case 'smash.mega':
+    case 'special.flameSmash':
+      return playMegaSmashSound();
     case 'power.ready':
       return playPowerReadySound();
     case 'combo.increase':
