@@ -124,6 +124,7 @@ export function useGameplayLoop({
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
   const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
+  const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
 
   const updateArcadeHudStats = useCallback((updater: (current: ArcadeHudStats) => ArcadeHudStats) => {
@@ -224,6 +225,7 @@ export function useGameplayLoop({
     setIsAiSwinging(false);
     setIsAiMissing(false);
     setCurrentSpecialMove(null);
+    clearSwingInput();
     clearSpecialMoveInput();
     if (specialMoveTimeout.current !== null) {
       window.clearTimeout(specialMoveTimeout.current);
@@ -234,7 +236,7 @@ export function useGameplayLoop({
       aiSwingTimeout.current = null;
     }
     playerFacingY.current = Math.PI;
-  }, [updateArcadeHudStats]);
+  }, [clearSpecialMoveInput, clearSwingInput, updateArcadeHudStats]);
 
   useEffect(() => {
     return () => {
@@ -403,7 +405,7 @@ export function useGameplayLoop({
         const targetFacing = Math.PI + THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.14, -0.35, 0.35);
         playerFacingY.current = THREE.MathUtils.lerp(playerFacingY.current, targetFacing, OVERHEAD_SMASH_CONFIG.autoAlignmentStrength);
 
-        const canUseFlameSmash = arcadeHudStats.energyPercent >= 100 && isSpecialMovePressed && now <= smashTarget.expiresAt;
+        const canUseFlameSmash = arcadeHudStatsRef.current.energyPercent >= 100 && isSpecialMovePressed && now <= smashTarget.expiresAt;
 
         if (canUseFlameSmash) {
           performOverheadSmash(ballPos, now, true);

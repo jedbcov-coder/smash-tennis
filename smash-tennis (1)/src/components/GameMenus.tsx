@@ -4,7 +4,7 @@ import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
-import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
+import { playAudioEvent } from '../audio/audioManager';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -29,6 +29,7 @@ export function GameMenus({
   pointReward: PointReward | null;
   matchStats: MatchStats;
 }) {
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
@@ -70,7 +71,7 @@ export function GameMenus({
             Neon Smash<br /><span>Tennis</span>
           </h1>
           <p className="mb-6 max-w-md text-sm uppercase tracking-widest text-slate-200">
-            Pick a readable neon court, then move with the mouse and click or press Space to serve, swing, and smash.
+            Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -82,16 +83,12 @@ export function GameMenus({
                 <button
                   key={surface}
                   onClick={() => handleSurfaceSelect(surface)}
-                  className="rounded-2xl border bg-black/60 px-4 py-3 text-left uppercase tracking-widest transition-all hover:-translate-y-1 hover:bg-white/10"
-                  style={{
-                    borderColor: isSelected ? settings.colors.lines : 'rgba(255,255,255,0.16)',
-                    boxShadow: isSelected ? `0 0 24px ${settings.colors.lines}` : undefined
-                  }}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${settings.colors.lines}66` : undefined }}
                 >
-                  <div className="text-sm font-black" style={{ color: settings.colors.lines }}>{settings.label}</div>
-                  <div className="mt-2 text-[10px] leading-relaxed text-white/65">
-                    Ball {(settings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(settings.bounceHeightMultiplier * 100).toFixed(0)}% · Move {(settings.playerMovementMultiplier * 100).toFixed(0)}%
-                  </div>
+                  <div className="mb-2 h-2 rounded-full" style={{ background: settings.colors.lines }} />
+                  <div className="text-sm font-black uppercase tracking-widest text-white">{settings.label}</div>
+                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{settings.description}</div>
                 </button>
               );
             })}
@@ -142,7 +139,7 @@ export function GameMenus({
 
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
-    const progressPercent = Math.min(100, matchStats.totalXp % 100);
+    const pointXp = pointReward?.xpGained ?? 0;
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
@@ -177,6 +174,15 @@ export function GameMenus({
             <div className="h-full rounded-full" style={{ width: `${progressPercent}%`, background: GRADIENTS.energy }} />
           </div>
 
+          <p className="mb-6 text-xl uppercase tracking-widest text-slate-200">
+            {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
+          </p>
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
+          </div>
           <button
             onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"

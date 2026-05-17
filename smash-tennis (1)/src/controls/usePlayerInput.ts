@@ -22,7 +22,13 @@ export function usePlayerInput() {
       mouseY.current = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
-    const handleMouseDown = () => {
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target;
+
+      if (target instanceof Element && target.closest('button, a, input, select, textarea, [role="button"]')) {
+        return;
+      }
+
       isMouseDown.current = true;
       setIsSwinging(true);
       setIsVisualSwinging(true);

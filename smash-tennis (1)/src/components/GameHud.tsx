@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
+import type { PointReward } from '../serve/useTennisGame';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import type { PointReward } from '../serve/useTennisGame';
 
@@ -34,14 +36,17 @@ export function GameHud({
   arcadeHudStats,
   pointReward
 }: GameHudProps) {
+  const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
   const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
-  const isPowerReady = arcadeHudStats.energyPercent >= 100;
-  const [serveCountdown, setServeCountdown] = useState(3);
   const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const [serveCountdown, setServeCountdown] = useState(3);
+  const isPowerReady = arcadeHudStats.energyPercent >= 100;
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const [serveCountdown, setServeCountdown] = useState(3);
 
   useEffect(() => {
     if (gameState !== GameState.SERVE_COUNTDOWN) {
@@ -175,8 +180,9 @@ export function GameHud({
       )}
 
       {gameState === GameState.SCORING && pointReward && (
-        <div className="absolute left-1/2 top-1/2 mt-24 -translate-x-1/2 rounded-xl border border-orange-200/35 bg-black/75 px-5 py-3 text-center text-xs font-black uppercase tracking-widest text-orange-100 pointer-events-none">
-          {pointReward.styleBonus} · Rally {pointReward.rallyLength} · +{pointReward.xpGained} XP
+        <div className="absolute left-1/2 top-[62%] flex -translate-x-1/2 flex-col items-center rounded-2xl border border-white/15 bg-black/70 px-5 py-3 text-center text-white pointer-events-none">
+          <div className="text-xs font-black uppercase tracking-[0.25em] text-white/60">{pointReward.styleBonus}</div>
+          <div className="text-lg font-black uppercase">+{pointReward.xpGained} XP · Rally {pointReward.rallyLength}</div>
         </div>
       )}
 
@@ -187,10 +193,10 @@ export function GameHud({
       )}
 
       {/* Serving Instruction */}
-      {gameState === GameState.SERVING && (
+      {(gameState === GameState.SERVING || gameState === GameState.SERVE_COUNTDOWN) && (
         <div className="absolute bottom-1/4 left-1/2 flex -translate-x-1/2 flex-col items-center pointer-events-none">
           <div className="neon-text-cyan neon-pulse text-3xl font-black italic uppercase tracking-tighter">
-            {serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
+            {gameState === GameState.SERVE_COUNTDOWN ? serveCountdown : serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
             <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">Press Space or Click to Serve</div>
