@@ -12,12 +12,9 @@ import {
   OUT_OF_BOUNDS_LIMITS,
   NET_HEIGHT
 } from '../gameplay/gameTuning';
-import { checkNetCollision, checkOutOfBounds, checkBaselineOut } from '../physics/WorldPhysics';
-import { calculatePlayerTarget, clampPlayerPosition, calculateAssistedPosition } from '../physics/CharacterPhysics';
 import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
-
 import { useServeMechanics } from '../serve/useServeMechanics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
