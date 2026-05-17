@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => ({
   // Set base path based on environment for GitHub Pages vs local preview.
-  base: process.env.GITHUB_ACTIONS ? '/Smash_Tennis/' : '/',
+  base: process.env.GITHUB_ACTIONS ? '/smash-tennis/' : '/',
   build: {
     outDir: 'dist',
   },

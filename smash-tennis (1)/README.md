@@ -2,7 +2,7 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
+Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
 Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
 
@@ -91,7 +91,7 @@ Current check notes verified on May 17, 2026:
 
 ## Deployment notes
 
-This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
 
 Important GitHub Pages settings:
 
@@ -100,6 +100,6 @@ Important GitHub Pages settings:
 3. Set **Build and deployment → Source** to **GitHub Actions**.
 4. Push or merge changes into `main`.
 5. The workflow at `.github/workflows/deploy.yml` installs dependencies with `npm ci`, builds the app with `npm run build`, uploads `smash-tennis (1)/dist`, and deploys it with the official GitHub Pages actions.
-6. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
+6. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
 
-The app folder is `smash-tennis (1)`, and the Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.
+The app folder is `smash-tennis (1)`, and the Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
