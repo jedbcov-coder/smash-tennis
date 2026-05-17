@@ -26,7 +26,6 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
-- Start screen, point-result banner, scoreboard, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
