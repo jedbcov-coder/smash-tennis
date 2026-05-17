@@ -1,6 +1,5 @@
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -29,12 +28,12 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats
-  courtSurface
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
+  const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
 
 
   return (
@@ -63,7 +62,7 @@ export function GameHud({
           </div>
         </div>
 
-        <div className="w-[320px] rounded-full border border-fuchsia-300/40 bg-black/70 p-1 shadow-[0_0_20px_rgba(217,70,239,0.35)]">
+        <div className="flex w-[320px] flex-col gap-1 rounded-2xl border border-fuchsia-300/40 bg-black/70 p-2 shadow-[0_0_20px_rgba(217,70,239,0.35)]">
           <div className="relative h-4 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-orange-300 transition-all duration-300"
@@ -71,6 +70,15 @@ export function GameHud({
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
               Energy {arcadeHudStats.energyPercent}%
+            </div>
+          </div>
+          <div className="relative h-3 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-400 to-emerald-300 transition-all duration-300"
+              style={{ width: intensityWidth }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center text-[8px] font-black uppercase tracking-[0.2em] text-white/90 drop-shadow">
+              Rally Intensity {Math.round(arcadeHudStats.rallyIntensity * 100)}%
             </div>
           </div>
         </div>

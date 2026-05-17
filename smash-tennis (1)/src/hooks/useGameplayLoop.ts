@@ -29,6 +29,7 @@ export interface ArcadeHudStats {
   energyPercent: number;
   comboCount: number;
   rallyCount: number;
+  rallyIntensity: number;
   callout: ArcadeCallout | null;
 }
 
@@ -37,6 +38,7 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   energyPercent: 0,
   comboCount: 0,
   rallyCount: 0,
+  rallyIntensity: 0,
   callout: null
 });
 
@@ -84,7 +86,6 @@ export function useGameplayLoop({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
-  courtSurface
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -130,18 +131,30 @@ export function useGameplayLoop({
       const nextEnergy = Math.min(100, current.energyPercent + amount);
       if (current.energyPercent < 100 && nextEnergy >= 100) {
         window.setTimeout(() => showCallout('POWER READY'), 0);
+        playAudioEvent('power.ready');
       }
       return { ...current, energyPercent: nextEnergy };
     });
   }, [showCallout]);
 
   const recordShot = useCallback((velocity: THREE.Vector3, options: { combo?: boolean; rally?: boolean; energy?: number; callout?: ArcadeCallout } = {}) => {
-    setArcadeHudStats((current) => ({
-      ...current,
-      serveSpeedMph: Math.round(velocity.length() * 14),
-      comboCount: options.combo ? current.comboCount + 1 : current.comboCount,
-      rallyCount: options.rally ? current.rallyCount + 1 : current.rallyCount
-    }));
+    setArcadeHudStats((current) => {
+      const nextComboCount = options.combo ? current.comboCount + 1 : current.comboCount;
+      const nextRallyCount = options.rally ? current.rallyCount + 1 : current.rallyCount;
+      const rallyIntensity = Math.min(1, nextRallyCount / 8);
+
+      if (options.combo && nextComboCount > 1) {
+        playAudioEvent('combo.increase');
+      }
+
+      return {
+        ...current,
+        serveSpeedMph: Math.round(velocity.length() * 14),
+        comboCount: nextComboCount,
+        rallyCount: nextRallyCount,
+        rallyIntensity
+      };
+    });
 
     if (options.energy) {
       addEnergy(options.energy);
@@ -183,7 +196,7 @@ export function useGameplayLoop({
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
     consecutiveReturns.current = 0;
-    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
+    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, rallyIntensity: 0, callout: null }));
     smashOpportunity.current = createEmptySmashOpportunity();
     setIsSmashOpportunityVisible(false);
     setIsVisualSmashing(false);
@@ -245,7 +258,7 @@ export function useGameplayLoop({
     endSmashOpportunity();
     triggerGameplayEvent('smash:activated');
     triggerGameplayEvent('vfx:overhead-smash');
-    playAudioEvent('hit.smash');
+    playAudioEvent('smash.mega');
     clearSwingInput();
   };
 
@@ -416,13 +429,9 @@ export function useGameplayLoop({
         const finalAiReturnVel = aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
-        ballRef.current?.setVelocity(
-          aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier),
-          aiSpin
-        );
         setLastHitter('AI');
         triggerAiSwing();
-        playAudioEvent('hit.normal');
+        playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');
       }
     }
@@ -444,7 +453,7 @@ export function useGameplayLoop({
         });
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
-        playAudioEvent('hit.normal');
+        playAudioEvent(isPerfectReturn ? 'return.perfect' : Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');
 
         clearSwingInput();

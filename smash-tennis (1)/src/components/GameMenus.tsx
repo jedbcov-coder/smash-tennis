@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { playAudioEvent } from '../audio/audioManager';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 
@@ -16,6 +18,32 @@ export function GameMenus({
   courtSurface: CourtSurface;
   setCourtSurface: (surface: CourtSurface) => void;
 }) {
+  const playedResultFor = useRef<PlayerType | null>(null);
+
+  const handleStartGame = () => {
+    playAudioEvent('ui.select');
+    startGame();
+  };
+
+  const handleSurfaceSelect = (surface: CourtSurface) => {
+    playAudioEvent('ui.select');
+    setCourtSurface(surface);
+  };
+
+  useEffect(() => {
+    if (gameState !== GameState.GAME_OVER) {
+      playedResultFor.current = null;
+      return;
+    }
+
+    if (!winner || playedResultFor.current === winner) {
+      return;
+    }
+
+    playedResultFor.current = winner;
+    playAudioEvent(winner === 'PLAYER' ? 'match.win' : 'match.defeat');
+  }, [gameState, winner]);
+
   if (gameState === GameState.MENU) {
     const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
@@ -38,7 +66,9 @@ export function GameMenus({
               <button
                 key={surface}
                 type="button"
-                onClick={() => setCourtSurface(surface)}
+                onMouseEnter={() => playAudioEvent('ui.hover')}
+                onFocus={() => playAudioEvent('ui.hover')}
+                onClick={() => handleSurfaceSelect(surface)}
                 className={`rounded-xl border p-3 text-left transition-all hover:scale-105 ${
                   isSelected ? 'border-white bg-white text-black shadow-2xl' : 'border-white/20 bg-black/50 text-white hover:bg-white/10'
                 }`}
@@ -60,7 +90,9 @@ export function GameMenus({
         </div>
 
         <button
-          onClick={startGame}
+          onMouseEnter={() => playAudioEvent('ui.hover')}
+          onFocus={() => playAudioEvent('ui.hover')}
+          onClick={handleStartGame}
           className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-12 rounded-lg text-xl transition-all hover:scale-105 uppercase tracking-widest"
         >
           Start Match
@@ -80,7 +112,9 @@ export function GameMenus({
           {isWin ? 'Congratulations, Champion.' : 'Better luck next time.'}
         </p>
         <button
-          onClick={startGame}
+          onMouseEnter={() => playAudioEvent('ui.hover')}
+          onFocus={() => playAudioEvent('ui.hover')}
+          onClick={handleStartGame}
           className="bg-white text-black hover:bg-gray-200 font-bold py-4 px-12 rounded-lg text-xl transition-all hover:scale-105 uppercase tracking-widest"
         >
           Play Again

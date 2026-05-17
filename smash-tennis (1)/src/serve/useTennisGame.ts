@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type PlayerType } from '../types';
 import {
   getInitialGameState,
@@ -7,6 +8,28 @@ import {
 } from './scoringRules';
 
 const POINT_RESULT_PAUSE_MS = 1400;
+
+
+function isPlayerOnePointFromWinningGame(status: GameStatus, player: PlayerType): boolean {
+  const playerScore = player === 'PLAYER' ? status.score.playerScore : status.score.aiScore;
+  const opponentScore = player === 'PLAYER' ? status.score.aiScore : status.score.playerScore;
+
+  if (status.isTiebreak) {
+    return playerScore >= 6 && playerScore >= opponentScore + 1;
+  }
+
+  return playerScore === 4 || (playerScore === 3 && opponentScore < 3);
+}
+
+function isMatchPoint(status: GameStatus): boolean {
+  const playerHasSetChance = status.score.playerGames >= 5 && status.score.playerGames >= status.score.aiGames + 1;
+  const aiHasSetChance = status.score.aiGames >= 5 && status.score.aiGames >= status.score.playerGames + 1;
+
+  return (
+    (playerHasSetChance && isPlayerOnePointFromWinningGame(status, 'PLAYER')) ||
+    (aiHasSetChance && isPlayerOnePointFromWinningGame(status, 'AI'))
+  );
+}
 
 function getReceiver(server: PlayerType): PlayerType {
   return server === 'PLAYER' ? 'AI' : 'PLAYER';
@@ -33,6 +56,7 @@ export function useTennisGame() {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
   const [lastPointWinner, setLastPointWinner] = useState<PlayerType | null>(null);
   const nextPointTimerRef = useRef<number | null>(null);
+  const matchPointSoundKeyRef = useRef<string | null>(null);
 
   const clearNextPointTimer = useCallback(() => {
     if (nextPointTimerRef.current !== null) {
@@ -54,6 +78,7 @@ export function useTennisGame() {
   const startGame = useCallback(() => {
     clearNextPointTimer();
     setStatus(getInitialGameState());
+    matchPointSoundKeyRef.current = null;
     setLastPointWinner(null);
     setGameState(GameState.SERVING);
   }, [clearNextPointTimer]);
@@ -82,6 +107,20 @@ export function useTennisGame() {
   }, [queueNextPoint]);
 
   useEffect(() => clearNextPointTimer, [clearNextPointTimer]);
+
+  useEffect(() => {
+    if (gameState !== GameState.SERVING || !isMatchPoint(status)) {
+      return;
+    }
+
+    const soundKey = `${status.score.playerGames}-${status.score.aiGames}-${status.score.playerScore}-${status.score.aiScore}-${status.isTiebreak}`;
+    if (matchPointSoundKeyRef.current === soundKey) {
+      return;
+    }
+
+    matchPointSoundKeyRef.current = soundKey;
+    playAudioEvent('match.point');
+  }, [gameState, status]);
 
   const difficultyStats = useMemo(() => getDifficultyStats(status), [status]);
   const targetRallyLength = Math.min(8, 3 + getTotalGames(status));

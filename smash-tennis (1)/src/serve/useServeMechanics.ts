@@ -84,7 +84,7 @@ export function useServeMechanics({
         onServeLaunched?.(serveVel);
         setGameState(GameState.PLAYING);
         setLastHitter('PLAYER');
-        playAudioEvent('hit.normal');
+        playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         clearSwingInput();
       }
     } else {
@@ -128,7 +128,7 @@ export function useServeMechanics({
         onServeLaunched?.(serveVel);
         setGameState(GameState.PLAYING);
         setLastHitter('AI');
-        playAudioEvent('hit.normal');
+        playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
       }
     }
     return true; // We are in SERVING state, stop generic frame processing
