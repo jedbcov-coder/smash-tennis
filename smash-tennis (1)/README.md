@@ -2,7 +2,7 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/smash-tennis/
+Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
 Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, and tennis-style scoring.
 
@@ -26,7 +26,6 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
-- Start screen, point-result banner, scoreboard, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
@@ -84,7 +83,7 @@ Current check notes:
 
 ## Deployment notes
 
-This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/.
 
 Important GitHub Pages settings:
 
@@ -92,6 +91,6 @@ Important GitHub Pages settings:
 2. Go to **Settings → Pages**.
 3. Set **Build and deployment → Source** to **GitHub Actions**.
 4. Push or merge changes into `main`, or start the workflow manually from the GitHub Actions tab.
-5. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
+5. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
 
-The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
+The Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.
