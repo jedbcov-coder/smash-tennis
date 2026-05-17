@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  background: #050712;
+}
+
+body {
+  margin: 0;
+  background: #050712;
+}
+
+.neon-panel {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.3), 0 0 34px rgba(232, 121, 249, 0.16), inset 0 0 22px rgba(34, 211, 238, 0.08);
+}
+
+.neon-card {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.18), inset 0 0 18px rgba(255, 255, 255, 0.04);
+}
+
+.neon-button {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.55), 0 0 34px rgba(232, 121, 249, 0.35), inset 0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+.neon-button:hover {
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.72), 0 0 48px rgba(232, 121, 249, 0.46), inset 0 0 16px rgba(255, 255, 255, 0.45);
+}
+
+.neon-title {
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.95), 0 0 28px rgba(232, 121, 249, 0.7), 0 0 52px rgba(99, 102, 241, 0.55);
+}
+
+.neon-title span {
+  color: #f0abfc;
+  text-shadow: 0 0 10px rgba(240, 171, 252, 0.95), 0 0 34px rgba(251, 146, 60, 0.65);
+}
+
+.neon-text-cyan {
+  color: #cffafe;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.95), 0 0 22px rgba(34, 211, 238, 0.55);
+}
+
+.neon-text-magenta {
+  color: #f5d0fe;
+  text-shadow: 0 0 8px rgba(232, 121, 249, 0.95), 0 0 22px rgba(232, 121, 249, 0.55);
+}
+
+.neon-text-orange {
+  color: #fed7aa;
+  text-shadow: 0 0 8px rgba(251, 146, 60, 0.95), 0 0 22px rgba(251, 146, 60, 0.55);
+}
+
+.neon-energy {
+  box-shadow: 0 0 18px rgba(232, 121, 249, 0.35), inset 0 0 16px rgba(34, 211, 238, 0.1);
+}
+
+.neon-energy-fill {
+  animation: neon-energy-pulse 1.8s ease-in-out infinite;
+}
+
+.neon-callout {
+  animation: neon-callout-pop 0.9s ease-in-out infinite alternate;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.55), 0 0 48px rgba(232, 121, 249, 0.35);
+}
+
+.neon-pulse {
+  animation: neon-soft-pulse 1.35s ease-in-out infinite alternate;
+}
+
+@keyframes neon-energy-pulse {
+  0%, 100% { filter: saturate(1) brightness(1); }
+  50% { filter: saturate(1.35) brightness(1.25); }
+}
+
+@keyframes neon-callout-pop {
+  from { transform: scale(0.98); filter: brightness(1); }
+  to { transform: scale(1.04); filter: brightness(1.25); }
+}
+
+@keyframes neon-soft-pulse {
+  from { opacity: 0.76; }
+  to { opacity: 1; }
+}

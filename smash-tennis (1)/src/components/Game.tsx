@@ -1,6 +1,5 @@
 import { useRef, useState, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import { Court } from '../environment/Court';
 import { Character } from '../character/Character';
@@ -12,6 +11,7 @@ import { useTennisGame } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
+import { COLOR_SCHEME } from '../design/colorScheme';
 
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
@@ -31,7 +31,7 @@ function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | n
   return (
     <mesh ref={markerRef} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
       <ringGeometry args={[0.3, 0.4, 32]} />
-      <meshBasicMaterial color="white" transparent opacity={0.3} />
+      <meshBasicMaterial color={COLOR_SCHEME.neon.cyanSoft} transparent opacity={0.38} />
     </mesh>
   );
 }
@@ -47,7 +47,6 @@ function GameScene({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
-  courtSurface
 }: {
   onScore: (winner: PlayerType) => void;
   onFault: () => void;
@@ -86,20 +85,22 @@ function GameScene({
     difficultyStats,
     courtSurface,
     onArcadeHudStatsChange
-    courtSurface
   });
 
   return (
     <>
-      <ambientLight intensity={1} />
-      <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow />
-      <Sky sunPosition={[100, 20, 100]} />
+      <color attach="background" args={[COLOR_SCHEME.neon.background]} />
+      <fog attach="fog" args={[COLOR_SCHEME.neon.background, 24, 54]} />
+      <ambientLight intensity={0.85} color={COLOR_SCHEME.neon.violetBlue} />
+      <pointLight position={[-8, 8, 8]} intensity={3.2} color={COLOR_SCHEME.neon.cyan} />
+      <pointLight position={[8, 7, -8]} intensity={2.4} color={COLOR_SCHEME.neon.magentaHot} />
+      <directionalLight position={[10, 20, 10]} intensity={1.25} color={COLOR_SCHEME.neon.goldSoft} castShadow />
 
       <Court courtSurface={courtSurface} />
       <Character
         initialPosition={[0, 0, 9]}
         positionRef={playerPos}
-        color="#3b82f6"
+        color={COLOR_SCHEME.characters.player}
         isSwinging={isVisualSwinging}
         isSmashing={isVisualSmashing}
         facingRotationYRef={playerFacingY}
@@ -107,7 +108,7 @@ function GameScene({
       <Character
         initialPosition={[0, 0, -9]}
         positionRef={aiPos}
-        color="#ef4444"
+        color={COLOR_SCHEME.characters.ai}
         isAI
         isSwinging={isAiSwinging}
         isMissing={isAiMissing}
@@ -125,7 +126,7 @@ function GameScene({
       {isSmashOpportunityVisible && (
         <mesh position={[playerPos.current.x, 0.08, playerPos.current.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.8, 1.05, 40]} />
-          <meshBasicMaterial color="#facc15" transparent opacity={0.55} />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.gold} transparent opacity={0.7} />
         </mesh>
       )}
 

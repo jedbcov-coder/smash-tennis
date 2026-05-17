@@ -2,9 +2,9 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/smash-tennis/
+Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, and tennis-style scoring.
+Smash Tennis is a neon arcade 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, on glowing dark courts with electric cyan, neon magenta, orange, gold, violet-blue, and red danger effects.
 
 ## Controls
 
@@ -16,17 +16,17 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Main features
 
+- Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
-- Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
+- Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific neon colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
-- Start screen, point-result banner, scoreboard, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
@@ -69,10 +69,14 @@ Current check notes:
 ## Project structure
 
 - `src/App.tsx` starts the main app screen.
+- `src/design/colorScheme.ts` keeps the shared neon palette in one place.
+- `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, and HUD together.
-- `src/components/GameHud.tsx` shows the in-game overlays and scoreboard.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the start and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
+- `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
@@ -84,7 +88,7 @@ Current check notes:
 
 ## Deployment notes
 
-This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/.
 
 Important GitHub Pages settings:
 
@@ -92,6 +96,6 @@ Important GitHub Pages settings:
 2. Go to **Settings → Pages**.
 3. Set **Build and deployment → Source** to **GitHub Actions**.
 4. Push or merge changes into `main`, or start the workflow manually from the GitHub Actions tab.
-5. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
+5. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
 
-The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
+The Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.

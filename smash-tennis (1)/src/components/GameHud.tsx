@@ -1,6 +1,6 @@
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -29,45 +29,39 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats
-  courtSurface
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
-
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.danger;
 
   return (
     <>
-
       {/* Neon Arcade HUD - Top Center */}
       <div className="absolute left-1/2 top-4 flex -translate-x-1/2 flex-col items-center gap-2 pointer-events-none">
-        <div className="flex overflow-hidden rounded-2xl border border-cyan-300/40 bg-slate-950/80 shadow-[0_0_24px_rgba(34,211,238,0.28)] backdrop-blur-sm">
-          <div className="border-r border-cyan-300/20 px-4 py-2 text-center">
-            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-cyan-200/70">Serve / Shot Speed</div>
-            <div className="text-2xl font-black italic text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.85)]">
+        <div className="neon-panel flex overflow-hidden rounded-2xl border border-cyan-300/50 bg-slate-950/85 backdrop-blur-sm">
+          <div className="border-r border-cyan-300/25 px-4 py-2 text-center">
+            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-cyan-100/75">Serve / Shot Speed</div>
+            <div className="neon-text-cyan text-2xl font-black italic">
               {arcadeHudStats.serveSpeedMph || '--'} <span className="text-xs not-italic text-white/60">MPH</span>
             </div>
           </div>
-          <div className="border-r border-fuchsia-300/20 px-4 py-2 text-center">
-            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-fuchsia-200/70">Combo</div>
-            <div className="text-2xl font-black italic text-fuchsia-300 drop-shadow-[0_0_8px_rgba(232,121,249,0.85)]">
-              x{arcadeHudStats.comboCount}
-            </div>
+          <div className="border-r border-fuchsia-300/25 px-4 py-2 text-center">
+            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-fuchsia-100/75">Combo</div>
+            <div className="neon-text-magenta text-2xl font-black italic">x{arcadeHudStats.comboCount}</div>
           </div>
           <div className="px-4 py-2 text-center">
-            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-200/70">Rally</div>
-            <div className="text-2xl font-black italic text-orange-300 drop-shadow-[0_0_8px_rgba(251,146,60,0.85)]">
-              {arcadeHudStats.rallyCount}
-            </div>
+            <div className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-100/75">Rally</div>
+            <div className="neon-text-orange text-2xl font-black italic">{arcadeHudStats.rallyCount}</div>
           </div>
         </div>
 
-        <div className="w-[320px] rounded-full border border-fuchsia-300/40 bg-black/70 p-1 shadow-[0_0_20px_rgba(217,70,239,0.35)]">
+        <div className="neon-energy w-[320px] rounded-full border border-fuchsia-300/45 bg-black/75 p-1">
           <div className="relative h-4 overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-orange-300 transition-all duration-300"
-              style={{ width: energyWidth }}
+              className="neon-energy-fill h-full rounded-full transition-all duration-300"
+              style={{ width: energyWidth, background: GRADIENTS.energy }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
               Energy {arcadeHudStats.energyPercent}%
@@ -79,7 +73,7 @@ export function GameHud({
       {/* Arcade Callout */}
       {arcadeHudStats.callout && (
         <div className="absolute inset-x-0 top-28 flex justify-center pointer-events-none">
-          <div className="animate-pulse rounded-2xl border border-white/50 bg-black/75 px-8 py-3 text-4xl font-black italic uppercase tracking-tighter text-white shadow-[0_0_32px_rgba(34,211,238,0.55)]">
+          <div className="neon-callout rounded-2xl border border-white/50 bg-black/80 px-8 py-3 text-4xl font-black italic uppercase tracking-tighter text-white">
             <span className="bg-gradient-to-r from-cyan-200 via-fuchsia-300 to-orange-300 bg-clip-text text-transparent">
               {arcadeHudStats.callout}
             </span>
@@ -87,60 +81,52 @@ export function GameHud({
         </div>
       )}
 
-      {/* TV Style Scoreboard - Lower Left */}
+      {/* Scoreboard - Lower Left */}
       <div className="absolute bottom-12 left-8 flex flex-col gap-0.5 pointer-events-none drop-shadow-lg">
         {/* Header Ribbon */}
         <div className="flex gap-0.5">
-          <div className="bg-white text-black px-2 py-0.5 text-[9px] font-black italic w-fit">
-            US OPEN - GAME {score.playerGames + score.aiGames + 1}
+          <div className="bg-cyan-300 px-2 py-0.5 text-[9px] font-black italic text-black w-fit shadow-[0_0_14px_rgba(34,211,238,0.65)]">
+            NEON SMASH - GAME {score.playerGames + score.aiGames + 1}
           </div>
-          <div className="bg-red-600 text-white px-2 py-0.5 text-[9px] font-black italic w-fit uppercase tracking-tighter">
+          <div className="bg-rose-500 px-2 py-0.5 text-[9px] font-black italic text-white w-fit uppercase tracking-tighter shadow-[0_0_14px_rgba(244,63,94,0.55)]">
             Rally Target: {targetRallyLength}
           </div>
-          <div className="bg-blue-600 text-white px-2 py-0.5 text-[9px] font-black italic w-fit uppercase tracking-tighter">
+          <div className="bg-indigo-500 px-2 py-0.5 text-[9px] font-black italic text-white w-fit uppercase tracking-tighter shadow-[0_0_14px_rgba(99,102,241,0.55)]">
             Speed: {(difficultyStats.pointDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}%
           </div>
           <div
-            className="text-black px-2 py-0.5 text-[9px] font-black italic w-fit uppercase tracking-tighter"
-            style={{ backgroundColor: surfaceSettings.colors.lines }}
+            className="px-2 py-0.5 text-[9px] font-black italic text-black w-fit uppercase tracking-tighter"
+            style={{ backgroundColor: surfaceSettings.colors.lines, boxShadow: `0 0 14px ${surfaceSettings.colors.lines}` }}
           >
             {surfaceSettings.label}
           </div>
         </div>
 
         {/* Score Table */}
-        <div className="bg-[#1a1a2e]/95 border-b-2 border-red-600 overflow-hidden shadow-2xl flex flex-col min-w-[240px]">
+        <div className="neon-panel min-w-[250px] overflow-hidden border-b-2 border-fuchsia-400/80 bg-[#050712]/95 flex flex-col">
           {/* Player Row */}
-          <div className="flex items-center h-8 px-3 border-b border-white/5">
-            <div className="w-2 mr-2">
-              {servingPlayer === 'PLAYER' && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" />}
+          <div className="flex h-8 items-center border-b border-cyan-300/10 px-3">
+            <div className="mr-2 w-2">
+              {servingPlayer === 'PLAYER' && <div className="h-1.5 w-1.5 rounded-full bg-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.95)]" />}
             </div>
-            <div className="flex-1 text-[13px] font-black text-white uppercase tracking-tighter">
-              Blake (Player)
-            </div>
-            <div className="flex bg-black/40 h-full">
-              <div className="w-8 flex items-center justify-center text-white/50 font-bold text-[11px] border-l border-white/10">{score.playerSets}</div>
-              <div className="w-8 flex items-center justify-center text-white/50 font-bold text-[11px] border-l border-white/10">{score.playerGames}</div>
-              <div className="w-12 flex items-center justify-center bg-white text-black font-black text-[14px]">
-                {playerLabel}
-              </div>
+            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">Blake (Player)</div>
+            <div className="flex h-full bg-black/45">
+              <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.playerSets}</div>
+              <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.playerGames}</div>
+              <div className="flex w-12 items-center justify-center bg-cyan-200 text-[14px] font-black text-black">{playerLabel}</div>
             </div>
           </div>
 
           {/* AI Row */}
-          <div className="flex items-center h-8 px-3">
-            <div className="w-2 mr-2">
-              {servingPlayer === 'AI' && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" />}
+          <div className="flex h-8 items-center px-3">
+            <div className="mr-2 w-2">
+              {servingPlayer === 'AI' && <div className="h-1.5 w-1.5 rounded-full bg-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.95)]" />}
             </div>
-            <div className="flex-1 text-[13px] font-black text-white uppercase tracking-tighter">
-              Hidalgo (AI)
-            </div>
-            <div className="flex bg-black/40 h-full">
-              <div className="w-8 flex items-center justify-center text-white/50 font-bold text-[11px] border-l border-white/10">{score.aiSets}</div>
-              <div className="w-8 flex items-center justify-center text-white/50 font-bold text-[11px] border-l border-white/10">{score.aiGames}</div>
-              <div className="w-12 flex items-center justify-center bg-white text-black font-black text-[14px]">
-                {aiLabel}
-              </div>
+            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">Hidalgo (AI)</div>
+            <div className="flex h-full bg-black/45">
+              <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiSets}</div>
+              <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiGames}</div>
+              <div className="flex w-12 items-center justify-center bg-fuchsia-200 text-[14px] font-black text-black">{aiLabel}</div>
             </div>
           </div>
         </div>
@@ -149,7 +135,10 @@ export function GameHud({
       {/* Point Result Banner */}
       {gameState === GameState.SCORING && lastPointWinner && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className={`px-8 py-5 text-5xl font-black italic uppercase tracking-tighter text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.35)] ${lastPointWinner === 'PLAYER' ? 'bg-blue-600' : 'bg-red-600'}`}>
+          <div
+            className="neon-callout px-8 py-5 text-5xl font-black italic uppercase tracking-tighter text-white"
+            style={{ background: `linear-gradient(90deg, ${pointWinnerColor}, ${COLOR_SCHEME.neon.magentaHot})` }}
+          >
             {lastPointWinner === 'PLAYER' ? 'Blake Point' : 'Hidalgo Point'}
           </div>
         </div>
@@ -157,21 +146,19 @@ export function GameHud({
 
       {/* Serving Instruction */}
       {gameState === GameState.SERVING && (
-        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-          <div className="text-white text-3xl font-black italic tracking-tighter drop-shadow-md animate-pulse uppercase">
+        <div className="absolute bottom-1/4 left-1/2 flex -translate-x-1/2 flex-col items-center pointer-events-none">
+          <div className="neon-text-cyan neon-pulse text-3xl font-black italic uppercase tracking-tighter">
             {serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
-            <div className="text-white/60 text-sm font-bold mt-2 uppercase tracking-widest">
-              Press Space or Click to Serve
-            </div>
+            <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">Press Space or Click to Serve</div>
           )}
         </div>
       )}
 
-      <div className="absolute top-4 right-4 max-w-[220px] rounded-lg border border-white/15 bg-black/55 p-3 text-left text-white pointer-events-none shadow-2xl">
+      <div className="neon-panel absolute right-4 top-4 max-w-[220px] rounded-lg border border-cyan-200/25 bg-black/60 p-3 text-left text-white pointer-events-none">
         <div className="text-[10px] font-black uppercase tracking-widest text-white/60">Court Surface</div>
-        <div className="text-lg font-black uppercase italic" style={{ color: surfaceSettings.colors.lines }}>
+        <div className="text-lg font-black uppercase italic" style={{ color: surfaceSettings.colors.lines, textShadow: `0 0 12px ${surfaceSettings.colors.lines}` }}>
           {surfaceSettings.label}
         </div>
         <div className="mt-1 text-[10px] uppercase leading-snug text-white/70">
@@ -179,14 +166,14 @@ export function GameHud({
         </div>
       </div>
 
-      <div className="absolute bottom-4 right-4 flex gap-4 text-white/30 text-[10px] items-center">
+      <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
         <span>MOUSE: MOVE PLAYER</span>
-        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>CLICK: SWING / SERVE</span>
+        <span className="h-1.5 w-1.5 rounded-full bg-cyan-200/45 shadow-[0_0_8px_rgba(34,211,238,0.75)]"></span>
+        <span>CLICK / SPACE: SWING OR SERVE</span>
       </div>
 
       {/* CRT Scanline Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ background: GRADIENTS.crtScanline, backgroundSize: '100% 2px, 3px 100%' }}></div>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05]" style={{ background: GRADIENTS.crtScanline, backgroundSize: '100% 2px, 3px 100%' }}></div>
     </>
   );
 }
