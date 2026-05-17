@@ -41,9 +41,21 @@ export const playAudioEvent = (eventName: AudioEventName) => {
     case 'hit.curve':
       return playCurveHitSound();
     case 'hit.smash':
+      return playSmashHitSound();
     case 'special.flameSmash':
-      return playHitSound();
-    case 'point.player':
+    case 'smash.mega':
+      return playMegaSmashSound();
+    case 'return.perfect':
+      return playPerfectReturnSound();
+    case 'power.ready':
+      return playPowerReadySound();
+    case 'combo.increase':
+      return playComboIncreaseSound();
+    case 'match.point':
+      return playMatchPointSound();
+    case 'ui.hover':
+      return playUiHoverSound();
+    case 'ui.select':
     case 'ui.start':
       return playUiSelectSound();
     case 'match.win':

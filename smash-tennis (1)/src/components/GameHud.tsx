@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
+import type { PointReward } from '../serve/useTennisGame';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -35,7 +37,10 @@ export function GameHud({
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
+  const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const [, setServeCountdown] = useState(3);
 
   useEffect(() => {
     if (gameState !== GameState.SERVE_COUNTDOWN) {

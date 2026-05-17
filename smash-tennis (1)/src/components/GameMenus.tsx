@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -28,6 +30,7 @@ export function GameMenus({
   matchStats: MatchStats;
 }) {
   const playedResultFor = useRef<PlayerType | null>(null);
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   const handleStartGame = () => {
     playAudioEvent('ui.select');
@@ -54,9 +57,6 @@ export function GameMenus({
   }, [gameState, winner]);
 
   if (gameState === GameState.MENU) {
-    const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
-
-  if (gameState === GameState.MENU) {
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-y-auto bg-black/82 p-6 text-center">
         <div className="pointer-events-none absolute inset-0 opacity-75" style={{ background: GRADIENTS.uiBackground }} />
@@ -78,14 +78,29 @@ export function GameMenus({
               const settings = COURT_SURFACE_SETTINGS[surface];
               const isSelected = surface === courtSurface;
 
-        <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
-          Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
-          <span className="mx-2 text-white/25">|</span>
-          Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
-        </div>
+              return (
+                <button
+                  key={surface}
+                  type="button"
+                  onClick={() => handleSurfaceSelect(surface)}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left uppercase tracking-widest transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_28px_rgba(255,255,255,0.24)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${settings.colors.lines}55` : undefined }}
+                >
+                  <div className="text-sm font-black text-white" style={{ color: settings.colors.lines }}>{settings.label}</div>
+                  <div className="mt-2 text-[10px] leading-relaxed text-white/60">{settings.description}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+            Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+            <span className="mx-2 text-white/25">|</span>
+            Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
+          </div>
 
           <button
-            onClick={startGame}
+            onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
             style={{ background: GRADIENTS.button }}
           >
@@ -98,7 +113,7 @@ export function GameMenus({
 
   if (gameState === GameState.INTRO) {
     return (
-      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-6 text-center text-white pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-6 text-center text-white">
         <div className="w-full max-w-3xl rounded-3xl border border-cyan-300/40 bg-slate-950/85 p-8 shadow-[0_0_50px_rgba(34,211,238,0.35)]">
           <div className="mb-3 text-xs font-black uppercase tracking-[0.45em] text-cyan-200">Exhibition Match</div>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
@@ -123,7 +138,7 @@ export function GameMenus({
 
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
-    const progressPercent = Math.min(100, matchStats.totalXp % 100);
+    const pointXp = pointReward?.xpGained ?? 0;
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
@@ -138,11 +153,15 @@ export function GameMenus({
           >
             {isWin ? 'Match\nWon!' : 'Match\nLost'}
           </h2>
-          <p className="mb-8 text-xl uppercase tracking-widest text-slate-200">
+          <p className="mb-4 text-xl uppercase tracking-widest text-slate-200">
             {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
           </p>
+          <div className="mb-8 rounded-2xl border border-white/10 bg-black/45 px-5 py-3 text-xs uppercase tracking-widest text-white/70">
+            Sets {score.playerSets}-{score.aiSets} · Games {score.playerGames}-{score.aiGames} · XP {matchStats.totalXp}
+            {pointXp > 0 && <span className="text-cyan-200"> · Last point +{pointXp}</span>}
+          </div>
           <button
-            onClick={startGame}
+            onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
             style={{ background: GRADIENTS.button }}
           >
