@@ -8,34 +8,58 @@ const disposeLater = (node: Tone.ToneAudioNode, delayMs = 900) => {
   window.setTimeout(() => node.dispose(), delayMs);
 };
 
+let masterVolumePercent = 80;
+let sfxVolumePercent = 80;
+
+export const setSoundVolumes = ({ masterVolume, sfxVolume }: { masterVolume: number; sfxVolume: number }) => {
+  masterVolumePercent = masterVolume;
+  sfxVolumePercent = sfxVolume;
+};
+
+const getAdjustedVolume = (volume: number) => {
+  const combinedVolume = (masterVolumePercent / 100) * (sfxVolumePercent / 100);
+  if (combinedVolume <= 0) return null;
+
+  return volume + 20 * Math.log10(combinedVolume);
+};
+
 const playBlip = (frequency: string, duration = '16n', volume = -14) => {
+  const adjustedVolume = getAdjustedVolume(volume);
+  if (adjustedVolume === null) return;
+
   startAudio();
   const synth = new Tone.Synth({
     oscillator: { type: 'triangle' },
     envelope: { attack: 0.004, decay: 0.08, sustain: 0.08, release: 0.08 },
-    volume
+    volume: adjustedVolume
   }).toDestination();
   synth.triggerAttackRelease(frequency, duration);
   disposeLater(synth);
 };
 
 const playNoiseBurst = (duration = '32n', volume = -16) => {
+  const adjustedVolume = getAdjustedVolume(volume);
+  if (adjustedVolume === null) return;
+
   startAudio();
   const noise = new Tone.NoiseSynth({
     noise: { type: 'white' },
     envelope: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.04 },
-    volume
+    volume: adjustedVolume
   }).toDestination();
   noise.triggerAttackRelease(duration);
   disposeLater(noise);
 };
 
 const playNotes = (notes: string[], stepSeconds = 0.06, volume = -14) => {
+  const adjustedVolume = getAdjustedVolume(volume);
+  if (adjustedVolume === null) return;
+
   startAudio();
   const synth = new Tone.Synth({
     oscillator: { type: 'square' },
     envelope: { attack: 0.003, decay: 0.08, sustain: 0.04, release: 0.08 },
-    volume
+    volume: adjustedVolume
   }).toDestination();
   const now = Tone.now();
   notes.forEach((note, index) => synth.triggerAttackRelease(note, '32n', now + index * stepSeconds));
@@ -48,11 +72,14 @@ export const playNormalHitSound = () => {
 };
 
 export const playCurveHitSound = () => {
+  const adjustedVolume = getAdjustedVolume(-18);
+  if (adjustedVolume === null) return;
+
   startAudio();
   const synth = new Tone.Synth({
     oscillator: { type: 'sawtooth' },
     envelope: { attack: 0.004, decay: 0.12, sustain: 0.02, release: 0.12 },
-    volume: -18
+    volume: adjustedVolume
   }).toDestination();
   const now = Tone.now();
   synth.frequency.setValueAtTime('D3', now);

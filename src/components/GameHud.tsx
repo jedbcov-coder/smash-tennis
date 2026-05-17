@@ -6,6 +6,7 @@ import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import type { PointReward } from '../serve/useTennisGame';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
+import type { GameSettings } from '../settings/useGameSettings';
 
 interface GameHudProps {
   score: Score;
@@ -19,6 +20,7 @@ interface GameHudProps {
   courtSurface: CourtSurface;
   arcadeHudStats: ArcadeHudStats;
   pointReward: PointReward | null;
+  settings: GameSettings;
 }
 
 export function GameHud({
@@ -32,7 +34,8 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats,
-  pointReward
+  pointReward,
+  settings
 }: GameHudProps) {
   const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
@@ -249,13 +252,15 @@ export function GameHud({
         </div>
       </div>
 
-      <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
-        <span>MOUSE: MOVE PLAYER</span>
-        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>CLICK: SWING / TAP-TAP SERVE</span>
-        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>E: FLAME SMASH WHEN READY</span>
-      </div>
+      {settings.showInputHelp && (
+        <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
+          <span>MOUSE: MOVE PLAYER</span>
+          <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
+          <span>CLICK: SWING / TAP-TAP SERVE</span>
+          <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
+          <span>E: FLAME SMASH WHEN READY</span>
+        </div>
+      )}
 
       {/* CRT Scanline Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.05]" style={{ background: GRADIENTS.crtScanline, backgroundSize: '100% 2px, 3px 100%' }}></div>

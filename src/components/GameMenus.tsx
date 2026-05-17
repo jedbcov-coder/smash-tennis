@@ -2,9 +2,11 @@ import { useEffect, useRef } from 'react';
 import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
+import { SettingsMenu } from './SettingsMenu';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
+import type { GameSettings } from '../settings/useGameSettings';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -18,7 +20,10 @@ export function GameMenus({
   setCourtSurface,
   score,
   pointReward,
-  matchStats
+  matchStats,
+  settings,
+  setSettings,
+  resetSettings
 }: {
   gameState: GameState;
   winner: PlayerType | null;
@@ -28,6 +33,9 @@ export function GameMenus({
   score: Score;
   pointReward: PointReward | null;
   matchStats: MatchStats;
+  settings: GameSettings;
+  setSettings: (settings: Partial<GameSettings>) => void;
+  resetSettings: () => void;
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
@@ -93,10 +101,14 @@ export function GameMenus({
             })}
           </div>
 
-          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+          <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
             Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
             <span className="mx-2 text-white/25">|</span>
             Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
+          </div>
+
+          <div className="mb-6 w-full">
+            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
           </div>
 
           <button
@@ -182,6 +194,9 @@ export function GameMenus({
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
+          </div>
+          <div className="mb-6 w-full">
+            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
           </div>
           <button
             onClick={handleStartGame}

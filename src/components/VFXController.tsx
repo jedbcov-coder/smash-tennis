@@ -94,13 +94,15 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
   );
 }
 
-export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle | null> }) {
+export function VFXController({ ballRef, reducedMotion }: { ballRef: React.RefObject<BallHandle | null>; reducedMotion: boolean }) {
   const [effects, setEffects] = useState<ActiveEffect[]>([]);
   const [showFlameFlash, setShowFlameFlash] = useState(false);
   const flameFlashTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     const handleEvent = (type: 'smash' | 'normal' | 'flame') => {
+      if (reducedMotion) return;
+
       if (ballRef.current) {
          setEffects(prev => [...prev, {
             id: Math.random().toString(),
@@ -115,6 +117,8 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
     const onSmash = () => handleEvent('smash');
     const onFlameSmash = () => {
       handleEvent('flame');
+      if (reducedMotion) return;
+
       setShowFlameFlash(true);
       if (flameFlashTimeout.current !== null) {
         window.clearTimeout(flameFlashTimeout.current);
@@ -137,7 +141,7 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
           window.clearTimeout(flameFlashTimeout.current);
         }
     };
-  }, [ballRef]);
+  }, [ballRef, reducedMotion]);
 
   // To fix startTime, we use a wrapper component that captures the clock's start time.
   return (

@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Court } from '../environment/Court';
@@ -12,6 +12,8 @@ import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
 import { COLOR_SCHEME } from '../design/colorScheme';
+import { setAudioSettings } from '../audio/audioManager';
+import { useGameSettings, type GameSettings } from '../settings/useGameSettings';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -80,7 +82,8 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
-  onArcadeHudStatsChange
+  onArcadeHudStatsChange,
+  settings
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
@@ -96,6 +99,7 @@ function GameScene({
   };
   courtSurface: CourtSurface;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
+  settings: GameSettings;
 }) {
   const {
     ballRef,
@@ -118,7 +122,8 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
-    onArcadeHudStatsChange
+    onArcadeHudStatsChange,
+    settings
   });
 
   return (
@@ -155,7 +160,7 @@ function GameScene({
         courtSurface={courtSurface}
       />
 
-      <VFXController ballRef={ballRef} />
+      <VFXController ballRef={ballRef} reducedMotion={settings.reducedMotion} />
 
       {isSmashOpportunityVisible && (
         <mesh position={[playerPos.current.x, 0.08, playerPos.current.z]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -171,6 +176,7 @@ function GameScene({
 }
 
 export function Game() {
+  const { settings, setSettings, resetSettings } = useGameSettings();
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
@@ -201,6 +207,10 @@ export function Game() {
     difficultyStats
   } = useTennisGame();
 
+  useEffect(() => {
+    setAudioSettings({ masterVolume: settings.masterVolume, sfxVolume: settings.sfxVolume });
+  }, [settings.masterVolume, settings.sfxVolume]);
+
   const scorePoint = (winner: PlayerType) => {
     addPoint(winner, {
       rallyCount: arcadeHudStats.rallyCount,
@@ -211,7 +221,7 @@ export function Game() {
   };
 
   return (
-    <div className="w-full h-full relative font-mono overflow-hidden bg-black select-none">
+    <div className={`w-full h-full relative font-mono overflow-hidden bg-black select-none ${settings.highContrastMode ? 'game-high-contrast' : ''} ${settings.reducedMotion ? 'game-reduced-motion' : ''}`}>
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <GameScene
           onScore={scorePoint}
@@ -224,6 +234,7 @@ export function Game() {
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
           onArcadeHudStatsChange={setArcadeHudStats}
+          settings={settings}
         />
       </Canvas>
 
@@ -239,6 +250,7 @@ export function Game() {
         courtSurface={courtSurface}
         arcadeHudStats={arcadeHudStats}
         pointReward={pointReward}
+        settings={settings}
       />
 
       <GameMenus
@@ -250,6 +262,9 @@ export function Game() {
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
+        settings={settings}
+        setSettings={setSettings}
+        resetSettings={resetSettings}
       />
     </div>
   );
