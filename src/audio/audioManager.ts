@@ -15,6 +15,11 @@ import {
   playWinSound,
   setSoundVolumes
 } from './sounds';
+import {
+  type AudioMixerChannel,
+  getAudioEventVolume,
+  volumeToDecibelAdjustment
+} from './audioSettings';
 
 export const setAudioSettings = setSoundVolumes;
 
@@ -37,38 +42,53 @@ export type AudioEventName =
   | 'ui.start'
   | 'special.flameSmash';
 
+
+const uiAudioEvents = new Set<AudioEventName>(['ui.hover', 'ui.select', 'ui.start']);
+
+const getAudioEventChannel = (eventName: AudioEventName): AudioMixerChannel => {
+  return uiAudioEvents.has(eventName) ? 'ui' : 'sfx';
+};
+
 export const playAudioEvent = (eventName: AudioEventName) => {
+  const eventVolume = getAudioEventVolume(getAudioEventChannel(eventName));
+
+  if (eventVolume <= 0) {
+    return;
+  }
+
+  const volumeAdjustment = volumeToDecibelAdjustment(eventVolume);
+
   switch (eventName) {
     case 'hit.normal':
-      return playNormalHitSound();
+      return playNormalHitSound(volumeAdjustment);
     case 'hit.curve':
-      return playCurveHitSound();
+      return playCurveHitSound(volumeAdjustment);
     case 'hit.smash':
-      return playSmashHitSound();
+      return playSmashHitSound(volumeAdjustment);
     case 'return.perfect':
-      return playPerfectReturnSound();
+      return playPerfectReturnSound(volumeAdjustment);
     case 'smash.mega':
     case 'special.flameSmash':
-      return playMegaSmashSound();
+      return playMegaSmashSound(volumeAdjustment);
     case 'power.ready':
-      return playPowerReadySound();
+      return playPowerReadySound(volumeAdjustment);
     case 'combo.increase':
-      return playComboIncreaseSound();
+      return playComboIncreaseSound(volumeAdjustment);
     case 'match.point':
-      return playMatchPointSound();
+      return playMatchPointSound(volumeAdjustment);
     case 'ui.hover':
-      return playUiHoverSound();
+      return playUiHoverSound(volumeAdjustment);
     case 'ui.select':
     case 'ui.start':
-      return playUiSelectSound();
+      return playUiSelectSound(volumeAdjustment);
     case 'match.win':
-      return playWinSound();
+      return playWinSound(volumeAdjustment);
     case 'match.defeat':
-      return playDefeatSound();
+      return playDefeatSound(volumeAdjustment);
     case 'point.player':
-      return playScoreSound();
+      return playScoreSound(volumeAdjustment);
     case 'point.ai':
     case 'ai.nearMiss':
-      return playMissSound();
+      return playMissSound(volumeAdjustment);
   }
 };

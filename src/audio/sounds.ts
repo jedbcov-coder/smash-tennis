@@ -66,9 +66,9 @@ const playNotes = (notes: string[], stepSeconds = 0.06, volume = -14) => {
   disposeLater(synth, 1200);
 };
 
-export const playNormalHitSound = () => {
-  playBlip('C3', '32n', -13);
-  playNoiseBurst('64n', -22);
+export const playNormalHitSound = (volumeAdjustment = 0) => {
+  playBlip('C3', '32n', -13, volumeAdjustment);
+  playNoiseBurst('64n', -22, volumeAdjustment);
 };
 
 export const playCurveHitSound = () => {
@@ -88,58 +88,58 @@ export const playCurveHitSound = () => {
   disposeLater(synth);
 };
 
-export const playSmashHitSound = () => {
-  playBlip('G2', '16n', -9);
-  playNoiseBurst('16n', -14);
+export const playSmashHitSound = (volumeAdjustment = 0) => {
+  playBlip('G2', '16n', -9, volumeAdjustment);
+  playNoiseBurst('16n', -14, volumeAdjustment);
 };
 
-export const playPerfectReturnSound = () => {
-  playNotes(['C5', 'E5', 'G5'], 0.045, -12);
+export const playPerfectReturnSound = (volumeAdjustment = 0) => {
+  playNotes(['C5', 'E5', 'G5'], 0.045, -12, volumeAdjustment);
 };
 
-export const playMegaSmashSound = () => {
-  playNotes(['G2', 'C3', 'G3', 'C4'], 0.04, -10);
-  window.setTimeout(() => playNoiseBurst('8n', -12), 80);
+export const playMegaSmashSound = (volumeAdjustment = 0) => {
+  playNotes(['G2', 'C3', 'G3', 'C4'], 0.04, -10, volumeAdjustment);
+  window.setTimeout(() => playNoiseBurst('8n', -12, volumeAdjustment), 80);
 };
 
-export const playPowerReadySound = () => {
-  playNotes(['C4', 'E4', 'G4', 'C5'], 0.055, -11);
+export const playPowerReadySound = (volumeAdjustment = 0) => {
+  playNotes(['C4', 'E4', 'G4', 'C5'], 0.055, -11, volumeAdjustment);
 };
 
-export const playComboIncreaseSound = () => {
-  playBlip('A4', '64n', -18);
+export const playComboIncreaseSound = (volumeAdjustment = 0) => {
+  playBlip('A4', '64n', -18, volumeAdjustment);
 };
 
-export const playMatchPointSound = () => {
-  playNotes(['C4', 'C4', 'G4'], 0.12, -12);
+export const playMatchPointSound = (volumeAdjustment = 0) => {
+  playNotes(['C4', 'C4', 'G4'], 0.12, -12, volumeAdjustment);
 };
 
-export const playUiHoverSound = () => {
-  playBlip('E5', '64n', -24);
+export const playUiHoverSound = (volumeAdjustment = 0) => {
+  playBlip('E5', '64n', -24, volumeAdjustment);
 };
 
-export const playUiSelectSound = () => {
-  playNotes(['C5', 'G5'], 0.04, -18);
+export const playUiSelectSound = (volumeAdjustment = 0) => {
+  playNotes(['C5', 'G5'], 0.04, -18, volumeAdjustment);
 };
 
-export const playWinSound = () => {
-  playNotes(['C4', 'E4', 'G4', 'C5', 'E5'], 0.07, -11);
+export const playWinSound = (volumeAdjustment = 0) => {
+  playNotes(['C4', 'E4', 'G4', 'C5', 'E5'], 0.07, -11, volumeAdjustment);
 };
 
-export const playDefeatSound = () => {
-  playNotes(['E3', 'D3', 'C3'], 0.12, -14);
+export const playDefeatSound = (volumeAdjustment = 0) => {
+  playNotes(['E3', 'D3', 'C3'], 0.12, -14, volumeAdjustment);
 };
 
-export const playMissSound = () => {
-  playNotes(['C3', 'B2'], 0.08, -15);
+export const playMissSound = (volumeAdjustment = 0) => {
+  playNotes(['C3', 'B2'], 0.08, -15, volumeAdjustment);
 };
 
-export const playScoreSound = () => {
-  playNotes(['G4', 'C5'], 0.06, -13);
+export const playScoreSound = (volumeAdjustment = 0) => {
+  playNotes(['G4', 'C5'], 0.06, -13, volumeAdjustment);
 };
 
 export const playHit = playNormalHitSound;
-export const playBounce = () => playBlip('G3', '64n', -20);
+export const playBounce = (volumeAdjustment = 0) => playBlip('G3', '64n', -20, volumeAdjustment);
 export const playFault = playMissSound;
 export const playScore = playScoreSound;
 export const playCheer = playWinSound;
