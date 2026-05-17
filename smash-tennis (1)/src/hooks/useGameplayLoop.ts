@@ -84,6 +84,7 @@ export function useGameplayLoop({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
+  courtSurface
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -415,6 +416,10 @@ export function useGameplayLoop({
         const finalAiReturnVel = aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
+        ballRef.current?.setVelocity(
+          aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier),
+          aiSpin
+        );
         setLastHitter('AI');
         triggerAiSwing();
         playAudioEvent('hit.normal');
