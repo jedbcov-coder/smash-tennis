@@ -49,8 +49,8 @@ export function GameHud({
   const serveMeterFillWidth = `${serveMeterPercent}%`;
   const serveInstruction =
     serveMeter.phase === 'charging'
-      ? 'Click or press Space again to hit'
-      : 'Click or press Space to start the serve meter';
+      ? 'Tap again when the marker reaches the big blue zone'
+      : 'Tap once to toss, then tap again to serve';
   const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
 
   useEffect(() => {
@@ -210,16 +210,24 @@ export function GameHud({
             <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">{serveMeter.qualityLabel}</div>
           )}
           {showServeMeter && (
-            <div className="mt-4 w-[340px] rounded-2xl border border-cyan-200/40 bg-black/75 p-3 shadow-[0_0_24px_rgba(34,211,238,0.25)]">
+            <div className="mt-4 w-[min(440px,90vw)] rounded-2xl border border-cyan-200/40 bg-black/80 p-4 shadow-[0_0_30px_rgba(34,211,238,0.28)]">
               <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/65">
-                <span>Weak</span>
-                <span className="text-cyan-100">Perfect</span>
-                <span>Fault</span>
+                <span>Safe</span>
+                <span className="text-cyan-100">Perfect Zone</span>
+                <span>Safe</span>
               </div>
-              <div className="relative h-5 overflow-hidden rounded-full border border-white/15 bg-gradient-to-r from-rose-500 via-cyan-300 to-rose-500">
-                <div className="absolute bottom-0 left-1/2 top-0 w-10 -translate-x-1/2 bg-white/20" />
-                <div className="h-full rounded-full bg-white/25 transition-[width] duration-75" style={{ width: serveMeterFillWidth }} />
-                <div className="absolute bottom-0 top-0 w-1 -translate-x-1/2 bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)] transition-[left] duration-75" style={{ left: serveMeterMarkerLeft }} />
+              <div className="relative h-8 overflow-hidden rounded-full border border-white/15 bg-gradient-to-r from-emerald-500 via-cyan-300 to-emerald-500">
+                <div className="absolute bottom-0 top-0 bg-sky-200/35" style={{ left: '38%', width: '24%' }} />
+                <div className="absolute bottom-0 top-0 bg-white/22" style={{ left: '25%', width: '50%' }} />
+                <div className="absolute bottom-0 top-0 w-[3%] bg-rose-500/70" style={{ left: 0 }} />
+                <div className="absolute bottom-0 top-0 w-[3%] bg-rose-500/70" style={{ right: 0 }} />
+                <div className="h-full rounded-full bg-white/20 transition-[width] duration-75" style={{ width: serveMeterFillWidth }} />
+                <div className="absolute bottom-0 top-0 w-1.5 -translate-x-1/2 bg-white shadow-[0_0_16px_rgba(255,255,255,0.95)] transition-[left] duration-75" style={{ left: serveMeterMarkerLeft }} />
+              </div>
+              <div className="mt-2 flex justify-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/55">
+                <span>Only the tiny red edges fault</span>
+                <span>•</span>
+                <span>Blue center = best serve</span>
               </div>
               {showServeQualityBadge && (
                 <div className="mt-3 inline-flex self-center rounded-full border border-cyan-200/40 bg-cyan-950/80 px-4 py-1 text-sm font-black uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)]">
@@ -244,7 +252,7 @@ export function GameHud({
       <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
         <span>MOUSE: MOVE PLAYER</span>
         <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>CLICK: SWING / SERVE</span>
+        <span>CLICK: SWING / TAP-TAP SERVE</span>
         <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
         <span>E: FLAME SMASH WHEN READY</span>
       </div>

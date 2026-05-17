@@ -41,38 +41,39 @@ interface UseServeMechanicsOptions {
   onServeMeterChange?: (state: ServeMeterState) => void;
 }
 
-const SERVE_METER_SPEED = 1.45;
+const SERVE_METER_SPEED = 0.82;
 
 function getServeMeterPosition(startedAt: number, now: number) {
-  const wave = Math.sin((now - startedAt) * Math.PI * 2 * SERVE_METER_SPEED);
+  // Start at the safe left edge and sweep slowly so serving feels readable instead of twitchy.
+  const wave = -Math.cos((now - startedAt) * Math.PI * 2 * SERVE_METER_SPEED);
   return (wave + 1) / 2;
 }
 
 function getServeOutcome(position: number): ServeOutcome {
   const distanceFromSweetSpot = Math.abs(position - 0.5);
 
-  if (distanceFromSweetSpot <= 0.055) {
-    return { label: 'Perfect Serve', speedMultiplier: 1.18, accuracyWobble: 0.08, spinMultiplier: 1.25, faultChance: 0.01 };
+  if (position <= 0.03 || position >= 0.97) {
+    return { label: 'Fault', speedMultiplier: 0.7, accuracyWobble: 1.35, spinMultiplier: 0.35, faultChance: 1 };
   }
 
-  if (distanceFromSweetSpot <= 0.16) {
-    return { label: 'Power Serve', speedMultiplier: 1.28, accuracyWobble: 0.42, spinMultiplier: 1.45, faultChance: 0.08 };
+  if (distanceFromSweetSpot <= 0.12) {
+    return { label: 'Perfect Serve', speedMultiplier: 1.2, accuracyWobble: 0.04, spinMultiplier: 1.25, faultChance: 0 };
   }
 
-  if (distanceFromSweetSpot <= 0.31) {
-    return { label: 'Standard Serve', speedMultiplier: 1, accuracyWobble: 0.68, spinMultiplier: 1, faultChance: 0.04 };
+  if (distanceFromSweetSpot <= 0.25) {
+    return { label: 'Power Serve', speedMultiplier: 1.25, accuracyWobble: 0.24, spinMultiplier: 1.35, faultChance: 0 };
   }
 
-  if (distanceFromSweetSpot <= 0.45) {
-    return { label: 'Weak Serve', speedMultiplier: 0.82, accuracyWobble: 1.08, spinMultiplier: 0.65, faultChance: 0.08 };
+  if (distanceFromSweetSpot <= 0.42) {
+    return { label: 'Standard Serve', speedMultiplier: 1, accuracyWobble: 0.38, spinMultiplier: 1, faultChance: 0 };
   }
 
-  return { label: 'Fault', speedMultiplier: 0.65, accuracyWobble: 1.8, spinMultiplier: 0.35, faultChance: 1 };
+  return { label: 'Weak Serve', speedMultiplier: 0.86, accuracyWobble: 0.62, spinMultiplier: 0.7, faultChance: 0 };
 }
 
 function applyServeOutcome(serveVel: THREE.Vector3, outcome: ServeOutcome, difficultyMultiplier: number) {
   const tunedVelocity = serveVel.clone().multiplyScalar(outcome.speedMultiplier);
-  const wobbleAmount = outcome.accuracyWobble * difficultyMultiplier;
+  const wobbleAmount = outcome.accuracyWobble * Math.min(difficultyMultiplier, 1.15);
 
   tunedVelocity.x += (Math.random() - 0.5) * wobbleAmount;
   tunedVelocity.z += (Math.random() - 0.5) * wobbleAmount * 0.35;

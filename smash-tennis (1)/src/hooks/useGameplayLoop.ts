@@ -407,6 +407,18 @@ export function useGameplayLoop({
     const ballVel = ballRef.current?.getVelocity() || new THREE.Vector3();
     const now = state.clock.getElapsedTime();
 
+    if (gameState === GameState.SERVING) {
+      const serverPos = servingPlayer === 'PLAYER' ? playerPos.current : aiPos.current;
+      const serviceTargetX = serveSide === 'DEUCE' ? 2.6 : -2.6;
+      const serviceTargetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
+      const behindServerZ = serverPos.z + (servingPlayer === 'PLAYER' ? 7 : -7);
+
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, serverPos.x * 0.45, 0.09);
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, 4.6, 0.08);
+      camera.position.z = THREE.MathUtils.lerp(camera.position.z, behindServerZ, 0.08);
+      camera.lookAt(serviceTargetX * 0.45, 1.0, serviceTargetZ);
+    }
+
     if (processServeFrame(delta, now)) return;
 
     // Player Movement (High-response Mouse follow)

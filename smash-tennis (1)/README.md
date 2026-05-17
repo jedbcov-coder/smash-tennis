@@ -4,13 +4,13 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
-- Serve: wait for the quick serve countdown, click or press Space once to start the serve meter, then click or press Space again to choose the meter position and hit the serve. The HUD shows the moving meter and then labels the result as Weak Serve, Standard Serve, Perfect Serve, Power Serve, or Fault.
+- Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 - Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
@@ -23,14 +23,15 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, live serve meter, beginner-friendly serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
-- Tennis scoring with points, games, sets, serving turns, second serves, double faults, timing-based player serve outcomes, and tiebreak support.
+- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
+- Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
 
 ## How to run locally
 

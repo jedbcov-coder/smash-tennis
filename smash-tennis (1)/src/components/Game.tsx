@@ -44,6 +44,32 @@ function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | n
   );
 }
 
+
+function ServeTargetGuide({ visible, servingPlayer, serveSide }: { visible: boolean; servingPlayer: PlayerType; serveSide: 'DEUCE' | 'AD' }) {
+  if (!visible) return null;
+
+  const targetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
+  const targetX = serveSide === 'DEUCE' ? 2.6 : -2.6;
+  const glowColor = servingPlayer === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.magentaHot;
+
+  return (
+    <group position={[targetX, 0.07, targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh>
+        <ringGeometry args={[0.9, 1.08, 48]} />
+        <meshBasicMaterial color={glowColor} transparent opacity={0.7} />
+      </mesh>
+      <mesh>
+        <ringGeometry args={[1.25, 1.35, 48]} />
+        <meshBasicMaterial color={COLOR_SCHEME.neon.goldSoft} transparent opacity={0.45} />
+      </mesh>
+      <mesh>
+        <circleGeometry args={[0.22, 32]} />
+        <meshBasicMaterial color={COLOR_SCHEME.neon.white} transparent opacity={0.55} />
+      </mesh>
+    </group>
+  );
+}
+
 function GameScene({
   onScore,
   onFault,
@@ -138,6 +164,7 @@ function GameScene({
         </mesh>
       )}
 
+      <ServeTargetGuide visible={gameState === GameState.SERVING} servingPlayer={servingPlayer} serveSide={serveSide} />
       <LandingMarker ballRef={ballRef} visible={gameState === GameState.PLAYING} />
     </>
   );
