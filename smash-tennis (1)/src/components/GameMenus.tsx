@@ -42,30 +42,11 @@ export function GameMenus({
               const settings = COURT_SURFACE_SETTINGS[surface];
               const isSelected = surface === courtSurface;
 
-              return (
-                <button
-                  key={surface}
-                  type="button"
-                  onClick={() => setCourtSurface(surface)}
-                  className={`neon-card rounded-xl border p-3 text-left transition-all hover:-translate-y-1 hover:scale-105 ${
-                    isSelected ? 'border-cyan-200 bg-cyan-100 text-black' : 'border-white/20 bg-black/55 text-white hover:border-fuchsia-300/70 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="mb-2 h-2 rounded-full" style={{ backgroundColor: settings.colors.playingSurface, boxShadow: `0 0 16px ${settings.colors.lines}` }} />
-                  <div className="text-sm font-black uppercase italic">{settings.label}</div>
-                  <div className={`mt-1 text-[10px] uppercase leading-snug ${isSelected ? 'text-black/70' : 'text-white/65'}`}>
-                    {settings.description}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="neon-panel mb-8 rounded-lg border border-cyan-200/25 bg-black/60 px-4 py-3 text-xs uppercase tracking-widest text-white/75">
-            Selected: <span className="font-black" style={{ color: selectedSurface.colors.lines, textShadow: `0 0 10px ${selectedSurface.colors.lines}` }}>{selectedSurface.label}</span>
-            <span className="mx-2 text-white/25">|</span>
-            Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceMultiplier * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
-          </div>
+        <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+          Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+          <span className="mx-2 text-white/25">|</span>
+          Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
+        </div>
 
           <button
             onClick={startGame}

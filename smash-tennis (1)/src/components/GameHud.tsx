@@ -1,6 +1,5 @@
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -34,7 +33,8 @@ export function GameHud({
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
-  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.danger;
+  const isPowerReady = arcadeHudStats.energyPercent >= 100;
+
 
   return (
     <>
@@ -64,7 +64,7 @@ export function GameHud({
               style={{ width: energyWidth, background: GRADIENTS.energy }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
-              Energy {arcadeHudStats.energyPercent}%
+              {isPowerReady ? 'POWER READY - PRESS E' : `Energy ${arcadeHudStats.energyPercent}%`}
             </div>
           </div>
         </div>
@@ -162,14 +162,16 @@ export function GameHud({
           {surfaceSettings.label}
         </div>
         <div className="mt-1 text-[10px] uppercase leading-snug text-white/70">
-          Ball {(surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(surfaceSettings.bounceMultiplier * 100).toFixed(0)}% · Move {(surfaceSettings.playerMovementMultiplier * 100).toFixed(0)}%
+          Ball {(surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(surfaceSettings.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(surfaceSettings.slideAmount * 100).toFixed(0)}% · Move {(surfaceSettings.playerMovementMultiplier * 100).toFixed(0)}%
         </div>
       </div>
 
       <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
         <span>MOUSE: MOVE PLAYER</span>
-        <span className="h-1.5 w-1.5 rounded-full bg-cyan-200/45 shadow-[0_0_8px_rgba(34,211,238,0.75)]"></span>
-        <span>CLICK / SPACE: SWING OR SERVE</span>
+        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
+        <span>CLICK: SWING / SERVE</span>
+        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
+        <span>E: FLAME SMASH WHEN READY</span>
       </div>
 
       {/* CRT Scanline Overlay */}

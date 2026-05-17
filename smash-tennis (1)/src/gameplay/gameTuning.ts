@@ -1,4 +1,4 @@
-import { COLOR_SCHEME } from '../design/colorScheme';
+import type { CourtSurface, CourtSurfaceTuning } from '../types';
 
 export const COURT_WIDTH = 10.97;
 export const COURT_LENGTH = 23.77;
@@ -96,12 +96,12 @@ export const PLAYER_MOVEMENT_LIMITS = {
   smashAssistMaxX: 4
 };
 export const COURT_SURFACE_SETTINGS = {
-  GRASS: {
+  grass: {
     label: 'Grass',
     description: 'Fast skids, low bounce, nimble movement.',
     ballSpeedMultiplier: 1.08,
-    bounceMultiplier: 0.62,
-    floorFriction: 0.9,
+    bounceHeightMultiplier: 0.62,
+    slideAmount: 0.10,
     playerMovementMultiplier: 1.04,
     spinCurveMultiplier: 0.9,
     colors: {
@@ -112,12 +112,12 @@ export const COURT_SURFACE_SETTINGS = {
       netPost: COLOR_SCHEME.neon.orange
     }
   },
-  CLAY: {
+  clay: {
     label: 'Clay',
     description: 'Slower rallies, higher bounce, heavier footwork.',
     ballSpeedMultiplier: 0.92,
-    bounceMultiplier: 0.82,
-    floorFriction: 0.78,
+    bounceHeightMultiplier: 0.82,
+    slideAmount: 0.22,
     playerMovementMultiplier: 0.92,
     spinCurveMultiplier: 1.25,
     colors: {
@@ -128,12 +128,12 @@ export const COURT_SURFACE_SETTINGS = {
       netPost: COLOR_SCHEME.neon.danger
     }
   },
-  HARD: {
+  hard: {
     label: 'Hard Court',
     description: 'Balanced speed, bounce, and control.',
     ballSpeedMultiplier: 1,
-    bounceMultiplier: 0.72,
-    floorFriction: 0.84,
+    bounceHeightMultiplier: 0.72,
+    slideAmount: 0.16,
     playerMovementMultiplier: 1,
     spinCurveMultiplier: 1,
     colors: {
@@ -144,12 +144,12 @@ export const COURT_SURFACE_SETTINGS = {
       netPost: COLOR_SCHEME.neon.violetBlue
     }
   },
-  NEON: {
+  neon: {
     label: 'Neon Court',
     description: 'Arcade boost with glowing speed and extra curve.',
     ballSpeedMultiplier: 1.16,
-    bounceMultiplier: 0.76,
-    floorFriction: 0.88,
+    bounceHeightMultiplier: 0.76,
+    slideAmount: 0.12,
     playerMovementMultiplier: 1.08,
     spinCurveMultiplier: 1.45,
     colors: {
@@ -160,12 +160,12 @@ export const COURT_SURFACE_SETTINGS = {
       netPost: COLOR_SCHEME.neon.orangeHot
     }
   },
-  ICE: {
+  ice: {
     label: 'Ice Court',
     description: 'Slippery movement, long skids, and sharp low bounces.',
     ballSpeedMultiplier: 1.22,
-    bounceMultiplier: 0.54,
-    floorFriction: 0.98,
+    bounceHeightMultiplier: 0.54,
+    slideAmount: 0.02,
     playerMovementMultiplier: 0.82,
     spinCurveMultiplier: 1.1,
     colors: {
@@ -176,8 +176,8 @@ export const COURT_SURFACE_SETTINGS = {
       netPost: COLOR_SCHEME.neon.cyan
     }
   }
-} as const;
+} satisfies Record<CourtSurface, CourtSurfaceTuning>;
 
-export const DEFAULT_COURT_SURFACE = 'HARD';
+export const DEFAULT_COURT_SURFACE: CourtSurface = 'hard';
 
 export const TUNING = {};

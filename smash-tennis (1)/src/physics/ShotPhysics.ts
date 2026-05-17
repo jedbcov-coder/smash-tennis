@@ -16,7 +16,7 @@ export function calculateLegalShot(
   serveSide: ServeSide,
   difficultyStats: ShotDifficultyStats,
   toSide: CourtSide = 'AI',
-  courtSurface: CourtSurface = 'HARD'
+  courtSurface: CourtSurface = 'hard'
 ) {
   // Target area depends on which side we are hitting to.
   let targetZ =
