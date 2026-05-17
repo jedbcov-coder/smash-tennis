@@ -67,6 +67,15 @@ export function GameHud({
               {isPowerReady ? 'POWER READY - PRESS E' : `Energy ${arcadeHudStats.energyPercent}%`}
             </div>
           </div>
+          <div className="relative h-3 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-400 to-emerald-300 transition-all duration-300"
+              style={{ width: intensityWidth }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center text-[8px] font-black uppercase tracking-[0.2em] text-white/90 drop-shadow">
+              Rally Intensity {Math.round(arcadeHudStats.rallyIntensity * 100)}%
+            </div>
+          </div>
         </div>
       </div>
 

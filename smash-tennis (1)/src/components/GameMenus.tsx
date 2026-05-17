@@ -18,6 +18,32 @@ export function GameMenus({
   courtSurface: CourtSurface;
   setCourtSurface: (surface: CourtSurface) => void;
 }) {
+  const playedResultFor = useRef<PlayerType | null>(null);
+
+  const handleStartGame = () => {
+    playAudioEvent('ui.select');
+    startGame();
+  };
+
+  const handleSurfaceSelect = (surface: CourtSurface) => {
+    playAudioEvent('ui.select');
+    setCourtSurface(surface);
+  };
+
+  useEffect(() => {
+    if (gameState !== GameState.GAME_OVER) {
+      playedResultFor.current = null;
+      return;
+    }
+
+    if (!winner || playedResultFor.current === winner) {
+      return;
+    }
+
+    playedResultFor.current = winner;
+    playAudioEvent(winner === 'PLAYER' ? 'match.win' : 'match.defeat');
+  }, [gameState, winner]);
+
   if (gameState === GameState.MENU) {
     const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 

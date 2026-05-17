@@ -29,6 +29,7 @@ export interface ArcadeHudStats {
   energyPercent: number;
   comboCount: number;
   rallyCount: number;
+  rallyIntensity: number;
   callout: ArcadeCallout | null;
 }
 
@@ -37,6 +38,7 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   energyPercent: 0,
   comboCount: 0,
   rallyCount: 0,
+  rallyIntensity: 0,
   callout: null
 });
 
@@ -487,7 +489,7 @@ export function useGameplayLoop({
         recordShot(finalAiReturnVel, { rally: true });
         setLastHitter('AI');
         triggerAiSwing();
-        playAudioEvent('hit.normal');
+        playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');
       }
     }
@@ -509,7 +511,7 @@ export function useGameplayLoop({
         });
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
-        playAudioEvent('hit.normal');
+        playAudioEvent(isPerfectReturn ? 'return.perfect' : Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');
 
         clearSwingInput();

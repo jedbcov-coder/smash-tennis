@@ -142,6 +142,7 @@ export function Game() {
     energyPercent: 0,
     comboCount: 0,
     rallyCount: 0,
+    rallyIntensity: 0,
     callout: null
   });
 
