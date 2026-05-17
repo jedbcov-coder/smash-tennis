@@ -124,7 +124,6 @@ export function useGameplayLoop({
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
   const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
-  const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
 
   const updateArcadeHudStats = useCallback((updater: (current: ArcadeHudStats) => ArcadeHudStats) => {

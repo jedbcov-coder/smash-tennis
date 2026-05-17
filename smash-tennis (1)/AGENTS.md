@@ -11,7 +11,7 @@
   ```md
   ## Play the game
 
-  Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
+  Live playable version: https://jedbcov-coder.github.io/smash-tennis/
   ```
 
 ## Error handling

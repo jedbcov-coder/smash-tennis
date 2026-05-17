@@ -4,7 +4,7 @@ import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
-import { playAudioEvent } from '../audio/audioManager';
+import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -31,7 +31,6 @@ export function GameMenus({
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
-  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   const handleStartGame = () => {
     playAudioEvent('ui.select');
@@ -140,6 +139,7 @@ export function GameMenus({
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
     const pointXp = pointReward?.xpGained ?? 0;
+    const progressPercent = Math.min(100, pointXp);
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
