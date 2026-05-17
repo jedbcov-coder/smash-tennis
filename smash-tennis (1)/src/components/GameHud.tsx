@@ -1,7 +1,8 @@
-import { GameState, type PlayerType, type Score } from '../types';
+import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
+import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 
 interface GameHudProps {
   score: Score;
@@ -12,6 +13,7 @@ interface GameHudProps {
   difficultyStats: GameplayDifficultyStats;
   lastPointWinner: PlayerType | null;
   serverFaults: number;
+  courtSurface: CourtSurface;
 }
 
 export function GameHud({
@@ -22,10 +24,12 @@ export function GameHud({
   targetRallyLength,
   difficultyStats,
   lastPointWinner,
-  serverFaults
+  serverFaults,
+  courtSurface
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
+  const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
 
 
   return (
@@ -41,7 +45,13 @@ export function GameHud({
             Rally Target: {targetRallyLength}
           </div>
           <div className="bg-blue-600 text-white px-2 py-0.5 text-[9px] font-black italic w-fit uppercase tracking-tighter">
-            Speed: {(difficultyStats.pointDifficultyMultiplier * 100).toFixed(0)}%
+            Speed: {(difficultyStats.pointDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}%
+          </div>
+          <div
+            className="text-black px-2 py-0.5 text-[9px] font-black italic w-fit uppercase tracking-tighter"
+            style={{ backgroundColor: surfaceSettings.colors.lines }}
+          >
+            {surfaceSettings.label}
           </div>
         </div>
 
@@ -105,6 +115,16 @@ export function GameHud({
           )}
         </div>
       )}
+
+      <div className="absolute top-4 right-4 max-w-[220px] rounded-lg border border-white/15 bg-black/55 p-3 text-left text-white pointer-events-none shadow-2xl">
+        <div className="text-[10px] font-black uppercase tracking-widest text-white/60">Court Surface</div>
+        <div className="text-lg font-black uppercase italic" style={{ color: surfaceSettings.colors.lines }}>
+          {surfaceSettings.label}
+        </div>
+        <div className="mt-1 text-[10px] uppercase leading-snug text-white/70">
+          Ball {(surfaceSettings.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(surfaceSettings.bounceMultiplier * 100).toFixed(0)}% · Move {(surfaceSettings.playerMovementMultiplier * 100).toFixed(0)}%
+        </div>
+      </div>
 
       <div className="absolute bottom-4 right-4 flex gap-4 text-white/30 text-[10px] items-center">
         <span>MOUSE: MOVE PLAYER</span>
