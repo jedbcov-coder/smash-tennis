@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { type BallHandle } from '../environment/Ball';
@@ -6,7 +7,7 @@ import { type BallHandle } from '../environment/Ball';
 type ActiveEffect = {
   id: string;
   position: THREE.Vector3;
-  type: 'smash' | 'normal';
+  type: 'smash' | 'normal' | 'flame';
   startTime: number;
 };
 
@@ -14,10 +15,10 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
   const groupRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const sparksRef = useRef<THREE.Points>(null);
-  const duration = effect.type === 'smash' ? 0.6 : 0.3;
+  const duration = effect.type === 'flame' ? 0.85 : effect.type === 'smash' ? 0.6 : 0.3;
   
   // Set up particles once
-  const sparkCount = effect.type === 'smash' ? 30 : 10;
+  const sparkCount = effect.type === 'flame' ? 60 : effect.type === 'smash' ? 30 : 10;
   const particles = useRef<{ positions: Float32Array, velocities: THREE.Vector3[] } | null>(null);
   
   if (!particles.current) {
@@ -28,7 +29,7 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
         pos[i * 3 + 1] = 0;
         pos[i * 3 + 2] = 0;
         const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-        const speed = effect.type === 'smash' ? 10 + Math.random() * 15 : 3 + Math.random() * 5;
+        const speed = effect.type === 'flame' ? 18 + Math.random() * 22 : effect.type === 'smash' ? 10 + Math.random() * 15 : 3 + Math.random() * 5;
         vel.push(dir.multiplyScalar(speed));
     }
     particles.current = { positions: pos, velocities: vel };
@@ -46,7 +47,7 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
     const t = elapsed / duration;
     
     if (ringRef.current) {
-        const ringScale = THREE.MathUtils.lerp(0.5, effect.type === 'smash' ? 12 : 3, t);
+        const ringScale = THREE.MathUtils.lerp(0.5, effect.type === 'flame' ? 18 : effect.type === 'smash' ? 12 : 3, t);
         ringRef.current.scale.setScalar(ringScale);
         (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 1 - t;
     }
@@ -69,7 +70,7 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
     }
   });
 
-  const color = effect.type === 'smash' ? '#facc15' : '#ffffff';
+  const color = effect.type === 'flame' ? '#fb923c' : effect.type === 'smash' ? '#facc15' : '#ffffff';
 
   return (
     <group position={effect.position} ref={groupRef}>
@@ -77,17 +78,17 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
         <ringGeometry args={[0.2, 0.4, 32]} />
         <meshBasicMaterial color={color} transparent opacity={1} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
-      {effect.type === 'smash' && (
-          <mesh rotation={[0, 0, 0]} ref={ringRef}>
+      {(effect.type === 'smash' || effect.type === 'flame') && (
+          <mesh rotation={[0, 0, 0]}>
             <ringGeometry args={[0.3, 0.5, 32]} />
-            <meshBasicMaterial color={'#ff9900'} transparent opacity={1} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+            <meshBasicMaterial color={effect.type === 'flame' ? '#ef4444' : '#ff9900'} transparent opacity={1} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
           </mesh>
       )}
       <points ref={sparksRef}>
         <bufferGeometry>
             <bufferAttribute attach="attributes-position" count={sparkCount} array={positions} itemSize={3} />
         </bufferGeometry>
-        <pointsMaterial size={effect.type === 'smash' ? 0.3 : 0.15} color={color} transparent opacity={1} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <pointsMaterial size={effect.type === 'flame' ? 0.42 : effect.type === 'smash' ? 0.3 : 0.15} color={color} transparent opacity={1} blending={THREE.AdditiveBlending} depthWrite={false} />
       </points>
     </group>
   );
@@ -95,9 +96,11 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
 
 export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle | null> }) {
   const [effects, setEffects] = useState<ActiveEffect[]>([]);
+  const [showFlameFlash, setShowFlameFlash] = useState(false);
+  const flameFlashTimeout = useRef<number | null>(null);
 
   useEffect(() => {
-    const handleEvent = (type: 'smash' | 'normal') => {
+    const handleEvent = (type: 'smash' | 'normal' | 'flame') => {
       if (ballRef.current) {
          setEffects(prev => [...prev, {
             id: Math.random().toString(),
@@ -110,19 +113,40 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
 
     const onNormal = () => handleEvent('normal');
     const onSmash = () => handleEvent('smash');
+    const onFlameSmash = () => {
+      handleEvent('flame');
+      setShowFlameFlash(true);
+      if (flameFlashTimeout.current !== null) {
+        window.clearTimeout(flameFlashTimeout.current);
+      }
+      flameFlashTimeout.current = window.setTimeout(() => {
+        setShowFlameFlash(false);
+        flameFlashTimeout.current = null;
+      }, 180);
+    };
 
     window.addEventListener('vfx:hit.normal', onNormal);
     window.addEventListener('vfx:overhead-smash', onSmash);
+    window.addEventListener('vfx:flame-smash', onFlameSmash);
 
     return () => {
         window.removeEventListener('vfx:hit.normal', onNormal);
         window.removeEventListener('vfx:overhead-smash', onSmash);
+        window.removeEventListener('vfx:flame-smash', onFlameSmash);
+        if (flameFlashTimeout.current !== null) {
+          window.clearTimeout(flameFlashTimeout.current);
+        }
     };
   }, [ballRef]);
 
   // To fix startTime, we use a wrapper component that captures the clock's start time.
   return (
     <>
+      {showFlameFlash && (
+        <Html fullscreen>
+          <div className="pointer-events-none h-full w-full bg-orange-400/35 mix-blend-screen" />
+        </Html>
+      )}
       {effects.map(effect => (
         <EffectWrapper 
              key={effect.id} 

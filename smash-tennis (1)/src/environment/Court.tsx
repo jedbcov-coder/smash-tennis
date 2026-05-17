@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { TEXTURE_RULES } from '../design/textures';
 import {
   COURT_LENGTH,
@@ -13,27 +14,67 @@ import type { CourtSurface } from '../types';
 
 export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
   const surfaceColors = COURT_SURFACE_SETTINGS[courtSurface].colors;
+  const lineGlowWidth = COURT_RENDERING.lineWidth * 2.25;
+  const borderGlowWidth = COURT_RENDERING.lineWidth * 3.2;
 
   return (
     <group>
-      {/* Surrounding Pavement */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+      {/* Dark arcade floor around the playable court. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 0]} receiveShadow>
         <planeGeometry args={[COURT_RENDERING.surroundingWidth, COURT_RENDERING.surroundingLength]} />
-        <meshStandardMaterial color={surfaceColors.surrounding} roughness={TEXTURE_RULES.court.roughness} />
+        <meshStandardMaterial
+          color={surfaceColors.surrounding}
+          emissive={surfaceColors.surrounding}
+          emissiveIntensity={0.16}
+          roughness={TEXTURE_RULES.court.roughness}
+        />
       </mesh>
 
-      {/* Main Playing Surface (Doubles) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      {/* Main playing surface with a darker base so the lines and ball stay readable. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.025, 0]} receiveShadow>
         <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_LENGTH]} />
-        <meshStandardMaterial color={surfaceColors.playingSurface} roughness={TEXTURE_RULES.court.roughness} />
+        <meshStandardMaterial
+          color={surfaceColors.playingSurface}
+          emissive={surfaceColors.playingSurface}
+          emissiveIntensity={0.2}
+          roughness={TEXTURE_RULES.court.roughness}
+        />
       </mesh>
+
+      {/* Soft neon border glow just outside the court. */}
+      <group position={[0, 0.004, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, COURT_LENGTH / 2 + 0.08]}>
+          <planeGeometry args={[DOUBLES_COURT_WIDTH + 0.55, borderGlowWidth]} />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.magentaHot} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -COURT_LENGTH / 2 - 0.08]}>
+          <planeGeometry args={[DOUBLES_COURT_WIDTH + 0.55, borderGlowWidth]} />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.magentaHot} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2 + 0.08, 0, 0]}>
+          <planeGeometry args={[borderGlowWidth, COURT_LENGTH + 0.55]} />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.cyan} transparent opacity={0.26} blending={THREE.AdditiveBlending} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2 - 0.08, 0, 0]}>
+          <planeGeometry args={[borderGlowWidth, COURT_LENGTH + 0.55]} />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.cyan} transparent opacity={0.26} blending={THREE.AdditiveBlending} />
+        </mesh>
+      </group>
 
       {/* Lines Group */}
-      <group position={[0, 0.01, 0]}>
+      <group position={[0, 0.018, 0]}>
         {/* Baselines */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.004, COURT_LENGTH / 2]}>
+          <planeGeometry args={[DOUBLES_COURT_WIDTH, lineGlowWidth]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, COURT_LENGTH / 2]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
           <meshBasicMaterial color={surfaceColors.lines} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.004, -COURT_LENGTH / 2]}>
+          <planeGeometry args={[DOUBLES_COURT_WIDTH, lineGlowWidth]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -COURT_LENGTH / 2]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
@@ -41,9 +82,17 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
         </mesh>
 
         {/* Doubles Sidelines */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2, -0.004, 0]}>
+          <planeGeometry args={[lineGlowWidth, COURT_LENGTH]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
           <meshBasicMaterial color={surfaceColors.lines} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2, -0.004, 0]}>
+          <planeGeometry args={[lineGlowWidth, COURT_LENGTH]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
@@ -89,7 +138,7 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
         {/* Mid court line (net position mark) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth * 0.5]} />
-          <meshBasicMaterial color={surfaceColors.lines} opacity={0.3} transparent />
+          <meshBasicMaterial color={COLOR_SCHEME.neon.gold} opacity={0.45} transparent blending={THREE.AdditiveBlending} />
         </mesh>
       </group>
 
@@ -99,11 +148,13 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
           <boxGeometry
             args={[DOUBLES_COURT_WIDTH + COURT_RENDERING.netPostPadding * 2, NET_HEIGHT, COURT_RENDERING.netDepth]}
           />
-          <meshStandardMaterial 
-            color={surfaceColors.net} 
-            transparent 
-            opacity={0.3} 
-            wireframe={true} // Net texture feel
+          <meshStandardMaterial
+            color={surfaceColors.net}
+            emissive={surfaceColors.net}
+            emissiveIntensity={0.7}
+            transparent
+            opacity={0.34}
+            wireframe={true}
           />
         </mesh>
         {/* Net Top Band */}
@@ -115,18 +166,18 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
               COURT_RENDERING.netTopBandDepth
             ]}
           />
-          <meshStandardMaterial color={surfaceColors.net} />
+          <meshStandardMaterial color={surfaceColors.net} emissive={surfaceColors.net} emissiveIntensity={0.55} />
         </mesh>
       </group>
 
       {/* Net Posts */}
       <mesh position={[DOUBLES_COURT_WIDTH / 2 + COURT_RENDERING.netPostPadding, 0.5, 0]}>
         <cylinderGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.lineWidth, COURT_RENDERING.netPostHeight]} />
-        <meshStandardMaterial color={surfaceColors.netPost} />
+        <meshStandardMaterial color={surfaceColors.netPost} emissive={surfaceColors.netPost} emissiveIntensity={0.45} />
       </mesh>
       <mesh position={[-DOUBLES_COURT_WIDTH / 2 - COURT_RENDERING.netPostPadding, 0.5, 0]}>
         <cylinderGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.lineWidth, COURT_RENDERING.netPostHeight]} />
-        <meshStandardMaterial color={surfaceColors.netPost} />
+        <meshStandardMaterial color={surfaceColors.netPost} emissive={surfaceColors.netPost} emissiveIntensity={0.45} />
       </mesh>
     </group>
   );

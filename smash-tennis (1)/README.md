@@ -4,7 +4,7 @@
 
 Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, expanded arcade audio feedback, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
 
 ## Controls
 
@@ -13,19 +13,22 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Serve: click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
+- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash.
 
 ## Main features
 
+- Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
-- Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
+- Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, menu hover/select, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, rally-intensity meter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
+- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
-- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and separate mega-smash audio.
+- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
+- Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
@@ -69,12 +72,15 @@ Current check notes:
 ## Project structure
 
 - `src/App.tsx` starts the main app screen.
+- `src/design/colorScheme.ts` keeps the shared neon palette in one place.
+- `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, and HUD together.
-- `src/components/GameHud.tsx` shows the in-game overlays and scoreboard.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the start and game-over screens.
-- `src/audio/audioManager.ts` maps gameplay, HUD, match, and menu events to sound effects.
-- `src/audio/sounds.ts` keeps the lightweight synthesized browser sounds in one place.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
+- `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
+- `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring and match state.

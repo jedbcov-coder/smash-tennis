@@ -6,9 +6,14 @@ export function usePlayerInput() {
   const isMouseDown = useRef(false);
   const [isSwinging, setIsSwinging] = useState(false);
   const [isVisualSwinging, setIsVisualSwinging] = useState(false);
+  const [isSpecialMovePressed, setIsSpecialMovePressed] = useState(false);
 
   const clearSwingInput = useCallback(() => {
     setIsSwinging(false);
+  }, []);
+
+  const clearSpecialMoveInput = useCallback(() => {
+    setIsSpecialMovePressed(false);
   }, []);
 
   useEffect(() => {
@@ -34,6 +39,10 @@ export function usePlayerInput() {
         setIsVisualSwinging(true);
         setTimeout(() => setIsVisualSwinging(false), 260);
       }
+
+      if (e.code === 'KeyE') {
+        setIsSpecialMovePressed(true);
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -55,7 +64,9 @@ export function usePlayerInput() {
     isMouseDown,
     isSwinging,
     isVisualSwinging,
+    isSpecialMovePressed,
     clearSwingInput,
+    clearSpecialMoveInput,
     handleSwing: () => setIsSwinging(true)
   };
 }
