@@ -8,6 +8,7 @@ import { GameHud } from './GameHud';
 import { GameMenus } from './GameMenus';
 import { useGameplayLoop, type ArcadeHudStats } from '../hooks/useGameplayLoop';
 import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
+import type { ServeMeterState } from '../serve/useServeMechanics';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
@@ -46,7 +47,8 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
-  onArcadeHudStatsChange
+  onArcadeHudStatsChange,
+  onServeMeterChange
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
@@ -62,6 +64,7 @@ function GameScene({
   };
   courtSurface: CourtSurface;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
+  onServeMeterChange: (state: ServeMeterState) => void;
 }) {
   const {
     ballRef,
@@ -84,7 +87,8 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
-    onArcadeHudStatsChange
+    onArcadeHudStatsChange,
+    onServeMeterChange
   });
 
   return (
@@ -146,6 +150,14 @@ export function Game() {
     callout: null
   });
 
+
+  const [serveMeterState, setServeMeterState] = useState<ServeMeterState>({
+    phase: 'idle',
+    position: 0,
+    qualityLabel: 'Ready',
+    servingPlayer: 'PLAYER'
+  });
+
   const {
     score,
     addPoint,
@@ -188,6 +200,7 @@ export function Game() {
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
           onArcadeHudStatsChange={setArcadeHudStats}
+          onServeMeterChange={setServeMeterState}
         />
       </Canvas>
 
@@ -203,6 +216,7 @@ export function Game() {
         courtSurface={courtSurface}
         arcadeHudStats={arcadeHudStats}
         pointReward={pointReward}
+        serveMeterState={serveMeterState}
       />
 
       <GameMenus
