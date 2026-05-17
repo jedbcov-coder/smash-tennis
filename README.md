@@ -57,11 +57,13 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 Run these commands from the repository root folder:
 
 ```bash
+npm run test
+npm run test:watch
 npm run lint
 npm run build
 ```
 
-`npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+`npm run test` runs the lightweight Vite-powered tests for scoring rules and shot physics once. `npm run test:watch` keeps those tests running while you edit files. `npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
 
 Current check notes verified on May 17, 2026:
 
@@ -90,7 +92,10 @@ Current check notes verified on May 17, 2026:
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
+- `src/serve/scoringRules.test.ts` checks point progression, deuce, advantage, game wins, set wins, tiebreaks, and server switching.
 - `src/physics/ShotPhysics.ts` calculates shot direction and speed.
+- `src/physics/ShotPhysics.test.ts` checks serve targeting, return direction, and court-surface speed changes.
+- `scripts/run-tests.mjs` runs the beginner-friendly Vite-powered test setup without adding extra dependencies.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
 - `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
 
