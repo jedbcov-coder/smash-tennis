@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { COLOR_SCHEME } from '../design/colorScheme';

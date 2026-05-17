@@ -3,7 +3,6 @@ import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { playAudioEvent } from '../audio/audioManager';
 
@@ -145,7 +144,7 @@ export function GameMenus({
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
         <div className="pointer-events-none absolute inset-0 opacity-65" style={{ background: isWin ? GRADIENTS.uiBackground : GRADIENTS.danger }} />
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex w-full max-w-2xl flex-col items-center">
           <div className="mb-3 rounded-full border border-white/25 bg-black/60 px-4 py-1 text-[10px] font-black uppercase tracking-[0.45em] text-white/75">
             Neon Smash Tennis
           </div>
@@ -155,6 +154,26 @@ export function GameMenus({
           >
             {isWin ? 'Match\nWon!' : 'Match\nLost'}
           </h2>
+          <p className="mb-5 text-xl uppercase tracking-widest text-slate-200">
+            {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
+          </p>
+
+          <div className="mb-6 grid w-full grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div><span className="block text-white/45">Score</span><span className="font-black text-white">{score.playerSets}-{score.aiSets} sets</span></div>
+            <div><span className="block text-white/45">Points won</span><span className="font-black text-white">{matchStats.playerPointsWon}-{matchStats.aiPointsWon}</span></div>
+            <div><span className="block text-white/45">Best combo</span><span className="font-black text-white">x{matchStats.bestCombo}</span></div>
+            <div><span className="block text-white/45">Longest rally</span><span className="font-black text-white">{matchStats.longestRally}</span></div>
+          </div>
+
+          {pointReward && (
+            <div className="mb-4 text-sm font-black uppercase tracking-widest text-orange-200">
+              Last point: {pointReward.styleBonus} · +{pointReward.xpGained} XP
+            </div>
+          )}
+          <div className="mb-8 h-2 w-full max-w-sm overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full" style={{ width: `${progressPercent}%`, background: GRADIENTS.energy }} />
+          </div>
+
           <p className="mb-6 text-xl uppercase tracking-widest text-slate-200">
             {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
           </p>
