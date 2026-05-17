@@ -1,6 +1,5 @@
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -29,7 +28,6 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats
-  courtSurface
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
