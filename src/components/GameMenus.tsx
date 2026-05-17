@@ -180,7 +180,6 @@ export function GameMenus({
   resetSettings
 }: GameMenusProps) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
-  const opponentProfile = OPPONENT_PROFILES.find((opponent) => opponent.id === opponentId) ?? OPPONENT_PROFILES[0];
   const resultMessage = winner === 'PLAYER'
     ? `You defeated ${opponentProfile.displayName}.`
     : `${opponentProfile.displayName} takes this one.`;

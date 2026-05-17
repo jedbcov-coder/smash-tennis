@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { AudioSettings } from '../audio/audioSettings';
 
 export interface GameSettings {
   masterVolume: number;
@@ -30,6 +31,17 @@ const clampPercent = (value: unknown, fallback: number) => {
 const readSavedBoolean = (value: unknown, fallback: boolean) => {
   return typeof value === 'boolean' ? value : fallback;
 };
+
+const percentToNormalizedVolume = (value: number) => {
+  return Math.min(1, Math.max(0, value / 100));
+};
+
+export const getAudioSettingsFromGameSettings = (settings: GameSettings): Partial<AudioSettings> => ({
+  masterVolume: percentToNormalizedVolume(settings.masterVolume),
+  sfxVolume: percentToNormalizedVolume(settings.sfxVolume),
+  uiVolume: percentToNormalizedVolume(settings.sfxVolume),
+  musicVolume: percentToNormalizedVolume(settings.musicVolume)
+});
 
 const readSavedSettings = (): GameSettings => {
   if (typeof window === 'undefined') return DEFAULT_GAME_SETTINGS;

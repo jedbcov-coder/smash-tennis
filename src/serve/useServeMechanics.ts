@@ -7,6 +7,7 @@ import { playAudioEvent } from '../audio/audioManager';
 import { chance, randomCentered } from '../gameplay/random';
 import type { BallHandle } from '../environment/Ball';
 import type { HitQuality, ShotType } from '../gameplay/shotTypes';
+import { beginRally } from '../gameplay/gameStateMachine';
 
 export type ServeMeterQuality = 'Weak Serve' | 'Standard Serve' | 'Perfect Serve' | 'Power Serve' | 'Fault';
 
