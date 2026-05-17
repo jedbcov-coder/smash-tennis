@@ -31,6 +31,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Flame Smash spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - GitHub Pages-friendly static build.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
+- Shared physics rules keep net faults, wide shots, and baseline outs consistent during rallies.
 
 ## How to run locally
 

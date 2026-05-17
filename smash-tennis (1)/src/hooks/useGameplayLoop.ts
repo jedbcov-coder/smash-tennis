@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { BallHandle } from '../environment/Ball';
 import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
+import { checkBaselineOut, checkNetCollision, checkOutOfBounds } from '../physics/WorldPhysics';
 import {
   AI_BASELINE_POSITION,
   AI_MISS_DRAMA,
@@ -10,7 +11,6 @@ import {
   PLAYER_MOVEMENT_LIMITS,
   SERVE_POSITIONS,
   OUT_OF_BOUNDS_LIMITS,
-  NET_HEIGHT,
   COURT_SURFACE_SETTINGS
 } from '../gameplay/gameTuning';
 import { playAudioEvent } from '../audio/audioManager';
@@ -595,14 +595,15 @@ export function useGameplayLoop({
     };
 
     // Net collision: if the ball crosses the net too low, the hitter loses the point.
-    const crossedNet = (previousBallZ.current <= 0 && ballPos.z > 0) || (previousBallZ.current >= 0 && ballPos.z < 0);
-    if (crossedNet && ballPos.y < NET_HEIGHT && lastHitter) {
+    const baselineOut = checkBaselineOut(ballPos);
+
+    if (checkNetCollision(ballPos, previousBallZ.current, lastHitter)) {
       awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter === 'AI');
-    } else if (ballPos.z > OUT_OF_BOUNDS_LIMITS.playerBackZ) {
+    } else if (baselineOut === 'PLAYER_OUT') {
       awardPoint('AI', false);
-    } else if (ballPos.z < OUT_OF_BOUNDS_LIMITS.aiBackZ) {
+    } else if (baselineOut === 'AI_OUT') {
       awardPoint('PLAYER', true);
-    } else if (Math.abs(ballPos.x) > OUT_OF_BOUNDS_LIMITS.x) {
+    } else if (checkOutOfBounds(ballPos)) {
       // Out of bounds
       awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter !== 'PLAYER');
     }
