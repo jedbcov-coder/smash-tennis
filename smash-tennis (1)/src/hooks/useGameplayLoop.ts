@@ -16,13 +16,23 @@ import {
 import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
-import { useServeMechanics, type ServeMeterState } from '../serve/useServeMechanics';
+import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
 export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | 'FLAME SMASH' | `COMBO x${number}`;
+
+export type ArcadeHudServeMeterPhase = 'idle' | 'charging' | 'confirmed';
+
+export interface ArcadeHudServeMeter {
+  active: boolean;
+  position: number;
+  phase: ArcadeHudServeMeterPhase;
+  qualityLabel: ServeMeterQuality | 'Ready';
+  servingPlayer: PlayerType | null;
+}
 
 export interface ArcadeHudStats {
   serveSpeedMph: number;
@@ -31,7 +41,16 @@ export interface ArcadeHudStats {
   rallyCount: number;
   rallyIntensity: number;
   callout: ArcadeCallout | null;
+  serveMeter: ArcadeHudServeMeter;
 }
+
+const createEmptyArcadeHudServeMeter = (): ArcadeHudServeMeter => ({
+  active: false,
+  position: 0,
+  phase: 'idle',
+  qualityLabel: 'Ready',
+  servingPlayer: null
+});
 
 const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   serveSpeedMph: 0,
@@ -39,7 +58,8 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   comboCount: 0,
   rallyCount: 0,
   rallyIntensity: 0,
-  callout: null
+  callout: null,
+  serveMeter: createEmptyArcadeHudServeMeter()
 });
 
 interface UseGameplayLoopOptions {
@@ -191,6 +211,38 @@ export function useGameplayLoop({
   useEffect(() => {
     onArcadeHudStatsChange?.(arcadeHudStats);
   }, [arcadeHudStats, onArcadeHudStatsChange]);
+
+  const handleServeMeterChange = useCallback((state: ServeMeterState) => {
+    const phase: ArcadeHudServeMeterPhase = state.phase === 'running' ? 'charging' : state.phase === 'locked' || state.phase === 'served' ? 'confirmed' : 'idle';
+
+    updateArcadeHudStats((current) => ({
+      ...current,
+      serveMeter: {
+        active: gameState === GameState.SERVING,
+        position: state.position,
+        phase,
+        qualityLabel: state.qualityLabel,
+        servingPlayer: state.servingPlayer
+      }
+    }));
+    onServeMeterChange?.(state);
+  }, [gameState, onServeMeterChange, updateArcadeHudStats]);
+
+  useEffect(() => {
+    if (gameState === GameState.SERVING) return;
+
+    updateArcadeHudStats((current) => {
+      if (!current.serveMeter.active && current.serveMeter.phase === 'idle' && current.serveMeter.position === 0) {
+        return current;
+      }
+
+      return {
+        ...current,
+        serveMeter: createEmptyArcadeHudServeMeter()
+      };
+    });
+    onServeMeterChange?.({ phase: 'idle', position: 0, qualityLabel: 'Ready', servingPlayer });
+  }, [gameState, onServeMeterChange, servingPlayer, updateArcadeHudStats]);
 
   const triggerAiSwing = useCallback((missing = false) => {
     if (aiSwingTimeout.current !== null) {
@@ -345,7 +397,7 @@ export function useGameplayLoop({
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
     },
-    onServeMeterChange
+    onServeMeterChange: handleServeMeterChange
   });
 
   useFrame((state, delta) => {
