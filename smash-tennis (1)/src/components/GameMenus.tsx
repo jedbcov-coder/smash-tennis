@@ -140,7 +140,7 @@ export function GameMenus({
 
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
-    const progressPercent = Math.min(100, matchStats.totalXp % 100);
+    const pointXp = pointReward?.xpGained ?? 0;
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">

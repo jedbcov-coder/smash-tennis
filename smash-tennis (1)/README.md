@@ -13,7 +13,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Serve: wait for the quick serve countdown, then click or press Space when it is your serve.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
-- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash.
+- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
 
 ## Main features
 

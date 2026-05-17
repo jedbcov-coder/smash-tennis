@@ -405,7 +405,7 @@ export function useGameplayLoop({
         const targetFacing = Math.PI + THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.14, -0.35, 0.35);
         playerFacingY.current = THREE.MathUtils.lerp(playerFacingY.current, targetFacing, OVERHEAD_SMASH_CONFIG.autoAlignmentStrength);
 
-        const canUseFlameSmash = arcadeHudStats.energyPercent >= 100 && isSpecialMovePressed && now <= smashTarget.expiresAt;
+        const canUseFlameSmash = arcadeHudStatsRef.current.energyPercent >= 100 && isSpecialMovePressed && now <= smashTarget.expiresAt;
 
         if (canUseFlameSmash) {
           performOverheadSmash(ballPos, now, true);
