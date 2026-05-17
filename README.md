@@ -82,10 +82,10 @@ Current check notes verified on May 17, 2026:
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
-- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
+- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
-- `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
+- `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, smash zoom, camera shake, and camera look-at targeting.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
