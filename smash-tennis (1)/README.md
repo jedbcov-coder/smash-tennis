@@ -4,10 +4,11 @@
 
 Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, on a bright 3D court with arcade movement and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, bigger overhead smashes, and tennis-style scoring.
 
 ## Controls
 
+- Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
 - Serve: click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
@@ -15,10 +16,14 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Main features
 
-- Low-poly 3D tennis court, ball, rackets, players, net, and camera.
+- Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
+- Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
+- Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
+- Stronger overhead smash acceleration for more dramatic finishing shots.
+- Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
-- Net-front overhead smash chance with ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
+- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Start screen, point-result banner, scoreboard, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 

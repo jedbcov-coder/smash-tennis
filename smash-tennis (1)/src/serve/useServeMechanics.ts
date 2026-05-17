@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { GameState, type PlayerType } from '../types';
+import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { SERVE_POSITIONS, PLAYER_MOVEMENT_LIMITS } from '../gameplay/gameTuning';
 import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import { playAudioEvent } from '../audio/audioManager';
@@ -12,6 +12,7 @@ interface UseServeMechanicsOptions {
   servingPlayer: PlayerType;
   serveSide: ServeSide;
   difficultyStats: ShotDifficultyStats;
+  courtSurface: CourtSurface;
   ballRef: React.RefObject<BallHandle | null>;
   playerPos: React.MutableRefObject<THREE.Vector3>;
   aiPos: React.MutableRefObject<THREE.Vector3>;
@@ -27,6 +28,7 @@ export function useServeMechanics({
   servingPlayer,
   serveSide,
   difficultyStats,
+  courtSurface,
   ballRef,
   playerPos,
   aiPos,
@@ -72,9 +74,11 @@ export function useServeMechanics({
           true,
           serveSide,
           difficultyStats,
-          'AI'
+          'AI',
+          courtSurface
         );
-        ballRef.current?.setVelocity(serveVel);
+        const serveSpin = serveSide === 'DEUCE' ? -0.9 : 0.9;
+        ballRef.current?.setVelocity(serveVel, serveSpin);
         setGameState(GameState.PLAYING);
         setLastHitter('PLAYER');
         playAudioEvent('hit.normal');
@@ -113,9 +117,11 @@ export function useServeMechanics({
           true,
           serveSide,
           difficultyStats,
-          'PLAYER'
+          'PLAYER',
+          courtSurface
         );
-        ballRef.current?.setVelocity(serveVel);
+        const serveSpin = serveSide === 'DEUCE' ? 0.7 : -0.7;
+        ballRef.current?.setVelocity(serveVel, serveSpin);
         setGameState(GameState.PLAYING);
         setLastHitter('AI');
         playAudioEvent('hit.normal');
