@@ -5,7 +5,6 @@ import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGamepl
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import type { PointReward } from '../serve/useTennisGame';
-import type { ServeMeterState } from '../serve/useServeMechanics';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 
 interface GameHudProps {
@@ -20,7 +19,6 @@ interface GameHudProps {
   courtSurface: CourtSurface;
   arcadeHudStats: ArcadeHudStats;
   pointReward: PointReward | null;
-  serveMeterState: ServeMeterState;
 }
 
 export function GameHud({
@@ -34,8 +32,7 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats,
-  pointReward,
-  serveMeterState
+  pointReward
 }: GameHudProps) {
   const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
@@ -45,13 +42,16 @@ export function GameHud({
   const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
   const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
+  const serveMeter = arcadeHudStats.serveMeter;
   const showServeMeter = gameState === GameState.SERVING && servingPlayer === 'PLAYER';
-  const serveMeterMarkerLeft = `${Math.round(serveMeterState.position * 100)}%`;
-  const serveMeterFillWidth = `${Math.round(serveMeterState.position * 100)}%`;
+  const serveMeterPercent = Math.round(Math.min(1, Math.max(0, serveMeter.position)) * 100);
+  const serveMeterMarkerLeft = `${serveMeterPercent}%`;
+  const serveMeterFillWidth = `${serveMeterPercent}%`;
   const serveInstruction =
-    serveMeterState.phase === 'running'
-      ? 'Press Space or Click again to serve'
-      : 'Press Space or Click to start meter';
+    serveMeter.phase === 'charging'
+      ? 'Click or press Space again to hit'
+      : 'Click or press Space to start the serve meter';
+  const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
 
   useEffect(() => {
     if (gameState !== GameState.SERVE_COUNTDOWN) {
@@ -204,10 +204,10 @@ export function GameHud({
             {gameState === GameState.SERVE_COUNTDOWN ? serveCountdown : serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
-            <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">{serveInstruction}</div>
+            <div className="mt-2 text-sm font-bold tracking-widest text-white/70">{serveInstruction}</div>
           )}
           {servingPlayer === 'AI' && gameState === GameState.SERVING && (
-            <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">{serveMeterState.qualityLabel}</div>
+            <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">{serveMeter.qualityLabel}</div>
           )}
           {showServeMeter && (
             <div className="mt-4 w-[340px] rounded-2xl border border-cyan-200/40 bg-black/75 p-3 shadow-[0_0_24px_rgba(34,211,238,0.25)]">
@@ -216,12 +216,16 @@ export function GameHud({
                 <span className="text-cyan-100">Perfect</span>
                 <span>Fault</span>
               </div>
-              <div className="relative h-5 overflow-hidden rounded-full bg-gradient-to-r from-rose-500 via-cyan-300 to-rose-500">
-                <div className="h-full rounded-full bg-white/25" style={{ width: serveMeterFillWidth }} />
-                <div className="absolute bottom-0 top-0 w-1 -translate-x-1/2 bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)]" style={{ left: serveMeterMarkerLeft }} />
+              <div className="relative h-5 overflow-hidden rounded-full border border-white/15 bg-gradient-to-r from-rose-500 via-cyan-300 to-rose-500">
                 <div className="absolute bottom-0 left-1/2 top-0 w-10 -translate-x-1/2 bg-white/20" />
+                <div className="h-full rounded-full bg-white/25 transition-[width] duration-75" style={{ width: serveMeterFillWidth }} />
+                <div className="absolute bottom-0 top-0 w-1 -translate-x-1/2 bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)] transition-[left] duration-75" style={{ left: serveMeterMarkerLeft }} />
               </div>
-              <div className="mt-2 text-center text-sm font-black uppercase tracking-widest text-cyan-100">{serveMeterState.qualityLabel}</div>
+              {showServeQualityBadge && (
+                <div className="mt-3 inline-flex self-center rounded-full border border-cyan-200/40 bg-cyan-950/80 px-4 py-1 text-sm font-black uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)]">
+                  {serveMeter.qualityLabel}
+                </div>
+              )}
             </div>
           )}
         </div>
