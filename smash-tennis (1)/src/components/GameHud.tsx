@@ -33,6 +33,7 @@ export function GameHud({
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
+  const isPowerReady = arcadeHudStats.energyPercent >= 100;
 
 
   return (
@@ -68,7 +69,7 @@ export function GameHud({
               style={{ width: energyWidth }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
-              Energy {arcadeHudStats.energyPercent}%
+              {isPowerReady ? 'POWER READY - PRESS E' : `Energy ${arcadeHudStats.energyPercent}%`}
             </div>
           </div>
         </div>
@@ -181,6 +182,8 @@ export function GameHud({
         <span>MOUSE: MOVE PLAYER</span>
         <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
         <span>CLICK: SWING / SERVE</span>
+        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
+        <span>E: FLAME SMASH WHEN READY</span>
       </div>
 
       {/* CRT Scanline Overlay */}
