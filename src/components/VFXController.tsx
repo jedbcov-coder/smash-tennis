@@ -3,6 +3,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { type BallHandle } from '../environment/Ball';
+import { subscribeToGameEvent } from '../gameplay/gameEvents';
 
 type ActiveEffect = {
   id: string;
@@ -94,13 +95,15 @@ function ImpactSprite({ effect, onComplete }: { effect: ActiveEffect; onComplete
   );
 }
 
-export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle | null> }) {
+export function VFXController({ ballRef, reducedMotion }: { ballRef: React.RefObject<BallHandle | null>; reducedMotion: boolean }) {
   const [effects, setEffects] = useState<ActiveEffect[]>([]);
   const [showFlameFlash, setShowFlameFlash] = useState(false);
   const flameFlashTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     const handleEvent = (type: 'smash' | 'normal' | 'flame') => {
+      if (reducedMotion) return;
+
       if (ballRef.current) {
          setEffects(prev => [...prev, {
             id: Math.random().toString(),
@@ -113,8 +116,11 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
 
     const onNormal = () => handleEvent('normal');
     const onSmash = () => handleEvent('smash');
+    const onOpportunity = () => handleEvent('smash');
     const onFlameSmash = () => {
       handleEvent('flame');
+      if (reducedMotion) return;
+
       setShowFlameFlash(true);
       if (flameFlashTimeout.current !== null) {
         window.clearTimeout(flameFlashTimeout.current);
@@ -127,17 +133,19 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
 
     window.addEventListener('vfx:hit.normal', onNormal);
     window.addEventListener('vfx:overhead-smash', onSmash);
+    window.addEventListener('vfx:smash-opportunity', onOpportunity);
     window.addEventListener('vfx:flame-smash', onFlameSmash);
 
     return () => {
         window.removeEventListener('vfx:hit.normal', onNormal);
         window.removeEventListener('vfx:overhead-smash', onSmash);
+        window.removeEventListener('vfx:smash-opportunity', onOpportunity);
         window.removeEventListener('vfx:flame-smash', onFlameSmash);
         if (flameFlashTimeout.current !== null) {
           window.clearTimeout(flameFlashTimeout.current);
         }
     };
-  }, [ballRef]);
+  }, [ballRef, reducedMotion]);
 
   // To fix startTime, we use a wrapper component that captures the clock's start time.
   return (
