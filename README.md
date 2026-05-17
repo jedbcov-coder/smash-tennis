@@ -87,6 +87,7 @@ Current check notes verified on May 17, 2026:
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
+- `src/gameplay/gameStateMachine.ts` keeps named match-flow transitions like starting a match, serving, rallies, point results, and match over in one place.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { SERVE_POSITIONS, PLAYER_MOVEMENT_LIMITS } from '../gameplay/gameTuning';
+import { beginRally } from '../gameplay/gameStateMachine';
 import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import { playAudioEvent } from '../audio/audioManager';
 import type { BallHandle } from '../environment/Ball';
@@ -181,7 +182,7 @@ export function useServeMechanics({
         ballRef.current?.setVelocity(tunedServeVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: playerMeterPosition.current, qualityLabel: outcome.label, servingPlayer: 'PLAYER' });
         onServeLaunched?.(tunedServeVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('PLAYER');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         clearSwingInput();
@@ -228,7 +229,7 @@ export function useServeMechanics({
         ballRef.current?.setVelocity(serveVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: 0.5, qualityLabel: 'Standard Serve', servingPlayer: 'AI' });
         onServeLaunched?.(serveVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('AI');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
       }
