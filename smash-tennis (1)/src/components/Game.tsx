@@ -47,6 +47,7 @@ function GameScene({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
+  courtSurface
 }: {
   onScore: (winner: PlayerType) => void;
   onFault: () => void;
@@ -85,6 +86,7 @@ function GameScene({
     difficultyStats,
     courtSurface,
     onArcadeHudStatsChange
+    courtSurface
   });
 
   return (
