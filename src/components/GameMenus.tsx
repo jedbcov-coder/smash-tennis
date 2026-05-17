@@ -2,10 +2,12 @@ import { useEffect, useRef } from 'react';
 import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
+import { SettingsMenu } from './SettingsMenu';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import { PLAYER_LEVEL_XP, type PlayerProgress } from '../progression/playerProgress';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
+import type { GameSettings } from '../settings/useGameSettings';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -197,6 +199,9 @@ export function GameMenus({
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Career XP</span>{playerProgress.totalXp}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Level</span>{playerProgress.playerLevel}</div>
+          </div>
+          <div className="mb-6 w-full">
+            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
           </div>
           <button
             onClick={handleStartGame}

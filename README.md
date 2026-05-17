@@ -27,7 +27,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
@@ -82,7 +82,9 @@ Current check notes verified on May 17, 2026:
 - `src/design/colorScheme.ts` keeps the shared neon palette in one place.
 - `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
-- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, optional input help, and arcade callouts.
+- `src/components/SettingsMenu.tsx` shows the saved settings controls for volume, motion, screen shake, contrast, and input help.
+- `src/settings/useGameSettings.ts` loads and saves game settings in browser localStorage.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
 - `src/components/GameMenus.tsx` shows the Neon Smash Tennis start screen, court selection, rival selection, intro matchup, and game-over screens.
 - `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens, including saved player progress.

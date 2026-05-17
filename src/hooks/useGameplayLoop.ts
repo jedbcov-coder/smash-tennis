@@ -20,6 +20,7 @@ import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMov
 import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
 import type { OpponentProfile } from '../gameplay/opponents';
 import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
+import type { GameSettings } from '../settings/useGameSettings';
 import {
   calculateOverheadSmash,
   calculateWeakSmashReturn,
@@ -87,6 +88,7 @@ interface UseGameplayLoopOptions {
   opponentProfile: OpponentProfile;
   onArcadeHudStatsChange?: (stats: ArcadeHudStats) => void;
   onServeMeterChange?: (state: ServeMeterState) => void;
+  settings: GameSettings;
 }
 
 type SpecialMoveName = 'FLAME_SMASH';
@@ -107,7 +109,8 @@ export function useGameplayLoop({
   courtSurface,
   opponentProfile,
   onArcadeHudStatsChange,
-  onServeMeterChange
+  onServeMeterChange,
+  settings
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -338,7 +341,7 @@ export function useGameplayLoop({
     setLastHitter('PLAYER');
     aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
     consecutiveReturns.current++;
-    cameraShakeUntil.current = now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration * (isFlameSmash ? 1.45 : 1);
+    cameraShakeUntil.current = settings.reducedMotion ? now : now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration * (isFlameSmash ? 1.45 : 1);
     smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
     setIsVisualSmashing(true);
     setTimeout(() => setIsVisualSmashing(false), isFlameSmash ? 460 : 320);
@@ -597,7 +600,8 @@ export function useGameplayLoop({
       now,
       cameraShakeUntil: cameraShakeUntil.current,
       smashOpportunityActive: smashOpportunity.current.active,
-      random: Math.random
+      random: Math.random,
+      screenShakeAmount: settings.reducedMotion ? 0 : settings.screenShakeAmount
     });
   });
 
@@ -611,7 +615,7 @@ export function useGameplayLoop({
     isAiSwinging,
     isAiMissing,
     isSmashOpportunityVisible,
-    ballTimeScale: currentSpecialMove ? 0.35 : isSmashOpportunityVisible ? OVERHEAD_SMASH_CONFIG.slowdownAmount : 1,
+    ballTimeScale: settings.reducedMotion ? 1 : currentSpecialMove ? 0.35 : isSmashOpportunityVisible ? OVERHEAD_SMASH_CONFIG.slowdownAmount : 1,
     arcadeHudStats
   };
 }
