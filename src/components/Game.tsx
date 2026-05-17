@@ -255,7 +255,7 @@ export function Game() {
         lastPointWinner={lastPointWinner}
         serverFaults={serverFaults}
         courtSurface={courtSurface}
-        arcadeHudStats={arcadeHudStats}
+        arcadeHudStats={{ ...arcadeHudStats, callout: presentationCallout ?? arcadeHudStats.callout }}
         pointReward={pointReward}
         settings={settings}
       />

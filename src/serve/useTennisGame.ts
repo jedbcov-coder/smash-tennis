@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { playAudioEvent } from '../audio/audioManager';
+import { presentationDirector } from '../presentation/presentationDirector';
 import { GameState, type PlayerType } from '../types';
 import {
   loadPlayerProgress,
@@ -175,6 +175,7 @@ export function useTennisGame() {
     setPointReward(null);
     setMatchStats(createInitialMatchStats());
     setGameState(GameState.INTRO);
+    presentationDirector.presentMoment('match.intro');
 
     introTimerRef.current = window.setTimeout(() => {
       introTimerRef.current = null;
@@ -237,6 +238,12 @@ export function useTennisGame() {
   useEffect(() => clearTimers, [clearTimers]);
 
   useEffect(() => {
+    if (gameState === GameState.SERVING) {
+      presentationDirector.presentMoment('serve.start', { servingPlayer: status.servingPlayer });
+    }
+  }, [gameState, status.servingPlayer]);
+
+  useEffect(() => {
     if (gameState !== GameState.SERVING || !isMatchPoint(status)) {
       return;
     }
@@ -247,7 +254,7 @@ export function useTennisGame() {
     }
 
     matchPointSoundKeyRef.current = soundKey;
-    playAudioEvent('match.point');
+    presentationDirector.presentMoment('match.point');
   }, [gameState, status]);
 
   const difficultyStats = useMemo(() => getDifficultyStats(status), [status]);

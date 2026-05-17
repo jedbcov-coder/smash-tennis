@@ -115,6 +115,7 @@ export function VFXController({ ballRef, reducedMotion }: { ballRef: React.RefOb
 
     const onNormal = () => handleEvent('normal');
     const onSmash = () => handleEvent('smash');
+    const onOpportunity = () => handleEvent('smash');
     const onFlameSmash = () => {
       handleEvent('flame');
       if (reducedMotion) return;
@@ -131,11 +132,13 @@ export function VFXController({ ballRef, reducedMotion }: { ballRef: React.RefOb
 
     window.addEventListener('vfx:hit.normal', onNormal);
     window.addEventListener('vfx:overhead-smash', onSmash);
+    window.addEventListener('vfx:smash-opportunity', onOpportunity);
     window.addEventListener('vfx:flame-smash', onFlameSmash);
 
     return () => {
         window.removeEventListener('vfx:hit.normal', onNormal);
         window.removeEventListener('vfx:overhead-smash', onSmash);
+        window.removeEventListener('vfx:smash-opportunity', onOpportunity);
         window.removeEventListener('vfx:flame-smash', onFlameSmash);
         if (flameFlashTimeout.current !== null) {
           window.clearTimeout(flameFlashTimeout.current);
