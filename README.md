@@ -78,7 +78,7 @@ Current check notes verified on May 17, 2026:
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
 - `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start, intro, and game-over screens using small internal menu components for the court cards, matchup intro, stats panel, and primary buttons.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
