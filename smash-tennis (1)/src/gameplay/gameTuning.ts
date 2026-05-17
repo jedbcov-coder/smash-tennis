@@ -1,3 +1,4 @@
+import { COLOR_SCHEME } from '../design/colorScheme';
 import type { CourtSurface, CourtSurfaceTuning } from '../types';
 
 export const COURT_WIDTH = 10.97;
