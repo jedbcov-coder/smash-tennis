@@ -4,8 +4,6 @@ import * as THREE from 'three';
 import type { BallHandle } from '../environment/Ball';
 import { calculateShotPhysics, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import {
-  AI_BASELINE_POSITION,
-  AI_MISS_DRAMA,
   OVERHEAD_SMASH_CONFIG,
   SERVE_POSITIONS,
   OUT_OF_BOUNDS_LIMITS,
@@ -18,7 +16,7 @@ import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput, type PlayerInputSource } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
-import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
+import { AI_MISS_SWING_DURATION_MS, AI_START_POSITION, updateAiOpponent } from '../gameplay/aiOpponentController';
 import type { OpponentProfile } from '../gameplay/opponents';
 import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
 import type { GameSettings } from '../settings/useGameSettings';
@@ -113,7 +111,7 @@ export function useGameplayLoop({
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
-  const aiPos = useRef(new THREE.Vector3(AI_BASELINE_POSITION.x, 0, AI_BASELINE_POSITION.z));
+  const aiPos = useRef(AI_START_POSITION.clone());
   const playerFacingY = useRef(Math.PI);
   const { camera } = useThree();
   const {
@@ -281,7 +279,7 @@ export function useGameplayLoop({
       setIsAiSwinging(false);
       setIsAiMissing(false);
       aiSwingTimeout.current = null;
-    }, missing ? AI_MISS_DRAMA.swingDurationMs : 260);
+    }, missing ? AI_MISS_SWING_DURATION_MS : 260);
   }, []);
 
   const resetBall = useCallback((server: PlayerType) => {
@@ -518,12 +516,9 @@ export function useGameplayLoop({
       }
     }
 
-    // AI movement (Slower and more arcade-like)
-    const aiMovement = calculateAiMovement({
-      aiX: aiPos.current.x,
-      aiZ: aiPos.current.z,
-      ballX: ballPos.x,
-      ballZ: ballPos.z,
+    const aiUpdate = updateAiOpponent({
+      aiPosition: aiPos.current,
+      ballPosition: ballPos,
       consecutiveReturns: consecutiveReturns.current,
       targetRallyLength,
       difficultyStats,
@@ -531,46 +526,28 @@ export function useGameplayLoop({
       elapsedTime: state.clock.getElapsedTime(),
       delta,
       opponentProfile,
-      forceMiss: aiWillMissReturn.current
-    });
-    aiPos.current.x = aiMovement.x;
-    aiPos.current.z = aiMovement.z;
-
-    const shouldShowAiMissSwing = shouldShowAiNearMiss({
-      isMercyMiss: aiMovement.isMercyMiss,
-      alreadyTriggered: aiMissSwingTriggered.current,
+      forceMiss: aiWillMissReturn.current,
+      missSwingAlreadyTriggered: aiMissSwingTriggered.current,
       lastHitter,
-      ballX: ballPos.x,
-      ballY: ballPos.y,
-      ballZ: ballPos.z,
-      aiX: aiPos.current.x
+      random: Math.random
     });
+    aiPos.current.copy(aiUpdate.nextPosition);
 
-    if (shouldShowAiMissSwing) {
+    if (aiUpdate.missed) {
       aiMissSwingTriggered.current = true;
       triggerAiSwing(true);
       playAudioEvent('ai.nearMiss');
     }
 
-    // AI Hit Detection
-    if (ballPos.z < -8 && ballPos.z > -9.5 && lastHitter === 'PLAYER' && ballPos.y < 3.5 && !aiMovement.isMercyMiss) {
-      if (Math.abs(ballPos.x - aiPos.current.x) < 2.0) {
-        const { velocity: finalAiReturnVel, spin: aiSpin } = calculateAiReturn({
-          ballPos,
-          aiX: aiPos.current.x,
-          difficultyStats,
-          surfaceSettings,
-          random: Math.random,
-          opponentProfile
-        });
-        ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
-        recordShot(finalAiReturnVel, { rally: true });
-        setLastHitter('AI');
-        aiWillMissReturn.current = false;
-        triggerAiSwing();
-        playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
-        dispatchGameEvent('hit.normal');
-      }
+    if (aiUpdate.returnShot) {
+      const { velocity: finalAiReturnVel, spin: aiSpin } = aiUpdate.returnShot;
+      ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
+      recordShot(finalAiReturnVel, { rally: true });
+      setLastHitter('AI');
+      aiWillMissReturn.current = false;
+      triggerAiSwing();
+      playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
+      dispatchGameEvent('hit.normal');
     }
 
     // Player Hit Detection (Guaranteed legal shot)

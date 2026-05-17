@@ -98,7 +98,7 @@ Current check notes verified on May 17, 2026:
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
-- `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots using the selected opponent profile.
+- `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, hit detection, and AI return shots using the selected opponent profile.
 - `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/gameEvents.ts` keeps shared typed browser event names and helper functions for gameplay visual effects.
