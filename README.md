@@ -4,8 +4,7 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
 
 ## Controls
 
@@ -21,7 +20,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
-- Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron.
+- Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron, shown as start-screen rival cards with descriptions, play styles, and a clear selected state.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, and displayed theme color.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
@@ -34,8 +33,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Start screen with selectable court and rival cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
-- Start screen with selectable court cards, saved player level, total XP, win-loss record, best rally, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Start screen with selectable court and rival cards, saved player level, total XP, win-loss record, best rally, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Browser progress saving with localStorage for player level, total XP, unlocked courts, unlocked cosmetics, best rally, best combo, and match wins/losses.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.

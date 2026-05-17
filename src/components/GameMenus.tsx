@@ -5,6 +5,7 @@ import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { SettingsMenu } from './SettingsMenu';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
+import { OPPONENT_PROFILES, type OpponentId } from '../gameplay/opponents';
 import { PLAYER_LEVEL_XP, type PlayerProgress } from '../progression/playerProgress';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
@@ -19,9 +20,15 @@ type GameMenusProps = {
   startGame: () => void;
   courtSurface: CourtSurface;
   setCourtSurface: (surface: CourtSurface) => void;
+  opponentId: OpponentId;
+  setOpponentId: (opponentId: OpponentId) => void;
   score: Score;
   pointReward: PointReward | null;
   matchStats: MatchStats;
+  playerProgress: PlayerProgress;
+  settings: GameSettings;
+  setSettings: (nextSettings: Partial<GameSettings>) => void;
+  resetSettings: () => void;
 };
 
 type CourtSelectCardProps = {
@@ -32,6 +39,7 @@ type CourtSelectCardProps = {
 
 type MatchupIntroPanelProps = {
   courtSurface: CourtSurface;
+  opponentName: string;
 };
 
 type GameOverStatsPanelProps = {
@@ -61,7 +69,7 @@ function CourtSelectCard({ surface, isSelected, onSelect }: CourtSelectCardProps
   );
 }
 
-function MatchupIntroPanel({ courtSurface }: MatchupIntroPanelProps) {
+function MatchupIntroPanel({ courtSurface, opponentName }: MatchupIntroPanelProps) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   return (
@@ -75,7 +83,7 @@ function MatchupIntroPanel({ courtSurface }: MatchupIntroPanelProps) {
         <div className="text-3xl font-black italic text-white/70">VS</div>
         <div className="rounded-2xl bg-red-600/25 p-5">
           <div className="text-sm uppercase tracking-widest text-red-100/70">Rival</div>
-          <div className="text-4xl font-black italic uppercase text-red-200">{AI_NAME}</div>
+          <div className="text-4xl font-black italic uppercase text-red-200">{opponentName}</div>
         </div>
       </div>
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
@@ -136,22 +144,21 @@ export function GameMenus({
   startGame,
   courtSurface,
   setCourtSurface,
+  opponentId,
+  setOpponentId,
   score,
   pointReward,
   matchStats,
-  playerProgress
-}: {
-  gameState: GameState;
-  winner: PlayerType | null;
-  startGame: () => void;
-  courtSurface: CourtSurface;
-  setCourtSurface: (surface: CourtSurface) => void;
-  score: Score;
-  pointReward: PointReward | null;
-  matchStats: MatchStats;
-  playerProgress: PlayerProgress;
-}) {
+  playerProgress,
+  settings,
+  setSettings,
+  resetSettings
+}: GameMenusProps) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
+  const opponentProfile = OPPONENT_PROFILES.find((opponent) => opponent.id === opponentId) ?? OPPONENT_PROFILES[0];
+  const resultMessage = winner === 'PLAYER'
+    ? `You defeated ${opponentProfile.displayName}.`
+    : `${opponentProfile.displayName} takes this one.`;
   const playedResultFor = useRef<PlayerType | null>(null);
 
   const handleStartGame = () => {
@@ -210,6 +217,34 @@ export function GameMenus({
                 onSelect={handleSurfaceSelect}
               />
             ))}
+          </div>
+
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-pink-100/75">Choose rival</div>
+          <div className="mb-6 grid w-full max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
+            {OPPONENT_PROFILES.map((opponent) => {
+              const isSelected = opponent.id === opponentId;
+
+              return (
+                <button
+                  key={opponent.id}
+                  onClick={() => handleOpponentSelect(opponent.id)}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${opponent.theme.glowColor}66` : undefined }}
+                >
+                  <div className="mb-2 h-2 rounded-full" style={{ background: opponent.theme.glowColor }} />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-sm font-black uppercase tracking-widest text-white">{opponent.displayName}</div>
+                    <div className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-widest ${isSelected ? 'border-white text-white' : 'border-white/15 text-white/45'}`}>
+                      {isSelected ? 'Selected' : 'Pick'}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{opponent.description}</div>
+                  <div className="mt-3 text-[10px] font-black uppercase tracking-widest" style={{ color: opponent.theme.glowColor }}>
+                    {opponent.theme.label} · {opponent.preferredShotType} · {opponent.specialMoveStyle}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">

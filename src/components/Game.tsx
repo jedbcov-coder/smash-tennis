@@ -84,7 +84,8 @@ function GameScene({
   difficultyStats,
   courtSurface,
   opponentProfile,
-  onArcadeHudStatsChange
+  onArcadeHudStatsChange,
+  settings
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
@@ -125,7 +126,8 @@ function GameScene({
     difficultyStats,
     courtSurface,
     opponentProfile,
-    onArcadeHudStatsChange
+    onArcadeHudStatsChange,
+    settings
   });
 
   return (
@@ -255,7 +257,7 @@ export function Game() {
         lastPointWinner={lastPointWinner}
         serverFaults={serverFaults}
         courtSurface={courtSurface}
-        arcadeHudStats={{ ...arcadeHudStats, callout: presentationCallout ?? arcadeHudStats.callout }}
+        arcadeHudStats={arcadeHudStats}
         pointReward={pointReward}
         settings={settings}
       />
@@ -266,10 +268,15 @@ export function Game() {
         startGame={startGame}
         courtSurface={courtSurface}
         setCourtSurface={setCourtSurface}
+        opponentId={opponentId}
+        setOpponentId={setOpponentId}
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
         playerProgress={playerProgress}
+        settings={settings}
+        setSettings={setSettings}
+        resetSettings={resetSettings}
       />
     </div>
   );
