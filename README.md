@@ -4,13 +4,13 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, easier tap-tap serving, rallies, bigger overhead smash moments, and a Flame Smash special move.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
-- Serve: tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
+- Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 - Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
@@ -24,45 +24,83 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
-- 3D tennis court built with React, Vite, Three.js, and React Three Fiber.
-- Player-vs-AI rallies against Hidalgo.
-- Tennis-style points, games, sets, serving turns, second serves, double faults, and more forgiving timing-based player serve outcomes.
-- Overhead smash effects with stronger acceleration, slow motion, highlight rings, screen shake, and sound.
-- Flame Smash spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- GitHub Pages-friendly static build.
+- Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
+- Player-vs-AI rallies with a gradually increasing rally target and speed.
+- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
+- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
+- Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
+- Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
 
 ## How to run locally
 
-The app files are in the `smash-tennis (1)` folder.
+**Prerequisite:** install Node.js first.
 
-1. Install Node.js.
-2. Open a terminal in `smash-tennis (1)`.
-3. Install the app packages:
+1. Open a terminal in the repository root folder, `/workspace/smash-tennis`.
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-4. Start the local version:
+3. Start the game:
 
    ```bash
    npm run dev
    ```
 
-5. Open the local link shown in the terminal, usually `http://localhost:3000/`.
+4. Open the local link shown in the terminal, usually `http://localhost:3000/`.
 
 ## Useful checks
 
-Run these from the `smash-tennis (1)` folder:
+Run these commands from the repository root folder:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-`npm run lint` checks the TypeScript code. `npm run build` creates the production-ready files for GitHub Pages.
+`npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+
+Current check notes verified on May 17, 2026:
+
+- `npm install` passes from the repository root.
+- `npm run dev` starts successfully from the repository root.
+- `npm run build` passes from the repository root and copies `dist/index.html` to `dist/404.html`.
+- The build may show a Vite chunk-size warning because the 3D/game libraries bundle into one large JavaScript file. This is a warning, not a build failure.
+
+## Project structure
+
+- `src/App.tsx` starts the main app screen.
+- `src/design/colorScheme.ts` keeps the shared neon palette in one place.
+- `src/design/gradients.ts` keeps reusable neon gradients in one place.
+- `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
+- `src/components/VFXController.tsx` listens for smash events and shows visual effects.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
+- `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
+- `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
+- `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
+- `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
+- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
+- `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
+- `src/physics/ShotPhysics.ts` calculates shot direction and speed.
+- `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
+- `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
 
 ## Deployment notes
 
-This project is set up for GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/. The deploy workflow lives at `.github/workflows/deploy.yml`, runs on pushes to `main`, installs the app from `smash-tennis (1)` with `npm ci`, builds it with `npm run build`, uploads `smash-tennis (1)/dist`, and publishes it with the official GitHub Pages actions. The Vite base path changes automatically during GitHub Actions builds so the game works under `/smash-tennis/` after deployment.
+This repository is set up to publish the latest game build with GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/.
+
+Important GitHub Pages settings:
+
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Set **Build and deployment → Source** to **GitHub Actions**.
+4. Push or merge changes into `main`.
+5. The workflow at `.github/workflows/deploy.yml` installs dependencies with `npm ci`, builds the app with `npm run build`, uploads `dist`, and deploys it with the official GitHub Pages actions.
+6. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
+
+The app now lives directly at the repository root, so `package.json`, `index.html`, `vite.config.ts`, `src/`, and `scripts/` are no longer inside a nested folder. The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
