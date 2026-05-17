@@ -147,7 +147,14 @@ export function Game() {
     comboCount: 0,
     rallyCount: 0,
     rallyIntensity: 0,
-    callout: null
+    callout: null,
+    serveMeter: {
+      active: false,
+      position: 0,
+      phase: 'idle',
+      qualityLabel: 'Ready',
+      servingPlayer: null
+    }
   });
 
 
