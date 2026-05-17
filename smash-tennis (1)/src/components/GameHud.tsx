@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { GRADIENTS } from '../design/gradients';
@@ -15,6 +16,7 @@ interface GameHudProps {
   serverFaults: number;
   courtSurface: CourtSurface;
   arcadeHudStats: ArcadeHudStats;
+  pointReward: PointReward | null;
 }
 
 export function GameHud({
@@ -35,6 +37,19 @@ export function GameHud({
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
 
+  useEffect(() => {
+    if (gameState !== GameState.SERVE_COUNTDOWN) {
+      setServeCountdown(3);
+      return;
+    }
+
+    setServeCountdown(3);
+    const countdownTimer = window.setInterval(() => {
+      setServeCountdown((current) => Math.max(1, current - 1));
+    }, 500);
+
+    return () => window.clearInterval(countdownTimer);
+  }, [gameState]);
 
   return (
     <>

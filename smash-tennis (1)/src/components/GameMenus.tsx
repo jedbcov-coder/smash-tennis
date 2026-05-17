@@ -1,22 +1,31 @@
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { GameState, type CourtSurface, type PlayerType } from '../types';
+import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
+import type { MatchStats, PointReward } from '../serve/useTennisGame';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
+const PLAYER_NAME = 'Blake';
+const AI_NAME = 'Hidalgo';
 
 export function GameMenus({
   gameState,
   winner,
   startGame,
   courtSurface,
-  setCourtSurface
+  setCourtSurface,
+  score,
+  pointReward,
+  matchStats
 }: {
   gameState: GameState;
   winner: PlayerType | null;
   startGame: () => void;
   courtSurface: CourtSurface;
   setCourtSurface: (surface: CourtSurface) => void;
+  score: Score;
+  pointReward: PointReward | null;
+  matchStats: MatchStats;
 }) {
   const playedResultFor = useRef<PlayerType | null>(null);
 
@@ -47,6 +56,7 @@ export function GameMenus({
   if (gameState === GameState.MENU) {
     const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
+  if (gameState === GameState.MENU) {
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-y-auto bg-black/82 p-6 text-center">
         <div className="pointer-events-none absolute inset-0 opacity-75" style={{ background: GRADIENTS.uiBackground }} />
@@ -86,8 +96,35 @@ export function GameMenus({
     );
   }
 
+  if (gameState === GameState.INTRO) {
+    return (
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-6 text-center text-white pointer-events-none">
+        <div className="w-full max-w-3xl rounded-3xl border border-cyan-300/40 bg-slate-950/85 p-8 shadow-[0_0_50px_rgba(34,211,238,0.35)]">
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.45em] text-cyan-200">Exhibition Match</div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="rounded-2xl bg-blue-600/25 p-5">
+              <div className="text-sm uppercase tracking-widest text-blue-100/70">Player</div>
+              <div className="text-4xl font-black italic uppercase text-blue-200">{PLAYER_NAME}</div>
+            </div>
+            <div className="text-3xl font-black italic text-white/70">VS</div>
+            <div className="rounded-2xl bg-red-600/25 p-5">
+              <div className="text-sm uppercase tracking-widest text-red-100/70">Rival</div>
+              <div className="text-4xl font-black italic uppercase text-red-200">{AI_NAME}</div>
+            </div>
+          </div>
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
+            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+          </div>
+          <div className="mt-6 animate-pulse text-2xl font-black italic uppercase tracking-[0.35em] text-orange-200">Get Ready</div>
+        </div>
+      </div>
+    );
+  }
+
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
+    const progressPercent = Math.min(100, matchStats.totalXp % 100);
+
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
         <div className="pointer-events-none absolute inset-0 opacity-65" style={{ background: isWin ? GRADIENTS.uiBackground : GRADIENTS.danger }} />

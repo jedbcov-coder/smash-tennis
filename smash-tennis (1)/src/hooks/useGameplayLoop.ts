@@ -319,7 +319,7 @@ export function useGameplayLoop({
   };
 
   useEffect(() => {
-    if (gameState === GameState.SERVING) {
+    if (gameState === GameState.SERVING || gameState === GameState.SERVE_COUNTDOWN) {
       resetBall(servingPlayer);
     }
   }, [gameState, resetBall, servingPlayer]);

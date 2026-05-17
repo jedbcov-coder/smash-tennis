@@ -10,7 +10,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
-- Serve: click or press Space when it is your serve.
+- Serve: wait for the quick serve countdown, then click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 - Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash.
@@ -83,7 +83,7 @@ Current check notes:
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
-- `src/serve/useTennisGame.ts` manages tennis scoring and match state.
+- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
 - `src/physics/ShotPhysics.ts` calculates shot direction and speed.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
