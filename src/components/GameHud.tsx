@@ -50,10 +50,16 @@ export function GameHud({
   const serveMeterPercent = Math.round(Math.min(1, Math.max(0, serveMeter.position)) * 100);
   const serveMeterMarkerLeft = `${serveMeterPercent}%`;
   const serveMeterFillWidth = `${serveMeterPercent}%`;
+  const inputSource = arcadeHudStats.inputSource;
+  const swingPrompt = inputSource === 'gamepad' ? 'A / Cross' : inputSource === 'keyboard' ? 'Space' : 'Click';
+  const serveActionPrompt = inputSource === 'gamepad' ? 'press A / Cross' : inputSource === 'keyboard' ? 'press Space' : 'click';
+  const movementPrompt = inputSource === 'gamepad' ? 'Left stick' : inputSource === 'keyboard' ? 'Arrow keys / WASD' : 'Mouse';
+  const specialPrompt = inputSource === 'gamepad' ? 'Y / Triangle' : 'E';
   const serveInstruction =
     serveMeter.phase === 'charging'
-      ? 'Tap again when the marker reaches the big blue zone'
-      : 'Tap once to toss, then tap again to serve';
+      ? `${serveActionPrompt} again when the marker reaches the big blue zone`
+      : `${serveActionPrompt} once to toss, then again to serve`;
+  const powerReadyLabel = isPowerReady ? `POWER READY - ${specialPrompt}` : `Energy ${arcadeHudStats.energyPercent}%`;
   const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
 
   useEffect(() => {
@@ -98,7 +104,7 @@ export function GameHud({
               style={{ width: energyWidth, background: GRADIENTS.energy }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
-              {isPowerReady ? 'POWER READY - PRESS E' : `Energy ${arcadeHudStats.energyPercent}%`}
+              {powerReadyLabel}
             </div>
           </div>
           <div className="relative h-3 overflow-hidden rounded-full bg-white/10">

@@ -14,7 +14,7 @@ import {
 } from '../gameplay/gameTuning';
 import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
-import { usePlayerInput } from '../controls/usePlayerInput';
+import { usePlayerInput, type PlayerInputSource } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
 import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
@@ -55,6 +55,7 @@ export interface ArcadeHudStats {
   rallyIntensity: number;
   callout: ArcadeCallout | null;
   serveMeter: ArcadeHudServeMeter;
+  inputSource: PlayerInputSource;
 }
 
 const createEmptyArcadeHudServeMeter = (): ArcadeHudServeMeter => ({
@@ -72,7 +73,8 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   rallyCount: 0,
   rallyIntensity: 0,
   callout: null,
-  serveMeter: createEmptyArcadeHudServeMeter()
+  serveMeter: createEmptyArcadeHudServeMeter(),
+  inputSource: 'mouse'
 });
 
 interface UseGameplayLoopOptions {
@@ -121,6 +123,7 @@ export function useGameplayLoop({
     isSwinging,
     isVisualSwinging,
     isSpecialMovePressed,
+    inputSource,
     mouseX,
     mouseY,
     clearSwingInput,
@@ -213,6 +216,16 @@ export function useGameplayLoop({
   useEffect(() => {
     onArcadeHudStatsChange?.(arcadeHudStats);
   }, [arcadeHudStats, onArcadeHudStatsChange]);
+
+  useEffect(() => {
+    updateArcadeHudStats((current) => {
+      if (current.inputSource === inputSource) {
+        return current;
+      }
+
+      return { ...current, inputSource };
+    });
+  }, [inputSource, updateArcadeHudStats]);
 
   const handleServeMeterChange = useCallback((state: ServeMeterState) => {
     const phase: ArcadeHudServeMeterPhase = state.phase === 'running' ? 'charging' : state.phase === 'locked' || state.phase === 'served' ? 'confirmed' : 'idle';
