@@ -22,6 +22,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
+- Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
@@ -81,7 +82,8 @@ Current check notes verified on May 17, 2026:
 - `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
-- `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
+- `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects, then applies the audio mixer before playback.
+- `src/audio/audioSettings.ts` stores master, SFX, UI, future music, and mute settings safely in browser local storage.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
