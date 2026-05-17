@@ -102,7 +102,7 @@ Current check notes verified on May 17, 2026:
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, reward stats, and sends point/match rewards to saved progression.
 - `src/progression/playerProgress.ts` saves player level, XP, unlocks, best rally, best combo, and match record in browser localStorage.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
-- `src/physics/ShotPhysics.ts` calculates shot direction and speed.
+- `src/physics/ShotPhysics.ts` calculates shot direction, speed, arc, spin, and target risk.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
 - `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
 
