@@ -98,7 +98,8 @@ Important GitHub Pages settings:
 1. Open the repository on GitHub.
 2. Go to **Settings → Pages**.
 3. Set **Build and deployment → Source** to **GitHub Actions**.
-4. Push or merge changes into `main`, or start the workflow manually from the GitHub Actions tab.
-5. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
+4. Push or merge changes into `main`.
+5. The workflow at `.github/workflows/deploy.yml` installs dependencies with `npm ci`, builds the app with `npm run build`, uploads `smash-tennis (1)/dist`, and deploys it with the official GitHub Pages actions.
+6. Open https://jedbcov-coder.github.io/Smash_Tennis/ after the deployment finishes.
 
-The Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.
+The app folder is `smash-tennis (1)`, and the Vite base path stays set to `/Smash_Tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/Smash_Tennis/`, not from the root of the domain.

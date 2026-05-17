@@ -64,4 +64,4 @@ npm run build
 
 ## Deployment notes
 
-This project is set up for GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/Smash_Tennis/` after deployment.
+This project is set up for GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/. The deploy workflow lives at `.github/workflows/deploy.yml`, runs on pushes to `main`, installs the app from `smash-tennis (1)` with `npm ci`, builds it with `npm run build`, uploads `smash-tennis (1)/dist`, and publishes it with the official GitHub Pages actions. The Vite base path changes automatically during GitHub Actions builds so the game works under `/Smash_Tennis/` after deployment.

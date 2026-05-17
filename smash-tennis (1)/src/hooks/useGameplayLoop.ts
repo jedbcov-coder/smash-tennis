@@ -22,7 +22,7 @@ export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
-export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | `COMBO x${number}`;
+export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | 'FLAME SMASH' | `COMBO x${number}`;
 
 export interface ArcadeHudStats {
   serveSpeedMph: number;
@@ -122,6 +122,7 @@ export function useGameplayLoop({
   const [isAiSwinging, setIsAiSwinging] = useState(false);
   const [isAiMissing, setIsAiMissing] = useState(false);
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
+  const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
   const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
 
@@ -155,8 +156,8 @@ export function useGameplayLoop({
   }, [showCallout, updateArcadeHudStats]);
 
   const resetEnergy = useCallback(() => {
-    setArcadeHudStats((current) => ({ ...current, energyPercent: 0 }));
-  }, []);
+    updateArcadeHudStats((current) => ({ ...current, energyPercent: 0 }));
+  }, [updateArcadeHudStats]);
 
   const recordShot = useCallback((velocity: THREE.Vector3, options: { combo?: boolean; rally?: boolean; energy?: number; callout?: ArcadeCallout } = {}) => {
     const currentStats = arcadeHudStatsRef.current;
