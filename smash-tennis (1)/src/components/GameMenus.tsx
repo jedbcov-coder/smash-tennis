@@ -1,14 +1,5 @@
 import { GameState, type PlayerType } from '../types';
 
-interface ScoreDetails {
-  playerScore: string | number;
-  aiScore: string | number;
-  playerGames: number;
-  aiGames: number;
-  playerSets: number;
-  aiSets: number;
-}
-
 export function GameMenus({
   gameState,
   winner,
