@@ -21,6 +21,7 @@ import type { OpponentProfile } from '../gameplay/opponents';
 import { updateArcadeCamera } from '../gameplay/cameraController';
 import type { GameSettings } from '../settings/useGameSettings';
 import { dispatchGameEvent } from '../gameplay/gameEvents';
+import { random as gameplayRandom } from '../gameplay/random';
 import {
   calculateOverheadSmash,
   calculateWeakSmashReturn,

@@ -8,23 +8,16 @@ const disposeLater = (node: Tone.ToneAudioNode, delayMs = 900) => {
   window.setTimeout(() => node.dispose(), delayMs);
 };
 
-let masterVolumePercent = 80;
-let sfxVolumePercent = 80;
+const getAdjustedVolume = (volume: number, volumeAdjustment = 0) => {
+  if (!Number.isFinite(volumeAdjustment)) {
+    return null;
+  }
 
-export const setSoundVolumes = ({ masterVolume, sfxVolume }: { masterVolume: number; sfxVolume: number }) => {
-  masterVolumePercent = masterVolume;
-  sfxVolumePercent = sfxVolume;
-};
-
-const getAdjustedVolume = (volume: number) => {
-  const combinedVolume = (masterVolumePercent / 100) * (sfxVolumePercent / 100);
-  if (combinedVolume <= 0) return null;
-
-  return volume + 20 * Math.log10(combinedVolume);
+  return volume + volumeAdjustment;
 };
 
 const playBlip = (frequency: string, duration = '16n', volume = -14, volumeAdjustment = 0) => {
-  const adjustedVolume = getAdjustedVolume(volume + volumeAdjustment);
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -38,7 +31,7 @@ const playBlip = (frequency: string, duration = '16n', volume = -14, volumeAdjus
 };
 
 const playNoiseBurst = (duration = '32n', volume = -16, volumeAdjustment = 0) => {
-  const adjustedVolume = getAdjustedVolume(volume + volumeAdjustment);
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -52,7 +45,7 @@ const playNoiseBurst = (duration = '32n', volume = -16, volumeAdjustment = 0) =>
 };
 
 const playNotes = (notes: string[], stepSeconds = 0.06, volume = -14, volumeAdjustment = 0) => {
-  const adjustedVolume = getAdjustedVolume(volume + volumeAdjustment);
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -72,7 +65,7 @@ export const playNormalHitSound = (volumeAdjustment = 0) => {
 };
 
 export const playCurveHitSound = (volumeAdjustment = 0) => {
-  const adjustedVolume = getAdjustedVolume(-18 + volumeAdjustment);
+  const adjustedVolume = getAdjustedVolume(-18, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();

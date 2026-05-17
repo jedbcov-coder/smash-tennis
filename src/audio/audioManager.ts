@@ -12,16 +12,16 @@ import {
   playSmashHitSound,
   playUiHoverSound,
   playUiSelectSound,
-  playWinSound,
-  setSoundVolumes
+  playWinSound
 } from './sounds';
 import {
   type AudioMixerChannel,
   getAudioEventVolume,
+  updateAudioSettings,
   volumeToDecibelAdjustment
 } from './audioSettings';
 
-export const setAudioSettings = setSoundVolumes;
+export const setAudioSettings = updateAudioSettings;
 
 export type AudioEventName =
   | 'hit.normal'

@@ -14,7 +14,7 @@ import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
 import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { setAudioSettings } from '../audio/audioManager';
-import { useGameSettings, type GameSettings } from '../settings/useGameSettings';
+import { getAudioSettingsFromGameSettings, useGameSettings, type GameSettings } from '../settings/useGameSettings';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -216,8 +216,8 @@ export function Game() {
   } = useTennisGame();
 
   useEffect(() => {
-    setAudioSettings({ masterVolume: settings.masterVolume, sfxVolume: settings.sfxVolume });
-  }, [settings.masterVolume, settings.sfxVolume]);
+    setAudioSettings(getAudioSettingsFromGameSettings(settings));
+  }, [settings.masterVolume, settings.musicVolume, settings.sfxVolume]);
 
   const scorePoint = (winner: PlayerType) => {
     addPoint(winner, {

@@ -25,7 +25,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, and displayed theme color.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
-- Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving.
+- Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving. The settings menu keeps beginner-friendly 0% to 100% sliders, while audio playback converts those values to the 0 to 1 scale used by the sound engine.
 - Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
@@ -105,6 +105,8 @@ Current check notes verified on May 17, 2026:
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin decay, and surface bounce math separate from the ball visuals.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
+- `src/audio/audioSettings.ts` stores the shared audio volume settings and converts combined volume to decibels for playback.
+- `src/audio/sounds.ts` plays the Tone.js sound effects using only the decibel adjustment it receives from the audio manager.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, hit detection, and AI return shots using the selected opponent profile.
