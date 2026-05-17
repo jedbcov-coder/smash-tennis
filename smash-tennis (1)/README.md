@@ -17,6 +17,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Main features
 
+- Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
@@ -70,10 +71,14 @@ Current check notes:
 ## Project structure
 
 - `src/App.tsx` starts the main app screen.
+- `src/design/colorScheme.ts` keeps the shared neon palette in one place.
+- `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, and HUD together.
-- `src/components/GameHud.tsx` shows the in-game overlays and scoreboard.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the start and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
+- `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.

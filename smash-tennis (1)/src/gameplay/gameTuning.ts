@@ -105,11 +105,11 @@ export const COURT_SURFACE_SETTINGS = {
     playerMovementMultiplier: 1.04,
     spinCurveMultiplier: 0.9,
     colors: {
-      surrounding: '#164e63',
-      playingSurface: '#166534',
-      lines: '#f8fafc',
-      net: '#f8fafc',
-      netPost: '#0f172a'
+      surrounding: '#06131f',
+      playingSurface: '#0f3b2e',
+      lines: COLOR_SCHEME.neon.cyanSoft,
+      net: COLOR_SCHEME.neon.magenta,
+      netPost: COLOR_SCHEME.neon.orange
     }
   },
   clay: {
@@ -121,11 +121,11 @@ export const COURT_SURFACE_SETTINGS = {
     playerMovementMultiplier: 0.92,
     spinCurveMultiplier: 1.25,
     colors: {
-      surrounding: '#7c2d12',
-      playingSurface: '#c2410c',
-      lines: '#fff7ed',
-      net: '#fef3c7',
-      netPost: '#431407'
+      surrounding: '#24100b',
+      playingSurface: '#7c2d12',
+      lines: COLOR_SCHEME.neon.goldSoft,
+      net: COLOR_SCHEME.neon.orange,
+      netPost: COLOR_SCHEME.neon.danger
     }
   },
   hard: {
@@ -137,11 +137,11 @@ export const COURT_SURFACE_SETTINGS = {
     playerMovementMultiplier: 1,
     spinCurveMultiplier: 1,
     colors: {
-      surrounding: '#1e40af',
-      playingSurface: '#2563eb',
-      lines: '#ffffff',
-      net: '#ffffff',
-      netPost: '#111827'
+      surrounding: COLOR_SCHEME.neon.backgroundSoft,
+      playingSurface: '#172554',
+      lines: COLOR_SCHEME.neon.cyan,
+      net: COLOR_SCHEME.neon.white,
+      netPost: COLOR_SCHEME.neon.violetBlue
     }
   },
   neon: {
@@ -153,11 +153,11 @@ export const COURT_SURFACE_SETTINGS = {
     playerMovementMultiplier: 1.08,
     spinCurveMultiplier: 1.45,
     colors: {
-      surrounding: '#0f172a',
-      playingSurface: '#312e81',
-      lines: '#22d3ee',
-      net: '#e879f9',
-      netPost: '#f97316'
+      surrounding: COLOR_SCHEME.neon.background,
+      playingSurface: COLOR_SCHEME.neon.violetBlueDeep,
+      lines: COLOR_SCHEME.neon.cyan,
+      net: COLOR_SCHEME.neon.magentaHot,
+      netPost: COLOR_SCHEME.neon.orangeHot
     }
   },
   ice: {
@@ -169,11 +169,11 @@ export const COURT_SURFACE_SETTINGS = {
     playerMovementMultiplier: 0.82,
     spinCurveMultiplier: 1.1,
     colors: {
-      surrounding: '#082f49',
-      playingSurface: '#67e8f9',
-      lines: '#f0f9ff',
-      net: '#bae6fd',
-      netPost: '#075985'
+      surrounding: '#051923',
+      playingSurface: '#155e75',
+      lines: COLOR_SCHEME.neon.white,
+      net: COLOR_SCHEME.neon.cyanSoft,
+      netPost: COLOR_SCHEME.neon.cyan
     }
   }
 } satisfies Record<CourtSurface, CourtSurfaceTuning>;
