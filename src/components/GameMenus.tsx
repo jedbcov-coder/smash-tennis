@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { playAudioEvent } from '../audio/audioManager';
+import { presentationDirector } from '../presentation/presentationDirector';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
+import { SettingsMenu } from './SettingsMenu';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
+import { PLAYER_LEVEL_XP, type PlayerProgress } from '../progression/playerProgress';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
+import type { GameSettings } from '../settings/useGameSettings';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
-const AI_NAME = 'Hidalgo';
 
 export function GameMenus({
   gameState,
@@ -18,7 +21,8 @@ export function GameMenus({
   setCourtSurface,
   score,
   pointReward,
-  matchStats
+  matchStats,
+  playerProgress
 }: {
   gameState: GameState;
   winner: PlayerType | null;
@@ -28,6 +32,7 @@ export function GameMenus({
   score: Score;
   pointReward: PointReward | null;
   matchStats: MatchStats;
+  playerProgress: PlayerProgress;
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
@@ -42,6 +47,11 @@ export function GameMenus({
     setCourtSurface(surface);
   };
 
+  const handleOpponentSelect = (opponentId: OpponentId) => {
+    playAudioEvent('ui.select');
+    setOpponentId(opponentId);
+  };
+
   useEffect(() => {
     if (gameState !== GameState.GAME_OVER) {
       playedResultFor.current = null;
@@ -53,7 +63,7 @@ export function GameMenus({
     }
 
     playedResultFor.current = winner;
-    playAudioEvent(winner === 'PLAYER' ? 'match.win' : 'match.defeat');
+    presentationDirector.presentMoment('match.result', { winner });
   }, [gameState, winner]);
 
   if (gameState === GameState.MENU) {
@@ -73,6 +83,7 @@ export function GameMenus({
             Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-cyan-100/75">Choose court</div>
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {COURT_SURFACES.map((surface) => {
               const settings = COURT_SURFACE_SETTINGS[surface];
@@ -93,10 +104,17 @@ export function GameMenus({
             })}
           </div>
 
-          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+          <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
             Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
             <span className="mx-2 text-white/25">|</span>
             Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
+          </div>
+
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 rounded-2xl border border-cyan-200/20 bg-black/50 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div><span className="block text-white/45">Level</span><span className="font-black text-white">{playerProgress.playerLevel}</span></div>
+            <div><span className="block text-white/45">Total XP</span><span className="font-black text-white">{playerProgress.totalXp}</span></div>
+            <div><span className="block text-white/45">Record</span><span className="font-black text-white">{playerProgress.matchWins}-{playerProgress.matchLosses}</span></div>
+            <div><span className="block text-white/45">Best Rally</span><span className="font-black text-white">{playerProgress.bestRally}</span></div>
           </div>
 
           <button
@@ -122,13 +140,13 @@ export function GameMenus({
               <div className="text-4xl font-black italic uppercase text-blue-200">{PLAYER_NAME}</div>
             </div>
             <div className="text-3xl font-black italic text-white/70">VS</div>
-            <div className="rounded-2xl bg-red-600/25 p-5">
-              <div className="text-sm uppercase tracking-widest text-red-100/70">Rival</div>
-              <div className="text-4xl font-black italic uppercase text-red-200">{AI_NAME}</div>
+            <div className="rounded-2xl p-5" style={{ background: `${opponentProfile.theme.color}33` }}>
+              <div className="text-sm uppercase tracking-widest text-white/70">Rival</div>
+              <div className="text-4xl font-black italic uppercase" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</div>
             </div>
           </div>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
-            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span> against <span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
           </div>
           <div className="mt-6 animate-pulse text-2xl font-black italic uppercase tracking-[0.35em] text-orange-200">Get Ready</div>
         </div>
@@ -138,8 +156,8 @@ export function GameMenus({
 
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
-    const pointXp = pointReward?.xpGained ?? 0;
-    const progressPercent = Math.min(100, pointXp);
+    const xpIntoLevel = playerProgress.totalXp % PLAYER_LEVEL_XP;
+    const progressPercent = Math.min(100, (xpIntoLevel / PLAYER_LEVEL_XP) * 100);
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
@@ -159,7 +177,7 @@ export function GameMenus({
           </p>
 
           <div className="mb-6 grid w-full grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
-            <div><span className="block text-white/45">Score</span><span className="font-black text-white">{score.playerSets}-{score.aiSets} sets</span></div>
+            <div><span className="block text-white/45">Rival</span><span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span></div>
             <div><span className="block text-white/45">Points won</span><span className="font-black text-white">{matchStats.playerPointsWon}-{matchStats.aiPointsWon}</span></div>
             <div><span className="block text-white/45">Best combo</span><span className="font-black text-white">x{matchStats.bestCombo}</span></div>
             <div><span className="block text-white/45">Longest rally</span><span className="font-black text-white">{matchStats.longestRally}</span></div>
@@ -180,8 +198,11 @@ export function GameMenus({
           <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Career XP</span>{playerProgress.totalXp}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Level</span>{playerProgress.playerLevel}</div>
+          </div>
+          <div className="mb-6 w-full">
+            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
           </div>
           <button
             onClick={handleStartGame}
