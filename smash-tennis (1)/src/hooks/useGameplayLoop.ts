@@ -122,6 +122,7 @@ export function useGameplayLoop({
   const [isAiSwinging, setIsAiSwinging] = useState(false);
   const [isAiMissing, setIsAiMissing] = useState(false);
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
+  const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
   const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
@@ -156,8 +157,8 @@ export function useGameplayLoop({
   }, [showCallout, updateArcadeHudStats]);
 
   const resetEnergy = useCallback(() => {
-    setArcadeHudStats((current) => ({ ...current, energyPercent: 0 }));
-  }, []);
+    updateArcadeHudStats((current) => ({ ...current, energyPercent: 0 }));
+  }, [updateArcadeHudStats]);
 
   const recordShot = useCallback((velocity: THREE.Vector3, options: { combo?: boolean; rally?: boolean; energy?: number; callout?: ArcadeCallout } = {}) => {
     const currentStats = arcadeHudStatsRef.current;
