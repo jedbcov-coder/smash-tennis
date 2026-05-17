@@ -29,6 +29,7 @@ export function GameMenus({
   pointReward: PointReward | null;
   matchStats: MatchStats;
 }) {
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
