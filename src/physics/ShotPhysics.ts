@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { COURT_SURFACE_SETTINGS, SHOT_TARGETS } from '../gameplay/gameTuning';
+import { randomCentered, randomRange } from '../gameplay/random';
 import type { CourtSurface } from '../types';
 
 export type CourtSide = 'PLAYER' | 'AI';
@@ -21,9 +22,9 @@ export function calculateLegalShot(
   // Target area depends on which side we are hitting to.
   let targetZ =
     toSide === 'AI'
-      ? SHOT_TARGETS.aiMinZ - Math.random() * SHOT_TARGETS.aiZRange
-      : SHOT_TARGETS.playerMinZ + Math.random() * SHOT_TARGETS.playerZRange;
-  let targetX = (Math.random() - 0.5) * SHOT_TARGETS.rallyXRange;
+      ? randomRange(SHOT_TARGETS.aiMinZ - SHOT_TARGETS.aiZRange, SHOT_TARGETS.aiMinZ)
+      : randomRange(SHOT_TARGETS.playerMinZ, SHOT_TARGETS.playerMinZ + SHOT_TARGETS.playerZRange);
+  let targetX = randomCentered(SHOT_TARGETS.rallyXRange);
 
   if (isServe) {
     // Enforce diagonal serve cross-court.
@@ -35,7 +36,7 @@ export function calculateLegalShot(
       targetX = serveSide === 'DEUCE' ? SHOT_TARGETS.serveDeuceTargetX : SHOT_TARGETS.serveAdTargetX;
     }
     // Add slight randomness to serve target.
-    targetX += (Math.random() - 0.5) * SHOT_TARGETS.serveRandomXRange;
+    targetX += randomCentered(SHOT_TARGETS.serveRandomXRange);
   }
 
   const dy = fromPos.y - 0.1;

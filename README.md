@@ -32,6 +32,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
+- Seeded gameplay randomness for shot placement, AI return targeting, and serve fault checks, while visual effects can still stay visually varied.
 
 ## How to run locally
 
@@ -84,6 +85,7 @@ Current check notes verified on May 17, 2026:
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
+- `src/gameplay/random.ts` keeps the small seeded gameplay random helper functions in one place.
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.

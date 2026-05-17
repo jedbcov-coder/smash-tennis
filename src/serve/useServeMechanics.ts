@@ -4,6 +4,7 @@ import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { SERVE_POSITIONS, PLAYER_MOVEMENT_LIMITS } from '../gameplay/gameTuning';
 import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import { playAudioEvent } from '../audio/audioManager';
+import { chance, randomCentered } from '../gameplay/random';
 import type { BallHandle } from '../environment/Ball';
 
 export type ServeMeterQuality = 'Weak Serve' | 'Standard Serve' | 'Perfect Serve' | 'Power Serve' | 'Fault';
@@ -75,8 +76,8 @@ function applyServeOutcome(serveVel: THREE.Vector3, outcome: ServeOutcome, diffi
   const tunedVelocity = serveVel.clone().multiplyScalar(outcome.speedMultiplier);
   const wobbleAmount = outcome.accuracyWobble * Math.min(difficultyMultiplier, 1.15);
 
-  tunedVelocity.x += (Math.random() - 0.5) * wobbleAmount;
-  tunedVelocity.z += (Math.random() - 0.5) * wobbleAmount * 0.35;
+  tunedVelocity.x += randomCentered(wobbleAmount);
+  tunedVelocity.z += randomCentered(wobbleAmount * 0.35);
 
   return tunedVelocity;
 }
@@ -154,7 +155,7 @@ export function useServeMechanics({
         const outcome = getServeOutcome(playerMeterPosition.current);
         publishServeMeterState({ phase: 'locked', position: playerMeterPosition.current, qualityLabel: outcome.label, servingPlayer: 'PLAYER' });
 
-        const isFault = Math.random() < Math.min(1, outcome.faultChance * difficultyStats.gameDifficultyMultiplier);
+        const isFault = chance(outcome.faultChance * difficultyStats.gameDifficultyMultiplier);
         playerMeterStartedAt.current = 0;
 
         if (isFault) {
@@ -203,7 +204,7 @@ export function useServeMechanics({
       }
       
       if (now >= aiServeReadyAt.current) {
-        const isFault = Math.random() < 0.10; // AI has 10% chance to fault
+        const isFault = chance(0.10); // AI has 10% chance to fault
         if (isFault) {
           publishServeMeterState({ phase: 'served', position: 0, qualityLabel: 'Fault', servingPlayer: 'AI' });
           addFault();

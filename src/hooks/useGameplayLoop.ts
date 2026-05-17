@@ -18,6 +18,7 @@ import { usePlayerInput } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
 import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
+import { random as gameplayRandom } from '../gameplay/random';
 import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
 import {
   calculateOverheadSmash,
@@ -315,7 +316,7 @@ export function useGameplayLoop({
       difficultyStats,
       surfaceSettings,
       isFlameSmash,
-      random: Math.random
+      random: gameplayRandom
     });
     ballRef.current?.setVelocity(smashVelocity, smashSpin);
     recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? 'FLAME SMASH' : 'MEGA SMASH' });
@@ -517,7 +518,7 @@ export function useGameplayLoop({
           aiX: aiPos.current.x,
           difficultyStats,
           surfaceSettings,
-          random: Math.random
+          random: gameplayRandom
         });
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
