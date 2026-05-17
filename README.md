@@ -4,7 +4,7 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, shot types with timing quality, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
 
 ## Controls
 
@@ -20,6 +20,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
+- Shot physics with flat, topspin, slice, lob, drop, smash, and special shot tuning. Shot quality can be early, good, perfect, late, or miss, which changes speed, arc, spin, and target risk.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
@@ -84,13 +85,14 @@ Current check notes verified on May 17, 2026:
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
+- `src/gameplay/shotTypes.ts` defines the shared shot types, hit qualities, and beginner-readable tuning values for shot physics.
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
-- `src/physics/ShotPhysics.ts` calculates shot direction and speed.
+- `src/physics/ShotPhysics.ts` calculates shot direction, speed, arc, spin, and target risk.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
 - `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
 
