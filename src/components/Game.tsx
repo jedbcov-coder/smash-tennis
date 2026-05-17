@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Court } from '../environment/Court';
@@ -12,6 +12,7 @@ import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
 import { COLOR_SCHEME } from '../design/colorScheme';
+import type { PresentationHudCallout } from '../presentation/presentationDirector';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -172,6 +173,8 @@ function GameScene({
 
 export function Game() {
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [presentationCallout, setPresentationCallout] = useState<PresentationHudCallout | null>(null);
+  const presentationCalloutTimeout = useRef<number | null>(null);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
     energyPercent: 0,
@@ -200,6 +203,31 @@ export function Game() {
     targetRallyLength,
     difficultyStats
   } = useTennisGame();
+
+  useEffect(() => {
+    const handlePresentationCallout = (event: Event) => {
+      const callout = (event as CustomEvent<PresentationHudCallout>).detail;
+      setPresentationCallout(callout);
+
+      if (presentationCalloutTimeout.current !== null) {
+        window.clearTimeout(presentationCalloutTimeout.current);
+      }
+
+      presentationCalloutTimeout.current = window.setTimeout(() => {
+        setPresentationCallout(null);
+        presentationCalloutTimeout.current = null;
+      }, 1200);
+    };
+
+    window.addEventListener('presentation:hud-callout', handlePresentationCallout);
+
+    return () => {
+      window.removeEventListener('presentation:hud-callout', handlePresentationCallout);
+      if (presentationCalloutTimeout.current !== null) {
+        window.clearTimeout(presentationCalloutTimeout.current);
+      }
+    };
+  }, []);
 
   const scorePoint = (winner: PlayerType) => {
     addPoint(winner, {
@@ -237,7 +265,7 @@ export function Game() {
         lastPointWinner={lastPointWinner}
         serverFaults={serverFaults}
         courtSurface={courtSurface}
-        arcadeHudStats={arcadeHudStats}
+        arcadeHudStats={{ ...arcadeHudStats, callout: presentationCallout ?? arcadeHudStats.callout }}
         pointReward={pointReward}
       />
 

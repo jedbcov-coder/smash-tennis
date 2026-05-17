@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { playAudioEvent } from '../audio/audioManager';
+import { presentationDirector } from '../presentation/presentationDirector';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -53,7 +54,7 @@ export function GameMenus({
     }
 
     playedResultFor.current = winner;
-    playAudioEvent(winner === 'PLAYER' ? 'match.win' : 'match.defeat');
+    presentationDirector.presentMoment('match.result', { winner });
   }, [gameState, winner]);
 
   if (gameState === GameState.MENU) {

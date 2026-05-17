@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { BallHandle } from '../environment/Ball';
@@ -13,6 +13,7 @@ import {
   COURT_SURFACE_SETTINGS
 } from '../gameplay/gameTuning';
 import { playAudioEvent } from '../audio/audioManager';
+import { createPresentationDirector, type PresentationCameraInstruction, type PresentationHudCallout } from '../presentation/presentationDirector';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
@@ -33,7 +34,7 @@ export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
-export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | 'FLAME SMASH' | `COMBO x${number}`;
+export type ArcadeCallout = PresentationHudCallout;
 
 export type ArcadeHudServeMeterPhase = 'idle' | 'charging' | 'confirmed';
 
@@ -125,6 +126,7 @@ export function useGameplayLoop({
   const smashOpportunity = useRef<SmashOpportunity>(createEmptySmashOpportunity());
   const smashCooldownUntil = useRef(0);
   const cameraShakeUntil = useRef(0);
+  const elapsedTimeRef = useRef(0);
   const consecutiveReturns = useRef(0);
   const previousBallZ = useRef(0);
   const pointEndedRef = useRef(false);
@@ -161,6 +163,18 @@ export function useGameplayLoop({
     }, 1200);
   }, [updateArcadeHudStats]);
 
+  const handleCameraInstruction = useCallback((instruction: PresentationCameraInstruction) => {
+    const shakeSeconds = 'shakeSeconds' in instruction ? instruction.shakeSeconds : 0;
+    if (shakeSeconds <= 0) return;
+
+    cameraShakeUntil.current = Math.max(cameraShakeUntil.current, elapsedTimeRef.current + shakeSeconds);
+  }, []);
+
+  const presentationDirector = useMemo(() => createPresentationDirector({
+    onCameraInstruction: handleCameraInstruction,
+    onHudCallout: showCallout
+  }), [handleCameraInstruction, showCallout]);
+
   const addEnergy = useCallback((amount: number) => {
     const currentEnergy = arcadeHudStatsRef.current.energyPercent;
     const nextEnergy = Math.min(100, currentEnergy + amount);
@@ -168,9 +182,9 @@ export function useGameplayLoop({
     updateArcadeHudStats((current) => ({ ...current, energyPercent: nextEnergy }));
 
     if (currentEnergy < 100 && nextEnergy >= 100) {
-      window.setTimeout(() => showCallout('POWER READY'), 0);
+      window.setTimeout(() => presentationDirector.triggerHudCallout('POWER READY'), 0);
     }
-  }, [showCallout, updateArcadeHudStats]);
+  }, [presentationDirector, updateArcadeHudStats]);
 
   const resetEnergy = useCallback(() => {
     updateArcadeHudStats((current) => ({ ...current, energyPercent: 0 }));
@@ -194,14 +208,15 @@ export function useGameplayLoop({
 
     if (options.rally && nextRally > 0 && nextRally % 6 === 0) {
       addEnergy(8);
+      presentationDirector.presentMoment('rally.long', { rallyCount: nextRally });
     }
 
     if (options.callout) {
-      showCallout(options.callout);
+      presentationDirector.triggerHudCallout(options.callout);
     } else if (options.combo && nextCombo > 1 && nextCombo % 3 === 0) {
-      showCallout(`COMBO x${nextCombo}`);
+      presentationDirector.triggerHudCallout(`COMBO x${nextCombo}`);
     }
-  }, [addEnergy, showCallout, updateArcadeHudStats]);
+  }, [addEnergy, presentationDirector, updateArcadeHudStats]);
 
   useEffect(() => {
     onArcadeHudStatsChange?.(arcadeHudStats);
@@ -305,7 +320,7 @@ export function useGameplayLoop({
   const startSmashOpportunity = (now: number, ballPos: THREE.Vector3) => {
     smashOpportunity.current = createSmashOpportunity(now, ballPos);
     setIsSmashOpportunityVisible(true);
-    triggerGameplayEvent('smash:opportunity');
+    presentationDirector.presentMoment('smash.opportunity');
   };
 
   const performOverheadSmash = (ballPos: THREE.Vector3, now: number, isFlameSmash = false) => {
@@ -318,7 +333,7 @@ export function useGameplayLoop({
       random: Math.random
     });
     ballRef.current?.setVelocity(smashVelocity, smashSpin);
-    recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? 'FLAME SMASH' : 'MEGA SMASH' });
+    recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? undefined : 'MEGA SMASH' });
     if (isFlameSmash) {
       resetEnergy();
       setCurrentSpecialMove('FLAME_SMASH');
@@ -338,8 +353,12 @@ export function useGameplayLoop({
     setTimeout(() => setIsVisualSmashing(false), isFlameSmash ? 460 : 320);
     endSmashOpportunity();
     triggerGameplayEvent('smash:activated');
-    triggerGameplayEvent(isFlameSmash ? 'vfx:flame-smash' : 'vfx:overhead-smash');
-    playAudioEvent(isFlameSmash ? 'special.flameSmash' : 'hit.smash');
+    if (isFlameSmash) {
+      presentationDirector.presentMoment('smash.flame');
+    } else {
+      presentationDirector.triggerVfxEvent('vfx:overhead-smash');
+      presentationDirector.triggerAudioEvent('hit.smash');
+    }
     clearSwingInput();
     clearSpecialMoveInput();
   };
@@ -386,6 +405,7 @@ export function useGameplayLoop({
     const ballPos = ballRef.current?.getPosition() || new THREE.Vector3();
     const ballVel = ballRef.current?.getVelocity() || new THREE.Vector3();
     const now = state.clock.getElapsedTime();
+    elapsedTimeRef.current = now;
 
     if (gameState === GameState.SERVING) {
       const serverPos = servingPlayer === 'PLAYER' ? playerPos.current : aiPos.current;
@@ -541,12 +561,16 @@ export function useGameplayLoop({
           combo: true,
           rally: true,
           energy: isPerfectReturn ? 16 : 10,
-          callout: isPerfectReturn ? 'PERFECT RETURN' : undefined
+          callout: undefined
         });
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
-        playAudioEvent(isPerfectReturn ? 'return.perfect' : Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
-        triggerGameplayEvent('vfx:hit.normal');
+        if (isPerfectReturn) {
+          presentationDirector.presentMoment('return.perfect');
+        } else {
+          presentationDirector.triggerAudioEvent(Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
+          presentationDirector.triggerVfxEvent('vfx:hit.normal');
+        }
 
         clearSwingInput();
       }
