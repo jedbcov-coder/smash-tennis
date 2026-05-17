@@ -11,8 +11,10 @@ import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
+import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { COLOR_SCHEME } from '../design/colorScheme';
-import type { PresentationHudCallout } from '../presentation/presentationDirector';
+import { setAudioSettings } from '../audio/audioManager';
+import { useGameSettings, type GameSettings } from '../settings/useGameSettings';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -81,6 +83,7 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
+  opponentProfile,
   onArcadeHudStatsChange
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
@@ -96,7 +99,9 @@ function GameScene({
     racketAccuracyRadius: number;
   };
   courtSurface: CourtSurface;
+  opponentProfile: OpponentProfile;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
+  settings: GameSettings;
 }) {
   const {
     ballRef,
@@ -119,6 +124,7 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
+    opponentProfile,
     onArcadeHudStatsChange
   });
 
@@ -143,7 +149,7 @@ function GameScene({
       <Character
         initialPosition={[0, 0, -9]}
         positionRef={aiPos}
-        color={COLOR_SCHEME.characters.ai}
+        color={opponentProfile.theme.color}
         isAI
         isSwinging={isAiSwinging}
         isMissing={isAiMissing}
@@ -156,7 +162,7 @@ function GameScene({
         courtSurface={courtSurface}
       />
 
-      <VFXController ballRef={ballRef} />
+      <VFXController ballRef={ballRef} reducedMotion={settings.reducedMotion} />
 
       {isSmashOpportunityVisible && (
         <mesh position={[playerPos.current.x, 0.08, playerPos.current.z]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -172,9 +178,10 @@ function GameScene({
 }
 
 export function Game() {
+  const { settings, setSettings, resetSettings } = useGameSettings();
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
-  const [presentationCallout, setPresentationCallout] = useState<PresentationHudCallout | null>(null);
-  const presentationCalloutTimeout = useRef<number | null>(null);
+  const [opponentId, setOpponentId] = useState<OpponentId>(DEFAULT_OPPONENT_PROFILE.id);
+  const opponentProfile = getOpponentProfile(opponentId);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
     energyPercent: 0,
@@ -182,7 +189,8 @@ export function Game() {
     rallyCount: 0,
     rallyIntensity: 0,
     callout: null,
-    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER }
+    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER },
+    inputSource: 'mouse'
   });
 
   const {
@@ -196,6 +204,7 @@ export function Game() {
     lastPointWinner,
     pointReward,
     matchStats,
+    playerProgress,
     servingPlayer,
     serveSide,
     serverFaults,
@@ -205,29 +214,8 @@ export function Game() {
   } = useTennisGame();
 
   useEffect(() => {
-    const handlePresentationCallout = (event: Event) => {
-      const callout = (event as CustomEvent<PresentationHudCallout>).detail;
-      setPresentationCallout(callout);
-
-      if (presentationCalloutTimeout.current !== null) {
-        window.clearTimeout(presentationCalloutTimeout.current);
-      }
-
-      presentationCalloutTimeout.current = window.setTimeout(() => {
-        setPresentationCallout(null);
-        presentationCalloutTimeout.current = null;
-      }, 1200);
-    };
-
-    window.addEventListener('presentation:hud-callout', handlePresentationCallout);
-
-    return () => {
-      window.removeEventListener('presentation:hud-callout', handlePresentationCallout);
-      if (presentationCalloutTimeout.current !== null) {
-        window.clearTimeout(presentationCalloutTimeout.current);
-      }
-    };
-  }, []);
+    setAudioSettings({ masterVolume: settings.masterVolume, sfxVolume: settings.sfxVolume });
+  }, [settings.masterVolume, settings.sfxVolume]);
 
   const scorePoint = (winner: PlayerType) => {
     addPoint(winner, {
@@ -239,7 +227,7 @@ export function Game() {
   };
 
   return (
-    <div className="w-full h-full relative font-mono overflow-hidden bg-black select-none">
+    <div className={`w-full h-full relative font-mono overflow-hidden bg-black select-none ${settings.highContrastMode ? 'game-high-contrast' : ''} ${settings.reducedMotion ? 'game-reduced-motion' : ''}`}>
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <GameScene
           onScore={scorePoint}
@@ -251,7 +239,9 @@ export function Game() {
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
+          opponentProfile={opponentProfile}
           onArcadeHudStatsChange={setArcadeHudStats}
+          settings={settings}
         />
       </Canvas>
 
@@ -267,6 +257,7 @@ export function Game() {
         courtSurface={courtSurface}
         arcadeHudStats={{ ...arcadeHudStats, callout: presentationCallout ?? arcadeHudStats.callout }}
         pointReward={pointReward}
+        settings={settings}
       />
 
       <GameMenus
@@ -278,6 +269,7 @@ export function Game() {
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
+        playerProgress={playerProgress}
       />
     </div>
   );

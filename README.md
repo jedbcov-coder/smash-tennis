@@ -4,11 +4,13 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
+- Choose rival: pick Hidalgo, Nova, or Racketron on the start screen. Each rival has its own color, speed, accuracy, aggression, miss chance, preferred shot, and special move style.
 - Move Blake: move your mouse around the game screen.
 - Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
@@ -19,18 +21,21 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
+- Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
+- Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, and displayed theme color.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
-- Central presentation director coordinates big moments like match intro, serve start, perfect returns, long rallies, smash chances, Flame Smash, match point, and win/loss with camera cues, HUD callouts, audio, and VFX events.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Start screen with selectable court and rival cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Start screen with selectable court cards, saved player level, total XP, win-loss record, best rally, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Browser progress saving with localStorage for player level, total XP, unlocked courts, unlocked cosmetics, best rally, best combo, and match wins/losses.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
 
@@ -77,19 +82,25 @@ Current check notes verified on May 17, 2026:
 - `src/design/colorScheme.ts` keeps the shared neon palette in one place.
 - `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
-- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, optional input help, and arcade callouts.
+- `src/components/SettingsMenu.tsx` shows the saved settings controls for volume, motion, screen shake, contrast, and input help.
+- `src/settings/useGameSettings.ts` loads and saves game settings in browser localStorage.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start screen, court selection, rival selection, intro matchup, and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens, including saved player progress.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
+- `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin decay, and surface bounce math separate from the ball visuals.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
-- `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
+- `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots using the selected opponent profile.
+- `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
-- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
+- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, reward stats, and sends point/match rewards to saved progression.
+- `src/progression/playerProgress.ts` saves player level, XP, unlocks, best rally, best combo, and match record in browser localStorage.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
 - `src/physics/ShotPhysics.ts` calculates shot direction and speed.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
