@@ -3,6 +3,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { type BallHandle } from '../environment/Ball';
+import { subscribeToGameEvent } from '../gameplay/gameEvents';
 
 type ActiveEffect = {
   id: string;
@@ -125,17 +126,17 @@ export function VFXController({ ballRef }: { ballRef: React.RefObject<BallHandle
       }, 180);
     };
 
-    window.addEventListener('vfx:hit.normal', onNormal);
-    window.addEventListener('vfx:overhead-smash', onSmash);
-    window.addEventListener('vfx:flame-smash', onFlameSmash);
+    const unsubscribeFromNormalHit = subscribeToGameEvent('hit.normal', onNormal);
+    const unsubscribeFromOverheadSmash = subscribeToGameEvent('vfx.overheadSmash', onSmash);
+    const unsubscribeFromFlameSmash = subscribeToGameEvent('vfx.flameSmash', onFlameSmash);
 
     return () => {
-        window.removeEventListener('vfx:hit.normal', onNormal);
-        window.removeEventListener('vfx:overhead-smash', onSmash);
-        window.removeEventListener('vfx:flame-smash', onFlameSmash);
-        if (flameFlashTimeout.current !== null) {
-          window.clearTimeout(flameFlashTimeout.current);
-        }
+      unsubscribeFromNormalHit();
+      unsubscribeFromOverheadSmash();
+      unsubscribeFromFlameSmash();
+      if (flameFlashTimeout.current !== null) {
+        window.clearTimeout(flameFlashTimeout.current);
+      }
     };
   }, [ballRef]);
 

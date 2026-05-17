@@ -19,6 +19,7 @@ import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from 
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
 import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
 import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
+import { dispatchGameEvent } from '../gameplay/gameEvents';
 import {
   calculateOverheadSmash,
   calculateWeakSmashReturn,
@@ -88,10 +89,6 @@ interface UseGameplayLoopOptions {
 }
 
 type SpecialMoveName = 'FLAME_SMASH';
-
-function triggerGameplayEvent(name: string) {
-  window.dispatchEvent(new CustomEvent(name));
-}
 
 export function useGameplayLoop({
   onScore,
@@ -305,7 +302,7 @@ export function useGameplayLoop({
   const startSmashOpportunity = (now: number, ballPos: THREE.Vector3) => {
     smashOpportunity.current = createSmashOpportunity(now, ballPos);
     setIsSmashOpportunityVisible(true);
-    triggerGameplayEvent('smash:opportunity');
+    dispatchGameEvent('smash.opportunity');
   };
 
   const performOverheadSmash = (ballPos: THREE.Vector3, now: number, isFlameSmash = false) => {
@@ -337,8 +334,8 @@ export function useGameplayLoop({
     setIsVisualSmashing(true);
     setTimeout(() => setIsVisualSmashing(false), isFlameSmash ? 460 : 320);
     endSmashOpportunity();
-    triggerGameplayEvent('smash:activated');
-    triggerGameplayEvent(isFlameSmash ? 'vfx:flame-smash' : 'vfx:overhead-smash');
+    dispatchGameEvent('smash.activated');
+    dispatchGameEvent(isFlameSmash ? 'vfx.flameSmash' : 'vfx.overheadSmash');
     playAudioEvent(isFlameSmash ? 'special.flameSmash' : 'hit.smash');
     clearSwingInput();
     clearSpecialMoveInput();
@@ -350,7 +347,6 @@ export function useGameplayLoop({
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
     consecutiveReturns.current++;
-    triggerGameplayEvent('smash:weak-return');
     playAudioEvent('hit.normal');
   };
 
@@ -464,7 +460,7 @@ export function useGameplayLoop({
           const closeEnoughForWeakReturn = isCloseEnoughForWeakSmashReturn(ballPos, playerPos.current.x);
           endSmashOpportunity();
           smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
-          triggerGameplayEvent('smash:missed');
+          dispatchGameEvent('smash.missed');
           if (closeEnoughForWeakReturn) {
             performWeakSmashFailReturn(ballPos);
           }
@@ -524,7 +520,7 @@ export function useGameplayLoop({
         setLastHitter('AI');
         triggerAiSwing();
         playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
-        triggerGameplayEvent('vfx:hit.normal');
+        dispatchGameEvent('hit.normal');
       }
     }
 
@@ -546,7 +542,7 @@ export function useGameplayLoop({
         setLastHitter('PLAYER');
         consecutiveReturns.current++;
         playAudioEvent(isPerfectReturn ? 'return.perfect' : Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
-        triggerGameplayEvent('vfx:hit.normal');
+        dispatchGameEvent('hit.normal');
 
         clearSwingInput();
       }
