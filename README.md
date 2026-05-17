@@ -2,9 +2,9 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/smash-tennis/
+Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, serves, rallies, and bigger overhead smash moments.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, serves, rallies, and bigger overhead smash moments and a Flame Smash special move.
 
 ## Controls
 
@@ -13,6 +13,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Serve: click or press Space when it is your serve.
 - Swing: click or press Space when the ball reaches your side.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
+- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash.
 
 ## Main features
 
@@ -20,11 +21,12 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
+- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - 3D tennis court built with React, Vite, Three.js, and React Three Fiber.
 - Player-vs-AI rallies against Hidalgo.
 - Tennis-style points, games, sets, serving turns, second serves, and double faults.
 - Overhead smash effects with stronger acceleration, slow motion, highlight rings, screen shake, and sound.
+- Flame Smash spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - GitHub Pages-friendly static build.
 
 ## How to run locally
@@ -60,4 +62,4 @@ npm run build
 
 ## Deployment notes
 
-This project is set up for GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/smash-tennis/` after deployment.
+This project is set up for GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/Smash_Tennis/` after deployment.

@@ -6,12 +6,14 @@ export type AudioEventName =
   | 'point.player'
   | 'point.ai'
   | 'ai.nearMiss'
-  | 'ui.start';
+  | 'ui.start'
+  | 'special.flameSmash';
 
 export const playAudioEvent = (eventName: AudioEventName) => {
   switch (eventName) {
     case 'hit.normal':
     case 'hit.smash':
+    case 'special.flameSmash':
       return playHitSound();
     case 'point.player':
     case 'ui.start':
