@@ -16,7 +16,7 @@ import {
 import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
-import { useServeMechanics } from '../serve/useServeMechanics';
+import { useServeMechanics, type ServeMeterState } from '../serve/useServeMechanics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -53,6 +53,7 @@ interface UseGameplayLoopOptions {
   difficultyStats: GameplayDifficultyStats;
   courtSurface: CourtSurface;
   onArcadeHudStatsChange?: (stats: ArcadeHudStats) => void;
+  onServeMeterChange?: (state: ServeMeterState) => void;
 }
 
 type SmashOpportunity = {
@@ -87,7 +88,8 @@ export function useGameplayLoop({
   targetRallyLength,
   difficultyStats,
   courtSurface,
-  onArcadeHudStatsChange
+  onArcadeHudStatsChange,
+  onServeMeterChange
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -342,7 +344,8 @@ export function useGameplayLoop({
     addFault: onFault,
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
-    }
+    },
+    onServeMeterChange
   });
 
   useFrame((state, delta) => {
