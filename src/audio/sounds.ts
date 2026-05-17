@@ -8,23 +8,16 @@ const disposeLater = (node: Tone.ToneAudioNode, delayMs = 900) => {
   window.setTimeout(() => node.dispose(), delayMs);
 };
 
-let masterVolumePercent = 80;
-let sfxVolumePercent = 80;
+const getAdjustedVolume = (volume: number, volumeAdjustment = 0) => {
+  if (!Number.isFinite(volumeAdjustment)) {
+    return null;
+  }
 
-export const setSoundVolumes = ({ masterVolume, sfxVolume }: { masterVolume: number; sfxVolume: number }) => {
-  masterVolumePercent = masterVolume;
-  sfxVolumePercent = sfxVolume;
+  return volume + volumeAdjustment;
 };
 
-const getAdjustedVolume = (volume: number) => {
-  const combinedVolume = (masterVolumePercent / 100) * (sfxVolumePercent / 100);
-  if (combinedVolume <= 0) return null;
-
-  return volume + 20 * Math.log10(combinedVolume);
-};
-
-const playBlip = (frequency: string, duration = '16n', volume = -14) => {
-  const adjustedVolume = getAdjustedVolume(volume);
+const playBlip = (frequency: string, duration = '16n', volume = -14, volumeAdjustment = 0) => {
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -37,8 +30,8 @@ const playBlip = (frequency: string, duration = '16n', volume = -14) => {
   disposeLater(synth);
 };
 
-const playNoiseBurst = (duration = '32n', volume = -16) => {
-  const adjustedVolume = getAdjustedVolume(volume);
+const playNoiseBurst = (duration = '32n', volume = -16, volumeAdjustment = 0) => {
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -51,8 +44,8 @@ const playNoiseBurst = (duration = '32n', volume = -16) => {
   disposeLater(noise);
 };
 
-const playNotes = (notes: string[], stepSeconds = 0.06, volume = -14) => {
-  const adjustedVolume = getAdjustedVolume(volume);
+const playNotes = (notes: string[], stepSeconds = 0.06, volume = -14, volumeAdjustment = 0) => {
+  const adjustedVolume = getAdjustedVolume(volume, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();
@@ -71,8 +64,8 @@ export const playNormalHitSound = (volumeAdjustment = 0) => {
   playNoiseBurst('64n', -22, volumeAdjustment);
 };
 
-export const playCurveHitSound = () => {
-  const adjustedVolume = getAdjustedVolume(-18);
+export const playCurveHitSound = (volumeAdjustment = 0) => {
+  const adjustedVolume = getAdjustedVolume(-18, volumeAdjustment);
   if (adjustedVolume === null) return;
 
   startAudio();

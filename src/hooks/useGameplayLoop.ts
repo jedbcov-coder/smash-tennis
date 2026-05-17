@@ -18,8 +18,10 @@ import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from 
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
 import { AI_MISS_SWING_DURATION_MS, AI_START_POSITION, updateAiOpponent } from '../gameplay/aiOpponentController';
 import type { OpponentProfile } from '../gameplay/opponents';
-import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
+import { updateArcadeCamera } from '../gameplay/cameraController';
 import type { GameSettings } from '../settings/useGameSettings';
+import { dispatchGameEvent } from '../gameplay/gameEvents';
+import { random as gameplayRandom } from '../gameplay/random';
 import {
   calculateOverheadSmash,
   calculateWeakSmashReturn,
@@ -368,7 +370,7 @@ export function useGameplayLoop({
     setIsVisualSmashing(true);
     setTimeout(() => setIsVisualSmashing(false), isFlameSmash ? 460 : 320);
     endSmashOpportunity();
-    triggerGameplayEvent('smash:activated');
+    dispatchGameEvent('smash.activated');
     if (isFlameSmash) {
       presentationDirector.presentMoment('smash.flame');
     } else {

@@ -12,6 +12,7 @@ import {
   updateScoreOnPoint,
   type GameStatus
 } from './scoringRules';
+import { beginServeCountdown, beginServing, finishMatch, finishPoint } from '../gameplay/gameStateMachine';
 
 const INTRO_DURATION_MS = 3200;
 const SERVE_COUNTDOWN_MS = 1600;
