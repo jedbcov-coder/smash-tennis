@@ -1,27 +1,31 @@
 import * as THREE from 'three';
-import { COLOR_SCHEME } from '../design/colorScheme';
 import { TEXTURE_RULES } from '../design/textures';
 import {
   COURT_LENGTH,
   COURT_RENDERING,
   DOUBLES_COURT_WIDTH,
   NET_HEIGHT,
-  SINGLES_COURT_WIDTH
+  SINGLES_COURT_WIDTH,
+  COURT_SURFACE_SETTINGS
 } from '../gameplay/gameTuning';
 
-export function Court() {
+import type { CourtSurface } from '../types';
+
+export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
+  const surfaceColors = COURT_SURFACE_SETTINGS[courtSurface].colors;
+
   return (
     <group>
       {/* Surrounding Pavement */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[COURT_RENDERING.surroundingWidth, COURT_RENDERING.surroundingLength]} />
-        <meshStandardMaterial color={COLOR_SCHEME.court.surrounding} roughness={TEXTURE_RULES.court.roughness} />
+        <meshStandardMaterial color={surfaceColors.surrounding} roughness={TEXTURE_RULES.court.roughness} />
       </mesh>
 
       {/* Main Playing Surface (Doubles) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
         <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_LENGTH]} />
-        <meshStandardMaterial color={COLOR_SCHEME.court.playingSurface} roughness={TEXTURE_RULES.court.roughness} />
+        <meshStandardMaterial color={surfaceColors.playingSurface} roughness={TEXTURE_RULES.court.roughness} />
       </mesh>
 
       {/* Lines Group */}
@@ -29,63 +33,63 @@ export function Court() {
         {/* Baselines */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, COURT_LENGTH / 2]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -COURT_LENGTH / 2]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Doubles Sidelines */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Singles Sidelines */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SINGLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-SINGLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Service Lines */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, COURT_RENDERING.serviceLineZ]}>
           <planeGeometry args={[SINGLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -COURT_RENDERING.serviceLineZ]}>
           <planeGeometry args={[SINGLES_COURT_WIDTH, COURT_RENDERING.lineWidth]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Center Service Line */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.serviceLineZ * 2]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Center Marks */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, COURT_LENGTH / 2 - 0.2]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.centerMarkLength]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -COURT_LENGTH / 2 + 0.2]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.centerMarkLength]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} />
+          <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
         {/* Mid court line (net position mark) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[DOUBLES_COURT_WIDTH, COURT_RENDERING.lineWidth * 0.5]} />
-          <meshBasicMaterial color={COLOR_SCHEME.court.lines} opacity={0.3} transparent />
+          <meshBasicMaterial color={surfaceColors.lines} opacity={0.3} transparent />
         </mesh>
       </group>
 
@@ -96,7 +100,7 @@ export function Court() {
             args={[DOUBLES_COURT_WIDTH + COURT_RENDERING.netPostPadding * 2, NET_HEIGHT, COURT_RENDERING.netDepth]}
           />
           <meshStandardMaterial 
-            color={COLOR_SCHEME.court.net} 
+            color={surfaceColors.net} 
             transparent 
             opacity={0.3} 
             wireframe={true} // Net texture feel
@@ -111,18 +115,18 @@ export function Court() {
               COURT_RENDERING.netTopBandDepth
             ]}
           />
-          <meshStandardMaterial color={COLOR_SCHEME.court.net} />
+          <meshStandardMaterial color={surfaceColors.net} />
         </mesh>
       </group>
 
       {/* Net Posts */}
       <mesh position={[DOUBLES_COURT_WIDTH / 2 + COURT_RENDERING.netPostPadding, 0.5, 0]}>
         <cylinderGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.lineWidth, COURT_RENDERING.netPostHeight]} />
-        <meshStandardMaterial color={COLOR_SCHEME.court.netPost} />
+        <meshStandardMaterial color={surfaceColors.netPost} />
       </mesh>
       <mesh position={[-DOUBLES_COURT_WIDTH / 2 - COURT_RENDERING.netPostPadding, 0.5, 0]}>
         <cylinderGeometry args={[COURT_RENDERING.lineWidth, COURT_RENDERING.lineWidth, COURT_RENDERING.netPostHeight]} />
-        <meshStandardMaterial color={COLOR_SCHEME.court.netPost} />
+        <meshStandardMaterial color={surfaceColors.netPost} />
       </mesh>
     </group>
   );

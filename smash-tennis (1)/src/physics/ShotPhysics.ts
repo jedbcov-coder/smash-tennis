@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { SHOT_TARGETS } from '../gameplay/gameTuning';
+import { COURT_SURFACE_SETTINGS, SHOT_TARGETS } from '../gameplay/gameTuning';
+import type { CourtSurface } from '../types';
 
 export type CourtSide = 'PLAYER' | 'AI';
 export type ServeSide = 'DEUCE' | 'AD';
@@ -14,7 +15,8 @@ export function calculateLegalShot(
   isServe: boolean,
   serveSide: ServeSide,
   difficultyStats: ShotDifficultyStats,
-  toSide: CourtSide = 'AI'
+  toSide: CourtSide = 'AI',
+  courtSurface: CourtSurface = 'HARD'
 ) {
   // Target area depends on which side we are hitting to.
   let targetZ =
@@ -50,6 +52,8 @@ export function calculateLegalShot(
     (targetZ - fromPos.z) / t
   );
 
-  // Apply game-level speed boost.
-  return finalVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier);
+  const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
+
+  // Apply game-level speed and court-surface speed boost.
+  return finalVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
 }
