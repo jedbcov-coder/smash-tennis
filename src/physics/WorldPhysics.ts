@@ -1,34 +1,6 @@
 import * as THREE from 'three';
 import { NET_HEIGHT, OUT_OF_BOUNDS_LIMITS } from '../gameplay/gameTuning';
-import type { CourtSurfaceTuning, PlayerType } from '../types';
-
-export const GRAVITY = -1.5;
-
-export function applyGravity(velocity: THREE.Vector3, delta: number): THREE.Vector3 {
-  return new THREE.Vector3(velocity.x, velocity.y + GRAVITY * delta, velocity.z);
-}
-
-export function applySpinCurve(
-  velocity: THREE.Vector3,
-  spinStrength: number,
-  spinCurveMultiplier: number,
-  delta: number
-): void {
-  // Tiny sideways push: enough to feel fun, but simple enough to tune.
-  velocity.x += spinStrength * spinCurveMultiplier * delta;
-}
-
-export function applySurfaceBounce(
-  velocity: THREE.Vector3,
-  surfaceSettings: Pick<CourtSurfaceTuning, 'bounceHeightMultiplier' | 'slideAmount'>
-): void {
-  velocity.y = Math.abs(velocity.y) * surfaceSettings.bounceHeightMultiplier;
-
-  // slideAmount is easier to tune as "more slide = less slowdown".
-  const skidMultiplier = THREE.MathUtils.clamp(1 - surfaceSettings.slideAmount, 0.65, 0.99);
-  velocity.x *= skidMultiplier;
-  velocity.z *= skidMultiplier;
-}
+import type { PlayerType } from '../types';
 
 export function checkOutOfBounds(ballPos: THREE.Vector3): boolean {
   return Math.abs(ballPos.x) > OUT_OF_BOUNDS_LIMITS.x;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { AI_BASELINE_POSITION, AI_MISS_DRAMA, OUT_OF_BOUNDS_LIMITS, PLAYER_MOVEMENT_LIMITS, COURT_SURFACE_SETTINGS } from './gameTuning';
 import type { ShotDifficultyStats } from '../physics/ShotPhysics';
 import type { PlayerType } from '../types';
+import type { OpponentProfile } from './opponents';
 
 interface AiMovementInput {
   aiX: number;
@@ -14,6 +15,8 @@ interface AiMovementInput {
   surfaceSettings: (typeof COURT_SURFACE_SETTINGS)[keyof typeof COURT_SURFACE_SETTINGS];
   elapsedTime: number;
   delta: number;
+  opponentProfile: OpponentProfile;
+  forceMiss: boolean;
 }
 
 export interface AiMovementResult {
@@ -23,9 +26,9 @@ export interface AiMovementResult {
 }
 
 export function calculateAiMovement(input: AiMovementInput): AiMovementResult {
-  const isMercyMiss = input.consecutiveReturns >= input.targetRallyLength;
+  const isMercyMiss = input.forceMiss || input.consecutiveReturns >= input.targetRallyLength;
   const isBallOnAiSide = input.ballZ < 0;
-  const aiBaseSpeed = 3.5;
+  const aiBaseSpeed = input.opponentProfile.movementSpeed;
   const aiSpeed =
     aiBaseSpeed *
     (isMercyMiss ? AI_MISS_DRAMA.lungeSpeedMultiplier : 1) *
@@ -78,6 +81,7 @@ interface AiReturnInput {
   difficultyStats: ShotDifficultyStats;
   surfaceSettings: (typeof COURT_SURFACE_SETTINGS)[keyof typeof COURT_SURFACE_SETTINGS];
   random: () => number;
+  opponentProfile: OpponentProfile;
 }
 
 export interface AiReturnResult {
@@ -86,14 +90,24 @@ export interface AiReturnResult {
 }
 
 export function calculateAiReturn(input: AiReturnInput): AiReturnResult {
-  const tZ = 5 + input.random() * 4;
-  const tX = (input.random() - 0.5) * 8;
-  const vy = 1.8 * input.difficultyStats.pointDifficultyMultiplier;
+  const { opponentProfile } = input;
+  const safeAccuracy = THREE.MathUtils.clamp(opponentProfile.accuracy, 0, 1);
+  const safeAggression = THREE.MathUtils.clamp(opponentProfile.aggression, 0, 1);
+  const targetError = (1 - safeAccuracy) * 2.8;
+  const targetDepth = 5.2 + safeAggression * 3.6;
+  const tZ = targetDepth + (input.random() - 0.5) * (1.4 + targetError);
+  const tX = (input.random() - 0.5) * (5.5 + safeAggression * 3.5) + (input.random() - 0.5) * targetError;
+  const shotLift = opponentProfile.preferredShotType === 'slice angle' ? 1.65 : opponentProfile.preferredShotType === 'flat drive' ? 1.55 : 1.9;
+  const vy = shotLift * input.difficultyStats.pointDifficultyMultiplier;
   const t = (vy + Math.sqrt(vy * vy + 2 * 1.5 * (input.ballPos.y - 0.1))) / 1.5;
+  const specialSpeedBoost = opponentProfile.specialMoveStyle === 'baseline blast' ? 1.08 : opponentProfile.specialMoveStyle === 'neon rush' ? 1.04 : 0.98;
+  const speedBoost = (0.94 + safeAggression * 0.18) * specialSpeedBoost;
   const velocity = new THREE.Vector3((tX - input.ballPos.x) / t, vy, (tZ - input.ballPos.z) / t).multiplyScalar(
-    input.difficultyStats.gameDifficultyMultiplier * input.surfaceSettings.ballSpeedMultiplier
+    input.difficultyStats.gameDifficultyMultiplier * input.surfaceSettings.ballSpeedMultiplier * speedBoost
   );
-  const spin = THREE.MathUtils.clamp((input.aiX - input.ballPos.x) * 0.45, -1.3, 1.3);
+  const specialSpinBoost = opponentProfile.specialMoveStyle === 'glitch slice' ? 1.25 : 1;
+  const spinMultiplier = (opponentProfile.preferredShotType === 'slice angle' ? 0.75 : opponentProfile.preferredShotType === 'topspin curve' ? 1.25 : 0.45) * specialSpinBoost;
+  const spin = THREE.MathUtils.clamp((input.aiX - input.ballPos.x) * spinMultiplier, -1.5, 1.5);
 
   return { velocity, spin };
 }

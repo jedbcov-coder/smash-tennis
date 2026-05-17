@@ -32,12 +32,14 @@ interface RallyCameraInput {
   cameraShakeUntil: number;
   smashOpportunityActive: boolean;
   random: () => number;
+  screenShakeAmount: number;
 }
 
 export function updateRallyCamera(input: RallyCameraInput) {
   const cameraSpeed = 0.1;
   const shakeRemaining = Math.max(0, input.cameraShakeUntil - input.now);
-  const shake = shakeRemaining > 0 ? OVERHEAD_SMASH_CONFIG.cameraShakeIntensity * 2.5 * (shakeRemaining / OVERHEAD_SMASH_CONFIG.cameraShakeDuration) : 0;
+  const shakeScale = input.screenShakeAmount / 100;
+  const shake = shakeRemaining > 0 ? OVERHEAD_SMASH_CONFIG.cameraShakeIntensity * 2.5 * shakeScale * (shakeRemaining / OVERHEAD_SMASH_CONFIG.cameraShakeDuration) : 0;
   const targetCameraY = input.smashOpportunityActive ? 5.0 : 7;
   const targetCameraZ = input.playerZ + (input.smashOpportunityActive ? 5.5 : 8);
 
