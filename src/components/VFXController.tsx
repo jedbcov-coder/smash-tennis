@@ -3,6 +3,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { type BallHandle } from '../environment/Ball';
+import { subscribeToGameEvent } from '../gameplay/gameEvents';
 
 type ActiveEffect = {
   id: string;

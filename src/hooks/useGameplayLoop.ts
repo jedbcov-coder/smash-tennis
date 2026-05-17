@@ -96,10 +96,6 @@ interface UseGameplayLoopOptions {
 
 type SpecialMoveName = 'FLAME_SMASH';
 
-function triggerGameplayEvent(name: string) {
-  window.dispatchEvent(new CustomEvent(name));
-}
-
 export function useGameplayLoop({
   onScore,
   onFault,
@@ -392,7 +388,6 @@ export function useGameplayLoop({
     setLastHitter('PLAYER');
     aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
     consecutiveReturns.current++;
-    triggerGameplayEvent('smash:weak-return');
     playAudioEvent('hit.normal');
   };
 
@@ -510,7 +505,7 @@ export function useGameplayLoop({
           const closeEnoughForWeakReturn = isCloseEnoughForWeakSmashReturn(ballPos, playerPos.current.x);
           endSmashOpportunity();
           smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
-          triggerGameplayEvent('smash:missed');
+          dispatchGameEvent('smash.missed');
           if (closeEnoughForWeakReturn) {
             performWeakSmashFailReturn(ballPos);
           }
@@ -574,7 +569,7 @@ export function useGameplayLoop({
         aiWillMissReturn.current = false;
         triggerAiSwing();
         playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
-        triggerGameplayEvent('vfx:hit.normal');
+        dispatchGameEvent('hit.normal');
       }
     }
 
