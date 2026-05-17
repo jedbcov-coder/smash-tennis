@@ -13,6 +13,14 @@ import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
 import { COLOR_SCHEME } from '../design/colorScheme';
 
+const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
+  active: false,
+  position: 0,
+  phase: 'idle',
+  qualityLabel: 'Ready',
+  servingPlayer: null
+};
+
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
 
@@ -144,15 +152,8 @@ export function Game() {
     rallyCount: 0,
     rallyIntensity: 0,
     callout: null,
-    serveMeter: {
-      active: false,
-      position: 0,
-      phase: 'idle',
-      qualityLabel: 'Ready',
-      servingPlayer: null
-    }
+    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER }
   });
-
 
   const {
     score,

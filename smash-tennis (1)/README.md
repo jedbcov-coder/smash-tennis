@@ -74,7 +74,7 @@ Current check notes verified on May 17, 2026:
 - `src/App.tsx` starts the main app screen.
 - `src/design/colorScheme.ts` keeps the shared neon palette in one place.
 - `src/design/gradients.ts` keeps reusable neon gradients in one place.
-- `src/components/Game.tsx` wires the 3D court, players, ball, menus, and HUD together.
+- `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
 - `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
 - `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
