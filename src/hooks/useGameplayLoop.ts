@@ -7,7 +7,6 @@ import {
   AI_BASELINE_POSITION,
   AI_MISS_DRAMA,
   OVERHEAD_SMASH_CONFIG,
-  PLAYER_MOVEMENT_LIMITS,
   SERVE_POSITIONS,
   OUT_OF_BOUNDS_LIMITS,
   NET_HEIGHT,
@@ -17,6 +16,18 @@ import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
+import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
+import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
+import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
+import {
+  calculateOverheadSmash,
+  calculateWeakSmashReturn,
+  canStartSmashOpportunity,
+  createEmptySmashOpportunity,
+  createSmashOpportunity,
+  isCloseEnoughForWeakSmashReturn,
+  type SmashOpportunity
+} from '../gameplay/smashSystem';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -75,22 +86,6 @@ interface UseGameplayLoopOptions {
   onArcadeHudStatsChange?: (stats: ArcadeHudStats) => void;
   onServeMeterChange?: (state: ServeMeterState) => void;
 }
-
-type SmashOpportunity = {
-  active: boolean;
-  startedAt: number;
-  expiresAt: number;
-  targetX: number;
-  targetZ: number;
-};
-
-const createEmptySmashOpportunity = (): SmashOpportunity => ({
-  active: false,
-  startedAt: 0,
-  expiresAt: 0,
-  targetX: 0,
-  targetZ: 0
-});
 
 type SpecialMoveName = 'FLAME_SMASH';
 
@@ -308,33 +303,20 @@ export function useGameplayLoop({
   };
 
   const startSmashOpportunity = (now: number, ballPos: THREE.Vector3) => {
-    smashOpportunity.current = {
-      active: true,
-      startedAt: now,
-      expiresAt: now + OVERHEAD_SMASH_CONFIG.timingWindow,
-      targetX: ballPos.x,
-      targetZ: THREE.MathUtils.clamp(ballPos.z, PLAYER_MOVEMENT_LIMITS.minZ + 0.1, OVERHEAD_SMASH_CONFIG.netDistanceThreshold)
-    };
+    smashOpportunity.current = createSmashOpportunity(now, ballPos);
     setIsSmashOpportunityVisible(true);
     triggerGameplayEvent('smash:opportunity');
   };
 
   const performOverheadSmash = (ballPos: THREE.Vector3, now: number, isFlameSmash = false) => {
-    const targetX = THREE.MathUtils.clamp((Math.random() - 0.5) * 7.5, -4.5, 4.5);
-    const targetZ = -9.5;
-    const travelTime = 0.58;
-    const smashVelocity = new THREE.Vector3(
-      (targetX - ballPos.x) / travelTime,
-      OVERHEAD_SMASH_CONFIG.smashDownwardVelocity,
-      (targetZ - ballPos.z) / travelTime
-    ).multiplyScalar(
-      OVERHEAD_SMASH_CONFIG.smashSpeedMultiplier *
-        (isFlameSmash ? 1.45 : 1) *
-        difficultyStats.gameDifficultyMultiplier *
-        surfaceSettings.ballSpeedMultiplier
-    );
-
-    const smashSpin = THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.8, -2.4, 2.4);
+    const { velocity: smashVelocity, spin: smashSpin } = calculateOverheadSmash({
+      ballPos,
+      playerX: playerPos.current.x,
+      difficultyStats,
+      surfaceSettings,
+      isFlameSmash,
+      random: Math.random
+    });
     ballRef.current?.setVelocity(smashVelocity, smashSpin);
     recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? 'FLAME SMASH' : 'MEGA SMASH' });
     if (isFlameSmash) {
@@ -363,9 +345,7 @@ export function useGameplayLoop({
   };
 
   const performWeakSmashFailReturn = (ballPos: THREE.Vector3) => {
-    const weakReturnVel = calculateLegalShot(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface).multiplyScalar(
-      OVERHEAD_SMASH_CONFIG.weakReturnSpeedMultiplier
-    );
+    const weakReturnVel = calculateWeakSmashReturn({ ballPos, serveSide, difficultyStats, courtSurface });
     ballRef.current?.setVelocity(weakReturnVel, 0.45);
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
@@ -409,43 +389,42 @@ export function useGameplayLoop({
 
     if (gameState === GameState.SERVING) {
       const serverPos = servingPlayer === 'PLAYER' ? playerPos.current : aiPos.current;
-      const serviceTargetX = serveSide === 'DEUCE' ? 2.6 : -2.6;
-      const serviceTargetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
-      const behindServerZ = serverPos.z + (servingPlayer === 'PLAYER' ? 7 : -7);
-
-      camera.position.x = THREE.MathUtils.lerp(camera.position.x, serverPos.x * 0.45, 0.09);
-      camera.position.y = THREE.MathUtils.lerp(camera.position.y, 4.6, 0.08);
-      camera.position.z = THREE.MathUtils.lerp(camera.position.z, behindServerZ, 0.08);
-      camera.lookAt(serviceTargetX * 0.45, 1.0, serviceTargetZ);
+      updateServeCamera({
+        camera,
+        serverX: serverPos.x,
+        serverZ: serverPos.z,
+        servingPlayer,
+        serveSide
+      });
     }
 
     if (processServeFrame(delta, now)) return;
 
     // Player Movement (High-response Mouse follow)
-    let targetX = mouseX.current * 12.0;
-    let targetZ = 6.0 + -mouseY.current * 10.0;
-
-    if (gameState === GameState.SERVING && servingPlayer === 'PLAYER') {
-      // Hard pin player behind baseline for service on correct side.
-      targetZ = PLAYER_MOVEMENT_LIMITS.serveZ;
-      targetX = serveSide === 'DEUCE' ? PLAYER_MOVEMENT_LIMITS.deuceServeX : PLAYER_MOVEMENT_LIMITS.adServeX;
-    }
-
-    const playerMovementResponse = THREE.MathUtils.clamp(0.95 * surfaceSettings.playerMovementMultiplier, 0.68, 0.98);
-    playerPos.current.x = THREE.MathUtils.lerp(playerPos.current.x, targetX, playerMovementResponse);
-    playerPos.current.z = THREE.MathUtils.lerp(playerPos.current.z, targetZ, playerMovementResponse);
-
-    playerPos.current.x = THREE.MathUtils.clamp(playerPos.current.x, PLAYER_MOVEMENT_LIMITS.minX, PLAYER_MOVEMENT_LIMITS.maxX);
-    playerPos.current.z = THREE.MathUtils.clamp(playerPos.current.z, PLAYER_MOVEMENT_LIMITS.minZ, PLAYER_MOVEMENT_LIMITS.maxZ);
+    const nextPlayerPos = calculatePlayerMovement({
+      currentX: playerPos.current.x,
+      currentZ: playerPos.current.z,
+      mouseX: mouseX.current,
+      mouseY: mouseY.current,
+      gameState,
+      servingPlayer,
+      serveSide,
+      surfaceSettings
+    });
+    playerPos.current.x = nextPlayerPos.x;
+    playerPos.current.z = nextPlayerPos.z;
 
     if (gameState === GameState.PLAYING) {
-      const activeSmash = smashOpportunity.current;
-      const nearNet = playerPos.current.z <= OVERHEAD_SMASH_CONFIG.netDistanceThreshold;
-      const ballIsHigh = ballPos.y >= OVERHEAD_SMASH_CONFIG.smashHeightThreshold && ballPos.y <= OVERHEAD_SMASH_CONFIG.maxSmashHeight;
-      const ballIsIncoming = lastHitter === 'AI' && ballVel.z > 0.35;
-      const ballIsInFront = ballPos.z >= playerPos.current.z - OVERHEAD_SMASH_CONFIG.playerBackWindow && ballPos.z <= playerPos.current.z + OVERHEAD_SMASH_CONFIG.playerForwardWindow;
-      const ballIsReachableSideways = Math.abs(ballPos.x - playerPos.current.x) <= OVERHEAD_SMASH_CONFIG.lateralWindow;
-      const canStartSmash = !activeSmash.active && now >= smashCooldownUntil.current && nearNet && ballIsHigh && ballIsIncoming && ballIsInFront && ballIsReachableSideways;
+      const canStartSmash = canStartSmashOpportunity({
+        activeSmash: smashOpportunity.current,
+        now,
+        smashCooldownUntil: smashCooldownUntil.current,
+        playerX: playerPos.current.x,
+        playerZ: playerPos.current.z,
+        ballPos,
+        ballVel,
+        lastHitter
+      });
 
       if (canStartSmash) {
         startSmashOpportunity(now, ballPos);
@@ -453,23 +432,17 @@ export function useGameplayLoop({
 
       if (smashOpportunity.current.active) {
         const smashTarget = smashOpportunity.current;
-        const assistedX = THREE.MathUtils.clamp(
-          smashTarget.targetX,
-          PLAYER_MOVEMENT_LIMITS.smashAssistMinX,
-          PLAYER_MOVEMENT_LIMITS.smashAssistMaxX
-        );
-        const assistedZ = THREE.MathUtils.clamp(
-          smashTarget.targetZ + 0.25,
-          PLAYER_MOVEMENT_LIMITS.minZ,
-          OVERHEAD_SMASH_CONFIG.netDistanceThreshold
-        );
-        const nextAssistX = THREE.MathUtils.lerp(playerPos.current.x, assistedX, OVERHEAD_SMASH_CONFIG.assistedPositionStrength);
-        const nextAssistZ = THREE.MathUtils.lerp(playerPos.current.z, assistedZ, OVERHEAD_SMASH_CONFIG.assistedPositionStrength);
-        playerPos.current.x += THREE.MathUtils.clamp(nextAssistX - playerPos.current.x, -OVERHEAD_SMASH_CONFIG.assistedMaxStep, OVERHEAD_SMASH_CONFIG.assistedMaxStep);
-        playerPos.current.z += THREE.MathUtils.clamp(nextAssistZ - playerPos.current.z, -OVERHEAD_SMASH_CONFIG.assistedMaxStep, OVERHEAD_SMASH_CONFIG.assistedMaxStep);
-
-        const targetFacing = Math.PI + THREE.MathUtils.clamp((playerPos.current.x - ballPos.x) * 0.14, -0.35, 0.35);
-        playerFacingY.current = THREE.MathUtils.lerp(playerFacingY.current, targetFacing, OVERHEAD_SMASH_CONFIG.autoAlignmentStrength);
+        const assistedPlayer = applySmashAssist({
+          playerX: playerPos.current.x,
+          playerZ: playerPos.current.z,
+          ballX: ballPos.x,
+          smashTargetX: smashTarget.targetX,
+          smashTargetZ: smashTarget.targetZ,
+          currentFacingY: playerFacingY.current
+        });
+        playerPos.current.x = assistedPlayer.x;
+        playerPos.current.z = assistedPlayer.z;
+        playerFacingY.current = assistedPlayer.facingY;
 
         const canUseFlameSmash = arcadeHudStatsRef.current.energyPercent >= 100 && isSpecialMovePressed && now <= smashTarget.expiresAt;
 
@@ -488,7 +461,7 @@ export function useGameplayLoop({
         }
 
         if (now > smashTarget.expiresAt || ballPos.z > playerPos.current.z + OVERHEAD_SMASH_CONFIG.playerForwardWindow) {
-          const closeEnoughForWeakReturn = Math.abs(ballPos.x - playerPos.current.x) <= OVERHEAD_SMASH_CONFIG.failWeakReturnRadius && ballPos.y < OVERHEAD_SMASH_CONFIG.maxSmashHeight;
+          const closeEnoughForWeakReturn = isCloseEnoughForWeakSmashReturn(ballPos, playerPos.current.x);
           endSmashOpportunity();
           smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
           triggerGameplayEvent('smash:missed');
@@ -505,37 +478,30 @@ export function useGameplayLoop({
     }
 
     // AI movement (Slower and more arcade-like)
-    const isMercyMiss = consecutiveReturns.current >= targetRallyLength;
-    const isBallOnAiSide = ballPos.z < 0;
-    const aiBaseSpeed = 3.5;
-    const aiSpeed =
-      aiBaseSpeed *
-      (isMercyMiss ? AI_MISS_DRAMA.lungeSpeedMultiplier : 1) *
-      difficultyStats.gameDifficultyMultiplier *
-      surfaceSettings.playerMovementMultiplier *
-      delta;
-    const aiTargetX = isBallOnAiSide
-      ? isMercyMiss
-        ? THREE.MathUtils.clamp(
-            ballPos.x - (Math.sign(ballPos.x - aiPos.current.x) || 1) * AI_MISS_DRAMA.nearMissDistance,
-            PLAYER_MOVEMENT_LIMITS.minX,
-            PLAYER_MOVEMENT_LIMITS.maxX
-          )
-        : ballPos.x
-      : 0;
-    const aiTargetZ = AI_BASELINE_POSITION.z + Math.sin(state.clock.getElapsedTime()) * AI_BASELINE_POSITION.wobbleAmount;
+    const aiMovement = calculateAiMovement({
+      aiX: aiPos.current.x,
+      aiZ: aiPos.current.z,
+      ballX: ballPos.x,
+      ballZ: ballPos.z,
+      consecutiveReturns: consecutiveReturns.current,
+      targetRallyLength,
+      difficultyStats,
+      surfaceSettings,
+      elapsedTime: state.clock.getElapsedTime(),
+      delta
+    });
+    aiPos.current.x = aiMovement.x;
+    aiPos.current.z = aiMovement.z;
 
-    aiPos.current.x += Math.sign(aiTargetX - aiPos.current.x) * Math.min(Math.abs(aiTargetX - aiPos.current.x), aiSpeed);
-    aiPos.current.z += Math.sign(aiTargetZ - aiPos.current.z) * Math.min(Math.abs(aiTargetZ - aiPos.current.z), aiSpeed);
-
-    const shouldShowAiMissSwing =
-      isMercyMiss &&
-      !aiMissSwingTriggered.current &&
-      lastHitter === 'PLAYER' &&
-      ballPos.z <= AI_MISS_DRAMA.desperationZoneZ &&
-      ballPos.z > OUT_OF_BOUNDS_LIMITS.aiBackZ &&
-      ballPos.y < 3.5 &&
-      Math.abs(ballPos.x - aiPos.current.x) <= AI_MISS_DRAMA.lateSwingDistance;
+    const shouldShowAiMissSwing = shouldShowAiNearMiss({
+      isMercyMiss: aiMovement.isMercyMiss,
+      alreadyTriggered: aiMissSwingTriggered.current,
+      lastHitter,
+      ballX: ballPos.x,
+      ballY: ballPos.y,
+      ballZ: ballPos.z,
+      aiX: aiPos.current.x
+    });
 
     if (shouldShowAiMissSwing) {
       aiMissSwingTriggered.current = true;
@@ -544,16 +510,15 @@ export function useGameplayLoop({
     }
 
     // AI Hit Detection
-    if (ballPos.z < -8 && ballPos.z > -9.5 && lastHitter === 'PLAYER' && ballPos.y < 3.5 && !isMercyMiss) {
+    if (ballPos.z < -8 && ballPos.z > -9.5 && lastHitter === 'PLAYER' && ballPos.y < 3.5 && !aiMovement.isMercyMiss) {
       if (Math.abs(ballPos.x - aiPos.current.x) < 2.0) {
-        const tZ = 5 + Math.random() * 4;
-        const tX = (Math.random() - 0.5) * 8;
-        const vy = 1.8 * difficultyStats.pointDifficultyMultiplier;
-        const t = (vy + Math.sqrt(vy * vy + 2 * 1.5 * (ballPos.y - 0.1))) / 1.5;
-
-        const aiReturnVel = new THREE.Vector3((tX - ballPos.x) / t, vy, (tZ - ballPos.z) / t);
-        const aiSpin = THREE.MathUtils.clamp((aiPos.current.x - ballPos.x) * 0.45, -1.3, 1.3);
-        const finalAiReturnVel = aiReturnVel.multiplyScalar(difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier);
+        const { velocity: finalAiReturnVel, spin: aiSpin } = calculateAiReturn({
+          ballPos,
+          aiX: aiPos.current.x,
+          difficultyStats,
+          surfaceSettings,
+          random: Math.random
+        });
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
         setLastHitter('AI');
@@ -609,30 +574,16 @@ export function useGameplayLoop({
     previousBallZ.current = ballPos.z;
 
     // Camera follow (Fixed-Height Arcade perspective)
-    const cameraSpeed = 0.1;
-    const shakeRemaining = Math.max(0, cameraShakeUntil.current - now);
-    const shake = shakeRemaining > 0 ? OVERHEAD_SMASH_CONFIG.cameraShakeIntensity * 2.5 * (shakeRemaining / OVERHEAD_SMASH_CONFIG.cameraShakeDuration) : 0;
-    
-    // Dynamic Camera Track and Zoom
-    let targetCameraY = 7;
-    let targetCameraZ = playerPos.current.z + 8;
-    
-    if (smashOpportunity.current.active) {
-      targetCameraY = 5.0; // Dynamic zoom in
-      targetCameraZ = playerPos.current.z + 5.5;
-    }
-
-    // Apply shake to Y and Z
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCameraY + (Math.random() - 0.5) * shake, 0.05);
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ + (Math.random() - 0.5) * shake, 0.05);
-
-    // Track ball's X position slightly alongside player X
-    const ballXTarget = THREE.MathUtils.clamp(ballPos.x * 0.2, -2.0, 2.0);
-    const playerXTarget = playerPos.current.x * 0.3;
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, playerXTarget + ballXTarget + ((Math.random() - 0.5) * shake), cameraSpeed);
-
-    // Look at target
-    camera.lookAt(ballXTarget * 0.5, 0, -3);
+    updateRallyCamera({
+      camera,
+      playerX: playerPos.current.x,
+      playerZ: playerPos.current.z,
+      ballX: ballPos.x,
+      now,
+      cameraShakeUntil: cameraShakeUntil.current,
+      smashOpportunityActive: smashOpportunity.current.active,
+      random: Math.random
+    });
   });
 
   return {
