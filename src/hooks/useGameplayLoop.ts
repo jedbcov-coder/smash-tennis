@@ -18,6 +18,7 @@ import { usePlayerInput } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
 import { calculateAiMovement, calculateAiReturn, shouldShowAiNearMiss } from '../gameplay/aiController';
+import type { OpponentProfile } from '../gameplay/opponents';
 import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
 import {
   calculateOverheadSmash,
@@ -83,6 +84,7 @@ interface UseGameplayLoopOptions {
   targetRallyLength: number;
   difficultyStats: GameplayDifficultyStats;
   courtSurface: CourtSurface;
+  opponentProfile: OpponentProfile;
   onArcadeHudStatsChange?: (stats: ArcadeHudStats) => void;
   onServeMeterChange?: (state: ServeMeterState) => void;
 }
@@ -103,6 +105,7 @@ export function useGameplayLoop({
   targetRallyLength,
   difficultyStats,
   courtSurface,
+  opponentProfile,
   onArcadeHudStatsChange,
   onServeMeterChange
 }: UseGameplayLoopOptions) {
@@ -130,6 +133,7 @@ export function useGameplayLoop({
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
+  const aiWillMissReturn = useRef(false);
   const aiSwingTimeout = useRef<number | null>(null);
   const calloutTimeout = useRef<number | null>(null);
   const specialMoveTimeout = useRef<number | null>(null);
@@ -265,6 +269,7 @@ export function useGameplayLoop({
     pointEndedRef.current = false;
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
+    aiWillMissReturn.current = false;
     consecutiveReturns.current = 0;
     updateArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
     smashOpportunity.current = createEmptySmashOpportunity();
@@ -331,6 +336,7 @@ export function useGameplayLoop({
       }, 550);
     }
     setLastHitter('PLAYER');
+    aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
     consecutiveReturns.current++;
     cameraShakeUntil.current = now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration * (isFlameSmash ? 1.45 : 1);
     smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
@@ -349,6 +355,7 @@ export function useGameplayLoop({
     ballRef.current?.setVelocity(weakReturnVel, 0.45);
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
+    aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
     consecutiveReturns.current++;
     triggerGameplayEvent('smash:weak-return');
     playAudioEvent('hit.normal');
@@ -376,6 +383,9 @@ export function useGameplayLoop({
     addFault: onFault,
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
+      if (servingPlayer === 'PLAYER') {
+        aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
+      }
     },
     onServeMeterChange: handleServeMeterChange
   });
@@ -488,7 +498,9 @@ export function useGameplayLoop({
       difficultyStats,
       surfaceSettings,
       elapsedTime: state.clock.getElapsedTime(),
-      delta
+      delta,
+      opponentProfile,
+      forceMiss: aiWillMissReturn.current
     });
     aiPos.current.x = aiMovement.x;
     aiPos.current.z = aiMovement.z;
@@ -517,11 +529,13 @@ export function useGameplayLoop({
           aiX: aiPos.current.x,
           difficultyStats,
           surfaceSettings,
-          random: Math.random
+          random: Math.random,
+          opponentProfile
         });
         ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
         recordShot(finalAiReturnVel, { rally: true });
         setLastHitter('AI');
+        aiWillMissReturn.current = false;
         triggerAiSwing();
         playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');
@@ -544,6 +558,7 @@ export function useGameplayLoop({
           callout: isPerfectReturn ? 'PERFECT RETURN' : undefined
         });
         setLastHitter('PLAYER');
+        aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
         consecutiveReturns.current++;
         playAudioEvent(isPerfectReturn ? 'return.perfect' : Math.abs(playerSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         triggerGameplayEvent('vfx:hit.normal');

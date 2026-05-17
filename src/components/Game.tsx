@@ -11,6 +11,7 @@ import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
+import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { COLOR_SCHEME } from '../design/colorScheme';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
@@ -80,6 +81,7 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
+  opponentProfile,
   onArcadeHudStatsChange
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
@@ -95,6 +97,7 @@ function GameScene({
     racketAccuracyRadius: number;
   };
   courtSurface: CourtSurface;
+  opponentProfile: OpponentProfile;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
 }) {
   const {
@@ -118,6 +121,7 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
+    opponentProfile,
     onArcadeHudStatsChange
   });
 
@@ -142,7 +146,7 @@ function GameScene({
       <Character
         initialPosition={[0, 0, -9]}
         positionRef={aiPos}
-        color={COLOR_SCHEME.characters.ai}
+        color={opponentProfile.theme.color}
         isAI
         isSwinging={isAiSwinging}
         isMissing={isAiMissing}
@@ -172,6 +176,8 @@ function GameScene({
 
 export function Game() {
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [opponentId, setOpponentId] = useState<OpponentId>(DEFAULT_OPPONENT_PROFILE.id);
+  const opponentProfile = getOpponentProfile(opponentId);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
     energyPercent: 0,
@@ -223,6 +229,7 @@ export function Game() {
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
+          opponentProfile={opponentProfile}
           onArcadeHudStatsChange={setArcadeHudStats}
         />
       </Canvas>
@@ -250,6 +257,8 @@ export function Game() {
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
+        opponentProfile={opponentProfile}
+        setOpponentId={setOpponentId}
       />
     </div>
   );

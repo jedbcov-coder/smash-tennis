@@ -3,12 +3,12 @@ import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
+import { OPPONENT_PROFILES, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
-const AI_NAME = 'Hidalgo';
 
 export function GameMenus({
   gameState,
@@ -18,7 +18,9 @@ export function GameMenus({
   setCourtSurface,
   score,
   pointReward,
-  matchStats
+  matchStats,
+  opponentProfile,
+  setOpponentId
 }: {
   gameState: GameState;
   winner: PlayerType | null;
@@ -28,6 +30,8 @@ export function GameMenus({
   score: Score;
   pointReward: PointReward | null;
   matchStats: MatchStats;
+  opponentProfile: OpponentProfile;
+  setOpponentId: (opponentId: OpponentId) => void;
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
@@ -40,6 +44,11 @@ export function GameMenus({
   const handleSurfaceSelect = (surface: CourtSurface) => {
     playAudioEvent('ui.select');
     setCourtSurface(surface);
+  };
+
+  const handleOpponentSelect = (opponentId: OpponentId) => {
+    playAudioEvent('ui.select');
+    setOpponentId(opponentId);
   };
 
   useEffect(() => {
@@ -73,6 +82,7 @@ export function GameMenus({
             Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-cyan-100/75">Choose court</div>
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {COURT_SURFACES.map((surface) => {
               const settings = COURT_SURFACE_SETTINGS[surface];
@@ -99,6 +109,39 @@ export function GameMenus({
             Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
           </div>
 
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-fuchsia-100/75">Choose rival</div>
+          <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
+            {OPPONENT_PROFILES.map((opponent) => {
+              const isSelected = opponent.id === opponentProfile.id;
+
+              return (
+                <button
+                  key={opponent.id}
+                  onClick={() => handleOpponentSelect(opponent.id)}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${opponent.theme.glowColor}66` : undefined }}
+                >
+                  <div className="mb-2 h-2 rounded-full" style={{ background: opponent.theme.color }} />
+                  <div className="text-sm font-black uppercase tracking-widest text-white">{opponent.displayName}</div>
+                  <div className="mt-1 text-[10px] font-black uppercase tracking-widest" style={{ color: opponent.theme.glowColor }}>{opponent.theme.label}</div>
+                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{opponent.description}</div>
+                  <div className="mt-3 text-[10px] uppercase leading-relaxed tracking-widest text-white/45">
+                    Speed {opponent.movementSpeed.toFixed(1)} · Accuracy {(opponent.accuracy * 100).toFixed(0)}% · Aggro {(opponent.aggression * 100).toFixed(0)}%
+                  </div>
+                  <div className="mt-1 text-[10px] uppercase leading-relaxed tracking-widest text-white/45">
+                    Shot {opponent.preferredShotType} · Special {opponent.specialMoveStyle}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+            Current rival: <span className="font-black text-white" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
+            <span className="mx-2 text-white/25">|</span>
+            Miss chance {(opponentProfile.missChance * 100).toFixed(0)}% · {opponentProfile.preferredShotType} · {opponentProfile.specialMoveStyle}
+          </div>
+
           <button
             onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
@@ -122,13 +165,13 @@ export function GameMenus({
               <div className="text-4xl font-black italic uppercase text-blue-200">{PLAYER_NAME}</div>
             </div>
             <div className="text-3xl font-black italic text-white/70">VS</div>
-            <div className="rounded-2xl bg-red-600/25 p-5">
-              <div className="text-sm uppercase tracking-widest text-red-100/70">Rival</div>
-              <div className="text-4xl font-black italic uppercase text-red-200">{AI_NAME}</div>
+            <div className="rounded-2xl p-5" style={{ background: `${opponentProfile.theme.color}33` }}>
+              <div className="text-sm uppercase tracking-widest text-white/70">Rival</div>
+              <div className="text-4xl font-black italic uppercase" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</div>
             </div>
           </div>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
-            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span> against <span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
           </div>
           <div className="mt-6 animate-pulse text-2xl font-black italic uppercase tracking-[0.35em] text-orange-200">Get Ready</div>
         </div>
@@ -159,7 +202,7 @@ export function GameMenus({
           </p>
 
           <div className="mb-6 grid w-full grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
-            <div><span className="block text-white/45">Score</span><span className="font-black text-white">{score.playerSets}-{score.aiSets} sets</span></div>
+            <div><span className="block text-white/45">Rival</span><span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span></div>
             <div><span className="block text-white/45">Points won</span><span className="font-black text-white">{matchStats.playerPointsWon}-{matchStats.aiPointsWon}</span></div>
             <div><span className="block text-white/45">Best combo</span><span className="font-black text-white">x{matchStats.bestCombo}</span></div>
             <div><span className="block text-white/45">Longest rally</span><span className="font-black text-white">{matchStats.longestRally}</span></div>
