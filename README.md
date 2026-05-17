@@ -2,7 +2,7 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
+Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
 Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, serves, rallies, and bigger overhead smash moments.
 
@@ -60,4 +60,4 @@ npm run build
 
 ## Deployment notes
 
-This project is set up for GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/Smash_Tennis/` after deployment.
+This project is set up for GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/smash-tennis/` after deployment.
