@@ -93,7 +93,7 @@ Current check notes verified on May 17, 2026:
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin decay, and surface bounce math separate from the ball visuals.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
-- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
+- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots using the selected opponent profile.
 - `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.

@@ -430,8 +430,8 @@ export function useGameplayLoop({
 
     if (gameState === GameState.SERVING) {
       const serverPos = servingPlayer === 'PLAYER' ? playerPos.current : aiPos.current;
-      updateServeCamera({
-        camera,
+      updateArcadeCamera(camera, {
+        mode: 'serve',
         serverX: serverPos.x,
         serverZ: serverPos.z,
         servingPlayer,
@@ -631,8 +631,8 @@ export function useGameplayLoop({
     previousBallZ.current = ballPos.z;
 
     // Camera follow (Fixed-Height Arcade perspective)
-    updateRallyCamera({
-      camera,
+    updateArcadeCamera(camera, {
+      mode: 'rally',
       playerX: playerPos.current.x,
       playerZ: playerPos.current.z,
       ballX: ballPos.x,
