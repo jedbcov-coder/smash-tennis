@@ -9,11 +9,14 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
-- Move Blake: move your mouse around the game screen.
-- Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
-- Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
-- Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
-- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
+- Move Blake with mouse: move your mouse around the game screen. This is still the default beginner-friendly control style.
+- Move Blake with keyboard: use Arrow keys or WASD.
+- Move Blake with gamepad: use the left stick.
+- Serve: wait for the quick serve countdown, then tap-tap with click, Space, or the gamepad A / Cross button. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
+- Swing: click the game court, press Space, or press the gamepad A / Cross button when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
+- Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click, press Space, or press the gamepad A / Cross button.
+- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E or the gamepad Y / Triangle button to spend the meter on a faster fiery smash that resets the energy meter.
+- Prompt detection: the on-screen control prompts switch between mouse, keyboard, and gamepad labels based on the input you used most recently.
 
 ## Main features
 
@@ -23,7 +26,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, input-aware tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
@@ -87,7 +90,7 @@ Current check notes verified on May 17, 2026:
 - `src/gameplay/aiController.ts` handles AI movement targets, near-miss checks, and AI return shots.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
-- `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
+- `src/controls/usePlayerInput.ts` keeps mouse, keyboard, gamepad, swing, special move, and input prompt detection in one place.
 - `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
 - `src/physics/ShotPhysics.ts` calculates shot direction and speed.

@@ -179,7 +179,8 @@ export function Game() {
     rallyCount: 0,
     rallyIntensity: 0,
     callout: null,
-    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER }
+    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER },
+    inputSource: 'mouse'
   });
 
   const {
