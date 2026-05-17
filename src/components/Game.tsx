@@ -268,6 +268,8 @@ export function Game() {
         startGame={startGame}
         courtSurface={courtSurface}
         setCourtSurface={setCourtSurface}
+        opponentId={opponentId}
+        setOpponentId={setOpponentId}
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
