@@ -347,7 +347,7 @@ export function useGameplayLoop({
       difficultyStats,
       surfaceSettings,
       isFlameSmash,
-      random: Math.random
+      random: gameplayRandom
     });
     ballRef.current?.setVelocity(smashVelocity, smashSpin);
     recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? undefined : 'MEGA SMASH' });
