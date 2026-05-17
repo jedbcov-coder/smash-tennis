@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { playAudioEvent } from '../audio/audioManager';
+import { presentationDirector } from '../presentation/presentationDirector';
 import { GameState, type PlayerType } from '../types';
+import {
+  loadPlayerProgress,
+  recordMatchProgress,
+  recordPointProgress,
+  type PlayerProgress
+} from '../progression/playerProgress';
 import {
   getInitialGameState,
   updateScoreOnPoint,
@@ -23,6 +29,7 @@ export interface PointReward {
   rallyLength: number;
   styleBonus: string;
   comboBonus: number;
+  comboCount: number;
   xpGained: number;
 }
 
@@ -107,6 +114,7 @@ function calculatePointReward(winner: PlayerType, input?: PointRewardInput): Poi
     rallyLength,
     styleBonus,
     comboBonus,
+    comboCount,
     xpGained: winnerBonus + rallyBonus + comboBonus + styleXp
   };
 }
@@ -117,6 +125,7 @@ export function useTennisGame() {
   const [lastPointWinner, setLastPointWinner] = useState<PlayerType | null>(null);
   const [pointReward, setPointReward] = useState<PointReward | null>(null);
   const [matchStats, setMatchStats] = useState<MatchStats>(() => createInitialMatchStats());
+  const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => loadPlayerProgress());
   const introTimerRef = useRef<number | null>(null);
   const serveCountdownTimerRef = useRef<number | null>(null);
   const nextPointTimerRef = useRef<number | null>(null);
@@ -137,21 +146,21 @@ export function useTennisGame() {
 
   const queueServeCountdown = useCallback(() => {
     clearTimer(serveCountdownTimerRef);
-    setGameState(GameState.SERVE_COUNTDOWN);
+    beginServeCountdown(setGameState);
     serveCountdownTimerRef.current = window.setTimeout(() => {
       serveCountdownTimerRef.current = null;
-      setGameState(GameState.SERVING);
+      beginServing(setGameState);
     }, SERVE_COUNTDOWN_MS);
   }, [clearTimer]);
 
   const queueNextPoint = useCallback((nextStatus: GameStatus) => {
     clearTimer(nextPointTimerRef);
-    setGameState(GameState.SCORING);
+    finishPoint(setGameState);
 
     nextPointTimerRef.current = window.setTimeout(() => {
       nextPointTimerRef.current = null;
       if (nextStatus.winner) {
-        setGameState(GameState.GAME_OVER);
+        finishMatch(setGameState);
       } else {
         queueServeCountdown();
       }
@@ -166,6 +175,7 @@ export function useTennisGame() {
     setPointReward(null);
     setMatchStats(createInitialMatchStats());
     setGameState(GameState.INTRO);
+    presentationDirector.presentMoment('match.intro');
 
     introTimerRef.current = window.setTimeout(() => {
       introTimerRef.current = null;
@@ -183,6 +193,8 @@ export function useTennisGame() {
       bestCombo: Math.max(current.bestCombo, rewardInput?.comboCount ?? 0),
       totalXp: current.totalXp + reward.xpGained
     }));
+    setPlayerProgress((current) => recordPointProgress(current, reward));
+    return reward;
   }, []);
 
   const addPoint = useCallback((winner: PlayerType, rewardInput?: PointRewardInput) => {
@@ -190,6 +202,10 @@ export function useTennisGame() {
     recordPointPresentation(winner, rewardInput);
     setStatus((currentStatus) => {
       const nextStatus = updateScoreOnPoint(currentStatus, winner);
+      const matchWinner = nextStatus.winner;
+      if (matchWinner) {
+        setPlayerProgress((current) => recordMatchProgress(current, matchWinner));
+      }
       queueNextPoint(nextStatus);
       return nextStatus;
     });
@@ -210,12 +226,22 @@ export function useTennisGame() {
         serveSpeedMph: 0
       });
       const nextStatus = updateScoreOnPoint(currentStatus, pointWinner);
+      const matchWinner = nextStatus.winner;
+      if (matchWinner) {
+        setPlayerProgress((current) => recordMatchProgress(current, matchWinner));
+      }
       queueNextPoint(nextStatus);
       return nextStatus;
     });
   }, [queueNextPoint, recordPointPresentation]);
 
   useEffect(() => clearTimers, [clearTimers]);
+
+  useEffect(() => {
+    if (gameState === GameState.SERVING) {
+      presentationDirector.presentMoment('serve.start', { servingPlayer: status.servingPlayer });
+    }
+  }, [gameState, status.servingPlayer]);
 
   useEffect(() => {
     if (gameState !== GameState.SERVING || !isMatchPoint(status)) {
@@ -228,7 +254,7 @@ export function useTennisGame() {
     }
 
     matchPointSoundKeyRef.current = soundKey;
-    playAudioEvent('match.point');
+    presentationDirector.presentMoment('match.point');
   }, [gameState, status]);
 
   const difficultyStats = useMemo(() => getDifficultyStats(status), [status]);
@@ -245,6 +271,7 @@ export function useTennisGame() {
     lastPointWinner,
     pointReward,
     matchStats,
+    playerProgress,
     servingPlayer: status.servingPlayer,
     serveSide: status.serveSide,
     serverFaults: status.serverFaults,
