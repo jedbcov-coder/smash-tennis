@@ -1,6 +1,5 @@
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
-import type { GameplayDifficultyStats } from '../hooks/useGameplayLoop';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
@@ -29,13 +28,13 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats
-  courtSurface
 }: GameHudProps) {
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
-
+  const serveMeterLeft = `${Math.round(arcadeHudStats.serveMeter.value * 100)}%`;
+  const serveQuality = arcadeHudStats.serveMeter.quality;
 
   return (
     <>
@@ -162,8 +161,31 @@ export function GameHud({
             {serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
-            <div className="text-white/60 text-sm font-bold mt-2 uppercase tracking-widest">
-              Press Space or Click to Serve
+            <div className="mt-3 flex w-[340px] flex-col items-center gap-2 rounded-2xl border border-cyan-300/35 bg-black/70 p-4 shadow-[0_0_24px_rgba(34,211,238,0.25)]">
+              <div className="text-white/70 text-xs font-black uppercase tracking-widest">
+                {arcadeHudStats.serveMeter.isTiming ? 'Press Space or Click again to hit' : 'Press Space or Click to start meter'}
+              </div>
+              <div className="relative h-5 w-full overflow-hidden rounded-full border border-white/20"
+                style={{ background: 'linear-gradient(90deg, #ef4444 0%, #fde047 32%, #6ee7b7 50%, #fde047 68%, #ef4444 100%)' }}>
+                <div className="absolute left-[46%] top-0 h-full w-[8%] bg-emerald-200/45" />
+                <div
+                  className="absolute top-[-2px] h-7 w-1 -translate-x-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] transition-[left] duration-75"
+                  style={{ left: serveMeterLeft }}
+                />
+              </div>
+              <div className="text-[11px] font-black uppercase tracking-widest text-white/65">
+                Aim for the green center: Weak · Standard · Perfect · Power · Fault
+              </div>
+              {serveQuality && (
+                <div className={`rounded-full px-4 py-1 text-sm font-black uppercase tracking-widest ${serveQuality === 'Fault' ? 'bg-red-600 text-white' : 'bg-cyan-300 text-slate-950'}`}>
+                  {serveQuality}
+                </div>
+              )}
+            </div>
+          )}
+          {servingPlayer === 'AI' && serveQuality && (
+            <div className="mt-2 rounded-full border border-white/20 bg-black/60 px-4 py-1 text-xs font-black uppercase tracking-widest text-white/70">
+              Hidalgo: {serveQuality}
             </div>
           )}
         </div>

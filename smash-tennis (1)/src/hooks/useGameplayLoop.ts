@@ -16,7 +16,7 @@ import {
 import { playAudioEvent } from '../audio/audioManager';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput } from '../controls/usePlayerInput';
-import { useServeMechanics } from '../serve/useServeMechanics';
+import { useServeMechanics, type ServeMeterState } from '../serve/useServeMechanics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -30,6 +30,7 @@ export interface ArcadeHudStats {
   comboCount: number;
   rallyCount: number;
   callout: ArcadeCallout | null;
+  serveMeter: ServeMeterState;
 }
 
 const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
@@ -37,7 +38,8 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   energyPercent: 0,
   comboCount: 0,
   rallyCount: 0,
-  callout: null
+  callout: null,
+  serveMeter: { value: 0, isTiming: false, quality: null }
 });
 
 interface UseGameplayLoopOptions {
@@ -84,7 +86,6 @@ export function useGameplayLoop({
   difficultyStats,
   courtSurface,
   onArcadeHudStatsChange
-  courtSurface
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -183,7 +184,7 @@ export function useGameplayLoop({
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
     consecutiveReturns.current = 0;
-    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
+    setArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null, serveMeter: { value: 0, isTiming: false, quality: null } }));
     smashOpportunity.current = createEmptySmashOpportunity();
     setIsSmashOpportunityVisible(false);
     setIsVisualSmashing(false);
@@ -281,6 +282,9 @@ export function useGameplayLoop({
     clearSwingInput,
     setLastHitter,
     addFault: onFault,
+    onServeMeterChange: (serveMeter) => {
+      setArcadeHudStats((current) => ({ ...current, serveMeter }));
+    },
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
     }

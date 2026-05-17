@@ -1,10 +1,39 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MutableRefObject, type RefObject } from 'react';
 import * as THREE from 'three';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { SERVE_POSITIONS, PLAYER_MOVEMENT_LIMITS } from '../gameplay/gameTuning';
 import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import { playAudioEvent } from '../audio/audioManager';
 import type { BallHandle } from '../environment/Ball';
+
+export type ServeQuality = 'Weak Serve' | 'Standard Serve' | 'Perfect Serve' | 'Power Serve' | 'Fault';
+
+export interface ServeMeterState {
+  value: number;
+  isTiming: boolean;
+  quality: ServeQuality | null;
+}
+
+interface QualityTuning {
+  speedMultiplier: number;
+  accuracyWobble: number;
+  spinMultiplier: number;
+  faultChance: number;
+}
+
+const INITIAL_SERVE_METER: ServeMeterState = {
+  value: 0,
+  isTiming: false,
+  quality: null
+};
+
+const QUALITY_TUNING: Record<ServeQuality, QualityTuning> = {
+  'Weak Serve': { speedMultiplier: 0.82, accuracyWobble: 0.55, spinMultiplier: 0.65, faultChance: 0.05 },
+  'Standard Serve': { speedMultiplier: 1, accuracyWobble: 0.25, spinMultiplier: 1, faultChance: 0.02 },
+  'Perfect Serve': { speedMultiplier: 1.18, accuracyWobble: 0, spinMultiplier: 1.25, faultChance: 0 },
+  'Power Serve': { speedMultiplier: 1.32, accuracyWobble: 0.35, spinMultiplier: 1.45, faultChance: 0.08 },
+  Fault: { speedMultiplier: 0, accuracyWobble: 0, spinMultiplier: 0, faultChance: 1 }
+};
 
 interface UseServeMechanicsOptions {
   gameState: GameState;
@@ -13,14 +42,41 @@ interface UseServeMechanicsOptions {
   serveSide: ServeSide;
   difficultyStats: ShotDifficultyStats;
   courtSurface: CourtSurface;
-  ballRef: React.RefObject<BallHandle | null>;
-  playerPos: React.MutableRefObject<THREE.Vector3>;
-  aiPos: React.MutableRefObject<THREE.Vector3>;
+  ballRef: RefObject<BallHandle | null>;
+  playerPos: MutableRefObject<THREE.Vector3>;
+  aiPos: MutableRefObject<THREE.Vector3>;
   isSwinging: boolean;
   clearSwingInput: () => void;
   setLastHitter: (hitter: PlayerType) => void;
-  addFault: () => void; // New callback to trigger service faults
+  addFault: () => void;
+  onServeMeterChange?: (meter: ServeMeterState) => void;
   onServeLaunched?: (velocity: THREE.Vector3) => void;
+}
+
+function getPlayerServeQuality(meterValue: number): ServeQuality {
+  const timingFromPerfect = Math.abs(meterValue - 0.5);
+
+  if (timingFromPerfect <= 0.035) return 'Perfect Serve';
+  if (timingFromPerfect <= 0.14) return 'Power Serve';
+  if (timingFromPerfect <= 0.27) return 'Standard Serve';
+  if (timingFromPerfect <= 0.4) return 'Weak Serve';
+
+  return 'Fault';
+}
+
+function applyServeQuality(serveVel: THREE.Vector3, quality: ServeQuality, server: PlayerType) {
+  const tuning = QUALITY_TUNING[quality];
+  const sideDirection = server === 'PLAYER' ? 1 : -1;
+
+  return serveVel
+    .clone()
+    .multiplyScalar(tuning.speedMultiplier)
+    .add(new THREE.Vector3((Math.random() - 0.5) * tuning.accuracyWobble * sideDirection, 0, 0));
+}
+
+function shouldFault(quality: ServeQuality) {
+  const tuning = QUALITY_TUNING[quality];
+  return Math.random() < tuning.faultChance;
 }
 
 export function useServeMechanics({
@@ -37,11 +93,51 @@ export function useServeMechanics({
   clearSwingInput,
   setLastHitter,
   addFault,
+  onServeMeterChange,
   onServeLaunched
 }: UseServeMechanicsOptions) {
   const aiServeReadyAt = useRef(0);
+  const meterValue = useRef(0);
+  const meterDirection = useRef(1);
+  const playerIsTimingServe = useRef(false);
+  const serveMeterStartedAt = useRef(0);
+  const lastMeterUpdate = useRef<ServeMeterState>(INITIAL_SERVE_METER);
 
-  // Return a boolean indicating whether serve mechanics overtook the frame logic
+  function updateServeMeter(nextMeter: ServeMeterState) {
+    lastMeterUpdate.current = nextMeter;
+    onServeMeterChange?.(nextMeter);
+  }
+
+  function launchServe(server: PlayerType, quality: ServeQuality, fromPos: THREE.Vector3) {
+    if (shouldFault(quality)) {
+      updateServeMeter({ value: meterValue.current, isTiming: false, quality: 'Fault' });
+      addFault();
+      playAudioEvent('hit.normal');
+      return;
+    }
+
+    const targetSide: PlayerType = server === 'PLAYER' ? 'AI' : 'PLAYER';
+    const baseServeVel = calculateLegalShot(fromPos, true, serveSide, difficultyStats, targetSide, courtSurface);
+    const serveVel = applyServeQuality(baseServeVel, quality, server);
+    const baseSpin =
+      server === 'PLAYER'
+        ? serveSide === 'DEUCE'
+          ? -0.9
+          : 0.9
+        : serveSide === 'DEUCE'
+          ? 0.7
+          : -0.7;
+    const serveSpin = baseSpin * QUALITY_TUNING[quality].spinMultiplier;
+
+    ballRef.current?.setVelocity(serveVel, serveSpin);
+    onServeLaunched?.(serveVel);
+    setGameState(GameState.PLAYING);
+    setLastHitter(server);
+    updateServeMeter({ value: meterValue.current, isTiming: false, quality });
+    playAudioEvent('hit.normal');
+  }
+
+  // Return a boolean indicating whether serve mechanics overtook the frame logic.
   function processServeFrame(delta: number, now: number): boolean {
     if (gameState !== GameState.SERVING) return false;
 
@@ -50,94 +146,87 @@ export function useServeMechanics({
       playerPos.current.z = PLAYER_MOVEMENT_LIMITS.serveZ;
       playerPos.current.x = serveSide === 'DEUCE' ? PLAYER_MOVEMENT_LIMITS.deuceServeX : PLAYER_MOVEMENT_LIMITS.adServeX;
 
-      ballRef.current?.reset(
-        [playerPos.current.x + SERVE_POSITIONS.ballXOffset, SERVE_POSITIONS.ballHeight, playerPos.current.z - SERVE_POSITIONS.ballZOffset],
-        [0, 0, 0]
+      const serveStart = new THREE.Vector3(
+        playerPos.current.x + SERVE_POSITIONS.ballXOffset,
+        SERVE_POSITIONS.ballHeight,
+        playerPos.current.z - SERVE_POSITIONS.ballZOffset
       );
+
+      ballRef.current?.reset([serveStart.x, serveStart.y, serveStart.z], [0, 0, 0]);
+
+      if (playerIsTimingServe.current) {
+        meterValue.current += meterDirection.current * delta * 1.35;
+        if (meterValue.current >= 1) {
+          meterValue.current = 1;
+          meterDirection.current = -1;
+        } else if (meterValue.current <= 0) {
+          meterValue.current = 0;
+          meterDirection.current = 1;
+        }
+        updateServeMeter({ value: meterValue.current, isTiming: true, quality: null });
+      }
 
       if (isSwinging) {
-        // Simple mock random fault logic for demonstration.
-        // In a more complex game, player timing might dictate faults.
-        const isFault = Math.random() < 0.15 * difficultyStats.gameDifficultyMultiplier; // 15% chance to fault
-        
-        if (isFault) {
-          addFault();
-          playAudioEvent('hit.normal'); // Still play hit sound
+        if (!playerIsTimingServe.current) {
+          playerIsTimingServe.current = true;
+          serveMeterStartedAt.current = now;
+          meterValue.current = 0;
+          meterDirection.current = 1;
+          updateServeMeter({ value: meterValue.current, isTiming: true, quality: null });
           clearSwingInput();
-          return true; // Frame processed
-        }
-
-        const serveVel = calculateLegalShot(
-          new THREE.Vector3(
-            playerPos.current.x + SERVE_POSITIONS.ballXOffset,
-            SERVE_POSITIONS.ballHeight,
-            playerPos.current.z - SERVE_POSITIONS.ballZOffset
-          ),
-          true,
-          serveSide,
-          difficultyStats,
-          'AI',
-          courtSurface
-        );
-        const serveSpin = serveSide === 'DEUCE' ? -0.9 : 0.9;
-        ballRef.current?.setVelocity(serveVel, serveSpin);
-        onServeLaunched?.(serveVel);
-        setGameState(GameState.PLAYING);
-        setLastHitter('PLAYER');
-        playAudioEvent('hit.normal');
-        clearSwingInput();
-      }
-    } else {
-      // AI Serving logic
-      aiPos.current.z = SERVE_POSITIONS.aiZ; // Behind baseline
-      aiPos.current.x = serveSide === 'DEUCE' ? SERVE_POSITIONS.aiDeuceX : SERVE_POSITIONS.aiAdX; // AI's deuce side is server's left (negative X)
-
-      ballRef.current?.reset(
-        [aiPos.current.x - SERVE_POSITIONS.ballXOffset, SERVE_POSITIONS.ballHeight, aiPos.current.z + SERVE_POSITIONS.ballZOffset],
-        [0, 0, 0]
-      );
-      
-      // Wait briefly before AI serves so the player can read the next point.
-      if (aiServeReadyAt.current === 0) {
-        aiServeReadyAt.current = now + SERVE_POSITIONS.aiDelaySeconds;
-      }
-      
-      if (now >= aiServeReadyAt.current) {
-        const isFault = Math.random() < 0.10; // AI has 10% chance to fault
-        if (isFault) {
-          addFault();
-          aiServeReadyAt.current = 0; // Reset timer for second serve if double fault doesn't happen
-          playAudioEvent('hit.normal');
           return true;
         }
 
-        const serveVel = calculateLegalShot(
-          new THREE.Vector3(
-            aiPos.current.x - SERVE_POSITIONS.ballXOffset,
-            SERVE_POSITIONS.ballHeight,
-            aiPos.current.z + SERVE_POSITIONS.ballZOffset
-          ),
-          true,
-          serveSide,
-          difficultyStats,
-          'PLAYER',
-          courtSurface
-        );
-        const serveSpin = serveSide === 'DEUCE' ? 0.7 : -0.7;
-        ballRef.current?.setVelocity(serveVel, serveSpin);
-        onServeLaunched?.(serveVel);
-        setGameState(GameState.PLAYING);
-        setLastHitter('AI');
-        playAudioEvent('hit.normal');
+        // Ignore accidental double input in the same instant the meter starts.
+        if (now - serveMeterStartedAt.current < 0.12) {
+          clearSwingInput();
+          return true;
+        }
+
+        const quality = getPlayerServeQuality(meterValue.current);
+        playerIsTimingServe.current = false;
+        launchServe('PLAYER', quality, serveStart);
+        clearSwingInput();
+      }
+    } else {
+      // AI serving stays simple: wait briefly, show a readable quality, then serve.
+      aiPos.current.z = SERVE_POSITIONS.aiZ;
+      aiPos.current.x = serveSide === 'DEUCE' ? SERVE_POSITIONS.aiDeuceX : SERVE_POSITIONS.aiAdX;
+
+      const serveStart = new THREE.Vector3(
+        aiPos.current.x - SERVE_POSITIONS.ballXOffset,
+        SERVE_POSITIONS.ballHeight,
+        aiPos.current.z + SERVE_POSITIONS.ballZOffset
+      );
+
+      ballRef.current?.reset([serveStart.x, serveStart.y, serveStart.z], [0, 0, 0]);
+
+      if (aiServeReadyAt.current === 0) {
+        aiServeReadyAt.current = now + SERVE_POSITIONS.aiDelaySeconds;
+        meterValue.current = 0.5;
+        updateServeMeter({ value: meterValue.current, isTiming: false, quality: 'Standard Serve' });
+      }
+
+      if (now >= aiServeReadyAt.current) {
+        const quality: ServeQuality = Math.random() < 0.28 ? 'Power Serve' : 'Standard Serve';
+        meterValue.current = quality === 'Power Serve' ? 0.62 : 0.5;
+        launchServe('AI', quality, serveStart);
+        aiServeReadyAt.current = 0;
       }
     }
-    return true; // We are in SERVING state, stop generic frame processing
+    return true; // We are in SERVING state, stop generic frame processing.
   }
 
-  // Effect to reset AI timer when gameState changes
   useEffect(() => {
     if (gameState === GameState.SERVING) {
       aiServeReadyAt.current = 0;
+      meterValue.current = 0;
+      meterDirection.current = 1;
+      playerIsTimingServe.current = false;
+      serveMeterStartedAt.current = 0;
+      updateServeMeter(INITIAL_SERVE_METER);
+    } else if (lastMeterUpdate.current.isTiming) {
+      updateServeMeter({ ...lastMeterUpdate.current, isTiming: false });
     }
   }, [gameState, servingPlayer]);
 

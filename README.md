@@ -2,15 +2,15 @@
 
 ## Play the game
 
-Live playable version: https://jedbcov-coder.github.io/smash-tennis/
+Live playable version: https://jedbcov-coder.github.io/Smash_Tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, serves, rallies, and bigger overhead smash moments.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, tennis scoring, timing-based serves, rallies, and bigger overhead smash moments.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Move Blake: move your mouse around the game screen.
-- Serve: click or press Space when it is your serve.
+- Serve: click or press Space once to start the serve meter, then click or press Space again to hit the serve. Try to stop the meter near the green center for a Perfect Serve; stopping too early or too late can cause a Fault.
 - Swing: click or press Space when the ball reaches your side.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 
@@ -18,6 +18,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
+- Timing-based player serve meter with Weak Serve, Standard Serve, Perfect Serve, Power Serve, and Fault results.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
@@ -60,4 +61,4 @@ npm run build
 
 ## Deployment notes
 
-This project is set up for GitHub Pages at https://jedbcov-coder.github.io/smash-tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/smash-tennis/` after deployment.
+This project is set up for GitHub Pages at https://jedbcov-coder.github.io/Smash_Tennis/. The Vite base path changes automatically during GitHub Actions builds so the game works under `/Smash_Tennis/` after deployment.
