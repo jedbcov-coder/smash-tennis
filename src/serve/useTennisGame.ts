@@ -146,21 +146,21 @@ export function useTennisGame() {
 
   const queueServeCountdown = useCallback(() => {
     clearTimer(serveCountdownTimerRef);
-    setGameState(GameState.SERVE_COUNTDOWN);
+    beginServeCountdown(setGameState);
     serveCountdownTimerRef.current = window.setTimeout(() => {
       serveCountdownTimerRef.current = null;
-      setGameState(GameState.SERVING);
+      beginServing(setGameState);
     }, SERVE_COUNTDOWN_MS);
   }, [clearTimer]);
 
   const queueNextPoint = useCallback((nextStatus: GameStatus) => {
     clearTimer(nextPointTimerRef);
-    setGameState(GameState.SCORING);
+    finishPoint(setGameState);
 
     nextPointTimerRef.current = window.setTimeout(() => {
       nextPointTimerRef.current = null;
       if (nextStatus.winner) {
-        setGameState(GameState.GAME_OVER);
+        finishMatch(setGameState);
       } else {
         queueServeCountdown();
       }

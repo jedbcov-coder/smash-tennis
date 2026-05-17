@@ -205,7 +205,7 @@ export function useServeMechanics({
         ballRef.current?.setVelocity(tunedServeVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: playerMeterPosition.current, qualityLabel: outcome.label, servingPlayer: 'PLAYER' });
         onServeLaunched?.(tunedServeVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('PLAYER');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         clearSwingInput();
@@ -258,7 +258,7 @@ export function useServeMechanics({
         ballRef.current?.setVelocity(serveVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: 0.5, qualityLabel: 'Standard Serve', servingPlayer: 'AI' });
         onServeLaunched?.(serveVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('AI');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
       }
