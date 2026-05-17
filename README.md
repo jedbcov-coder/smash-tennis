@@ -61,21 +61,32 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Useful checks
 
-Run these commands from the repository root folder:
+Run these commands from the repository root folder before saying the app is ready:
 
 ```bash
 npm run test
-npm run test:watch
 npm run lint
 npm run build
 ```
 
-`npm run test` runs the lightweight Vite-powered tests for scoring rules and shot physics once. `npm run test:watch` keeps those tests running while you edit files. `npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+`npm run test` uses `scripts/run-tests.mjs` to run the lightweight Vite-powered helper tests for tennis scoring rules and shot physics. Keep using it for those focused checks, but do not treat it as the only safety check because it does not cover the full React app wiring.
+
+After `npm run test`, always run `npm run lint`. The lint command runs TypeScript across the full app, so it catches broken imports, type mistakes, and wiring problems that helper tests may miss. Before marking the app ready, always run `npm run build`. The build command checks the production app bundle, creates the files in `dist`, and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+
+Optional while editing:
+
+```bash
+npm run test:watch
+```
+
+`npm run test:watch` keeps the scoring and shot helper tests running while you edit files. It is useful during development, but the final readiness check is still `npm run test`, then `npm run lint`, then `npm run build`.
 
 Current check notes verified on May 17, 2026:
 
 - `npm install` passes from the repository root.
 - `npm run dev` starts successfully from the repository root.
+- `npm run test` passes from the repository root for scoring and shot helper logic.
+- `npm run lint` passes from the repository root and checks the full TypeScript app.
 - `npm run build` passes from the repository root and copies `dist/index.html` to `dist/404.html`.
 - The build may show a Vite chunk-size warning because the 3D/game libraries bundle into one large JavaScript file. This is a warning, not a build failure.
 

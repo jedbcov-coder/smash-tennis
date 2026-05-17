@@ -275,8 +275,6 @@ export function Game() {
         matchStats={matchStats}
         playerProgress={playerProgress}
         opponentProfile={opponentProfile}
-        opponentId={opponentId}
-        setOpponentId={setOpponentId}
         settings={settings}
         setSettings={setSettings}
         resetSettings={resetSettings}
