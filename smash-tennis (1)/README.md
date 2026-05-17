@@ -81,6 +81,7 @@ Current check notes verified on May 17, 2026:
 - `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
+- `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin curve, bounce, and surface bounce rules in a pure helper so the visuals stay easier to maintain.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
 - `src/hooks/useGameplayLoop.ts` runs the frame-by-frame gameplay logic.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.

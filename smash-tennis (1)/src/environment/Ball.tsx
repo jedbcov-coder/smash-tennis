@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { TEXTURE_RULES } from '../design/textures';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { GRAVITY, applySpinCurve, applySurfaceBounce } from '../physics/WorldPhysics';
+import { stepBallSimulation } from '../physics/BallSimulation';
 import type { CourtSurface } from '../types';
 
 export interface BallHandle {
@@ -95,20 +95,22 @@ export const Ball = forwardRef<BallHandle, BallProps>(({ isActive = true, timeSc
     const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
 
     if (isActive) {
-      const scaledDelta = delta * timeScale;
+      const nextBallState = stepBallSimulation(
+        {
+          position: groupRef.current.position,
+          velocity: velocity.current,
+          spin: spin.current
+        },
+        {
+          delta,
+          timeScale,
+          surfaceSettings
+        }
+      );
 
-      // Spin bends the ball sideways while it flies. It is intentionally arcade-like, not a full simulation.
-      applySpinCurve(velocity.current, spin.current, surfaceSettings.spinCurveMultiplier, scaledDelta);
-      spin.current *= 1 - Math.min(0.9, scaledDelta * 0.45);
-
-      velocity.current.y += GRAVITY * scaledDelta;
-      groupRef.current.position.addScaledVector(velocity.current, scaledDelta);
-
-      if (groupRef.current.position.y < 0.1) {
-        groupRef.current.position.y = 0.1;
-        applySurfaceBounce(velocity.current, surfaceSettings);
-        spin.current *= 0.58;
-      }
+      groupRef.current.position.copy(nextBallState.position);
+      velocity.current.copy(nextBallState.velocity);
+      spin.current = nextBallState.spin;
     }
 
     const speed = velocity.current.length();

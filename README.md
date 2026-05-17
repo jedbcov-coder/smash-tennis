@@ -20,6 +20,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
+- Ball movement is kept in a small physics helper for easier maintenance of gravity, spin, bounce, and surface rules.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
