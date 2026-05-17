@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { ArcadeHudStats, GameplayDifficultyStats } from '../hooks/useGameplayLoop';
+import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
+import type { PointReward } from '../serve/useTennisGame';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 
 interface GameHudProps {
@@ -35,7 +37,10 @@ export function GameHud({
   const aiLabel = formatTennisScore(score.aiScore, isTiebreak);
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
+  const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const [serveCountdown, setServeCountdown] = useState(3);
 
   useEffect(() => {
     if (gameState !== GameState.SERVE_COUNTDOWN) {
@@ -169,10 +174,10 @@ export function GameHud({
       )}
 
       {/* Serving Instruction */}
-      {gameState === GameState.SERVING && (
+      {(gameState === GameState.SERVING || gameState === GameState.SERVE_COUNTDOWN) && (
         <div className="absolute bottom-1/4 left-1/2 flex -translate-x-1/2 flex-col items-center pointer-events-none">
           <div className="neon-text-cyan neon-pulse text-3xl font-black italic uppercase tracking-tighter">
-            {serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
+            {gameState === GameState.SERVE_COUNTDOWN ? serveCountdown : serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
             <div className="mt-2 text-sm font-bold uppercase tracking-widest text-white/65">Press Space or Click to Serve</div>

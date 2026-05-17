@@ -21,7 +21,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
-- Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, menu hover/select, win, and defeat.
+- Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
@@ -29,7 +29,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Start screen, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 
 ## How to run locally
