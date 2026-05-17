@@ -11,6 +11,7 @@ import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
+import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { setAudioSettings } from '../audio/audioManager';
 import { useGameSettings, type GameSettings } from '../settings/useGameSettings';
@@ -82,8 +83,8 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
-  onArcadeHudStatsChange,
-  settings
+  opponentProfile,
+  onArcadeHudStatsChange
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
@@ -98,6 +99,7 @@ function GameScene({
     racketAccuracyRadius: number;
   };
   courtSurface: CourtSurface;
+  opponentProfile: OpponentProfile;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
   settings: GameSettings;
 }) {
@@ -122,8 +124,8 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
-    onArcadeHudStatsChange,
-    settings
+    opponentProfile,
+    onArcadeHudStatsChange
   });
 
   return (
@@ -147,7 +149,7 @@ function GameScene({
       <Character
         initialPosition={[0, 0, -9]}
         positionRef={aiPos}
-        color={COLOR_SCHEME.characters.ai}
+        color={opponentProfile.theme.color}
         isAI
         isSwinging={isAiSwinging}
         isMissing={isAiMissing}
@@ -178,6 +180,8 @@ function GameScene({
 export function Game() {
   const { settings, setSettings, resetSettings } = useGameSettings();
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [opponentId, setOpponentId] = useState<OpponentId>(DEFAULT_OPPONENT_PROFILE.id);
+  const opponentProfile = getOpponentProfile(opponentId);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
     energyPercent: 0,
@@ -199,6 +203,7 @@ export function Game() {
     lastPointWinner,
     pointReward,
     matchStats,
+    playerProgress,
     servingPlayer,
     serveSide,
     serverFaults,
@@ -233,6 +238,7 @@ export function Game() {
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
+          opponentProfile={opponentProfile}
           onArcadeHudStatsChange={setArcadeHudStats}
           settings={settings}
         />
@@ -262,9 +268,7 @@ export function Game() {
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
-        settings={settings}
-        setSettings={setSettings}
-        resetSettings={resetSettings}
+        playerProgress={playerProgress}
       />
     </div>
   );
