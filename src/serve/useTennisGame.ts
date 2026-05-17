@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { presentationDirector } from '../presentation/presentationDirector';
+import {
+  beginServeCountdown,
+  beginServing,
+  finishMatch,
+  finishPoint,
+  startMatch
+} from '../gameplay/gameStateMachine';
 import { GameState, type PlayerType } from '../types';
 import {
   loadPlayerProgress,
@@ -174,7 +181,7 @@ export function useTennisGame() {
     setLastPointWinner(null);
     setPointReward(null);
     setMatchStats(createInitialMatchStats());
-    setGameState(GameState.INTRO);
+    startMatch(setGameState);
     presentationDirector.presentMoment('match.intro');
 
     introTimerRef.current = window.setTimeout(() => {
