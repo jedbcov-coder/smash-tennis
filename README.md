@@ -20,6 +20,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Surface-based gameplay changes for ball speed, bounce height, floor friction, player movement, and spin curve.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
+- Neon arcade HUD with a serve/shot speedometer, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, and POWER READY callouts.
 - 3D tennis court built with React, Vite, Three.js, and React Three Fiber.
 - Player-vs-AI rallies against Hidalgo.
 - Tennis-style points, games, sets, serving turns, second serves, and double faults.

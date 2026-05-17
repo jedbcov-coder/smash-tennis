@@ -20,6 +20,7 @@ interface UseServeMechanicsOptions {
   clearSwingInput: () => void;
   setLastHitter: (hitter: PlayerType) => void;
   addFault: () => void; // New callback to trigger service faults
+  onServeLaunched?: (velocity: THREE.Vector3) => void;
 }
 
 export function useServeMechanics({
@@ -35,7 +36,8 @@ export function useServeMechanics({
   isSwinging,
   clearSwingInput,
   setLastHitter,
-  addFault
+  addFault,
+  onServeLaunched
 }: UseServeMechanicsOptions) {
   const aiServeReadyAt = useRef(0);
 
@@ -79,6 +81,7 @@ export function useServeMechanics({
         );
         const serveSpin = serveSide === 'DEUCE' ? -0.9 : 0.9;
         ballRef.current?.setVelocity(serveVel, serveSpin);
+        onServeLaunched?.(serveVel);
         setGameState(GameState.PLAYING);
         setLastHitter('PLAYER');
         playAudioEvent('hit.normal');
@@ -122,6 +125,7 @@ export function useServeMechanics({
         );
         const serveSpin = serveSide === 'DEUCE' ? 0.7 : -0.7;
         ballRef.current?.setVelocity(serveVel, serveSpin);
+        onServeLaunched?.(serveVel);
         setGameState(GameState.PLAYING);
         setLastHitter('AI');
         playAudioEvent('hit.normal');

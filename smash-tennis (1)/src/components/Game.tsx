@@ -7,7 +7,7 @@ import { Character } from '../character/Character';
 import { Ball, type BallHandle } from '../environment/Ball';
 import { GameHud } from './GameHud';
 import { GameMenus } from './GameMenus';
-import { useGameplayLoop } from '../hooks/useGameplayLoop';
+import { useGameplayLoop, type ArcadeHudStats } from '../hooks/useGameplayLoop';
 import { useTennisGame } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
@@ -45,6 +45,8 @@ function GameScene({
   serveSide,
   targetRallyLength,
   difficultyStats,
+  courtSurface,
+  onArcadeHudStatsChange
   courtSurface
 }: {
   onScore: (winner: PlayerType) => void;
@@ -60,6 +62,7 @@ function GameScene({
     racketAccuracyRadius: number;
   };
   courtSurface: CourtSurface;
+  onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
 }) {
   const {
     ballRef,
@@ -81,6 +84,8 @@ function GameScene({
     serveSide,
     targetRallyLength,
     difficultyStats,
+    courtSurface,
+    onArcadeHudStatsChange
     courtSurface
   });
 
@@ -131,6 +136,13 @@ function GameScene({
 
 export function Game() {
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
+    serveSpeedMph: 0,
+    energyPercent: 0,
+    comboCount: 0,
+    rallyCount: 0,
+    callout: null
+  });
 
   const {
     score,
@@ -162,6 +174,7 @@ export function Game() {
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
+          onArcadeHudStatsChange={setArcadeHudStats}
         />
       </Canvas>
 
@@ -175,6 +188,7 @@ export function Game() {
         lastPointWinner={lastPointWinner}
         serverFaults={serverFaults}
         courtSurface={courtSurface}
+        arcadeHudStats={arcadeHudStats}
       />
 
       <GameMenus
