@@ -5,7 +5,13 @@ import * as THREE from 'three';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { TEXTURE_RULES } from '../design/textures';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { GRAVITY, applySpinCurve, applySurfaceBounce } from '../physics/WorldPhysics';
+import {
+  createBallSimulationState,
+  resetBallSimulation,
+  setBallSpin,
+  setBallVelocity,
+  stepBallSimulation
+} from '../physics/BallSimulation';
 import type { CourtSurface } from '../types';
 
 export interface BallHandle {
@@ -61,31 +67,28 @@ export const Ball = forwardRef<BallHandle, BallProps>(({ isActive = true, timeSc
   const meshRef = useRef<THREE.Mesh>(null);
   const shadowRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
-  const velocity = useRef(new THREE.Vector3(0, 0, 0));
-  const spin = useRef(0);
+  const simulation = useRef(createBallSimulationState());
   const modeUpdateTimer = useRef(0);
   const [visualMode, setVisualMode] = useState<BallVisualMode>('normal');
 
   useImperativeHandle(ref, () => ({
     reset: (pos, vel) => {
+      resetBallSimulation(simulation.current, pos, vel);
       if (groupRef.current) {
-        groupRef.current.position.set(...pos);
+        groupRef.current.position.copy(simulation.current.position);
       }
       if (meshRef.current) {
         meshRef.current.position.set(0, 0, 0);
       }
-      velocity.current.set(...vel);
-      spin.current = 0;
       setVisualMode('normal');
     },
-    getPosition: () => groupRef.current?.position.clone() || new THREE.Vector3(),
-    getVelocity: () => velocity.current.clone(),
+    getPosition: () => simulation.current.position.clone(),
+    getVelocity: () => simulation.current.velocity.clone(),
     setVelocity: (vel: THREE.Vector3, nextSpin = 0) => {
-      velocity.current.copy(vel);
-      spin.current = nextSpin;
+      setBallVelocity(simulation.current, vel, nextSpin);
     },
     setSpin: (nextSpin: number) => {
-      spin.current = nextSpin;
+      setBallSpin(simulation.current, nextSpin);
     }
   }));
 
@@ -95,24 +98,15 @@ export const Ball = forwardRef<BallHandle, BallProps>(({ isActive = true, timeSc
     const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
 
     if (isActive) {
-      const scaledDelta = delta * timeScale;
-
-      // Spin bends the ball sideways while it flies. It is intentionally arcade-like, not a full simulation.
-      applySpinCurve(velocity.current, spin.current, surfaceSettings.spinCurveMultiplier, scaledDelta);
-      spin.current *= 1 - Math.min(0.9, scaledDelta * 0.45);
-
-      velocity.current.y += GRAVITY * scaledDelta;
-      groupRef.current.position.addScaledVector(velocity.current, scaledDelta);
-
-      if (groupRef.current.position.y < 0.1) {
-        groupRef.current.position.y = 0.1;
-        applySurfaceBounce(velocity.current, surfaceSettings);
-        spin.current *= 0.58;
-      }
+      stepBallSimulation(simulation.current, {
+        delta: delta * timeScale,
+        surfaceSettings
+      });
+      groupRef.current.position.copy(simulation.current.position);
     }
 
-    const speed = velocity.current.length();
-    const nextMode: BallVisualMode = isHighlighted ? 'highlight' : speed > 15 ? 'fast' : Math.abs(spin.current) > 0.7 ? 'curve' : 'normal';
+    const speed = simulation.current.velocity.length();
+    const nextMode: BallVisualMode = isHighlighted ? 'highlight' : speed > 15 ? 'fast' : Math.abs(simulation.current.spin) > 0.7 ? 'curve' : 'normal';
     modeUpdateTimer.current += delta;
     if (modeUpdateTimer.current > 0.08) {
       modeUpdateTimer.current = 0;

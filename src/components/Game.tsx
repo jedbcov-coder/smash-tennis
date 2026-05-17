@@ -199,6 +199,7 @@ export function Game() {
     lastPointWinner,
     pointReward,
     matchStats,
+    playerProgress,
     servingPlayer,
     serveSide,
     serverFaults,
@@ -257,8 +258,7 @@ export function Game() {
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
-        opponentProfile={opponentProfile}
-        setOpponentId={setOpponentId}
+        playerProgress={playerProgress}
       />
     </div>
   );

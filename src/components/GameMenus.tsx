@@ -3,7 +3,7 @@ import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { OPPONENT_PROFILES, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
+import { PLAYER_LEVEL_XP, type PlayerProgress } from '../progression/playerProgress';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 
@@ -19,8 +19,7 @@ export function GameMenus({
   score,
   pointReward,
   matchStats,
-  opponentProfile,
-  setOpponentId
+  playerProgress
 }: {
   gameState: GameState;
   winner: PlayerType | null;
@@ -30,8 +29,7 @@ export function GameMenus({
   score: Score;
   pointReward: PointReward | null;
   matchStats: MatchStats;
-  opponentProfile: OpponentProfile;
-  setOpponentId: (opponentId: OpponentId) => void;
+  playerProgress: PlayerProgress;
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
@@ -103,43 +101,17 @@ export function GameMenus({
             })}
           </div>
 
-          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+          <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
             Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
             <span className="mx-2 text-white/25">|</span>
             Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
           </div>
 
-          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-fuchsia-100/75">Choose rival</div>
-          <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
-            {OPPONENT_PROFILES.map((opponent) => {
-              const isSelected = opponent.id === opponentProfile.id;
-
-              return (
-                <button
-                  key={opponent.id}
-                  onClick={() => handleOpponentSelect(opponent.id)}
-                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
-                  style={{ boxShadow: isSelected ? `0 0 28px ${opponent.theme.glowColor}66` : undefined }}
-                >
-                  <div className="mb-2 h-2 rounded-full" style={{ background: opponent.theme.color }} />
-                  <div className="text-sm font-black uppercase tracking-widest text-white">{opponent.displayName}</div>
-                  <div className="mt-1 text-[10px] font-black uppercase tracking-widest" style={{ color: opponent.theme.glowColor }}>{opponent.theme.label}</div>
-                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{opponent.description}</div>
-                  <div className="mt-3 text-[10px] uppercase leading-relaxed tracking-widest text-white/45">
-                    Speed {opponent.movementSpeed.toFixed(1)} · Accuracy {(opponent.accuracy * 100).toFixed(0)}% · Aggro {(opponent.aggression * 100).toFixed(0)}%
-                  </div>
-                  <div className="mt-1 text-[10px] uppercase leading-relaxed tracking-widest text-white/45">
-                    Shot {opponent.preferredShotType} · Special {opponent.specialMoveStyle}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
-            Current rival: <span className="font-black text-white" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
-            <span className="mx-2 text-white/25">|</span>
-            Miss chance {(opponentProfile.missChance * 100).toFixed(0)}% · {opponentProfile.preferredShotType} · {opponentProfile.specialMoveStyle}
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 rounded-2xl border border-cyan-200/20 bg-black/50 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div><span className="block text-white/45">Level</span><span className="font-black text-white">{playerProgress.playerLevel}</span></div>
+            <div><span className="block text-white/45">Total XP</span><span className="font-black text-white">{playerProgress.totalXp}</span></div>
+            <div><span className="block text-white/45">Record</span><span className="font-black text-white">{playerProgress.matchWins}-{playerProgress.matchLosses}</span></div>
+            <div><span className="block text-white/45">Best Rally</span><span className="font-black text-white">{playerProgress.bestRally}</span></div>
           </div>
 
           <button
@@ -181,8 +153,8 @@ export function GameMenus({
 
   if (gameState === GameState.GAME_OVER) {
     const isWin = winner === 'PLAYER';
-    const pointXp = pointReward?.xpGained ?? 0;
-    const progressPercent = Math.min(100, pointXp);
+    const xpIntoLevel = playerProgress.totalXp % PLAYER_LEVEL_XP;
+    const progressPercent = Math.min(100, (xpIntoLevel / PLAYER_LEVEL_XP) * 100);
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
@@ -223,8 +195,8 @@ export function GameMenus({
           <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Career XP</span>{playerProgress.totalXp}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Level</span>{playerProgress.playerLevel}</div>
           </div>
           <button
             onClick={handleStartGame}
