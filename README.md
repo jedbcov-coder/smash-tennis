@@ -4,7 +4,7 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, saved settings, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
 
 ## Controls
 
@@ -26,6 +26,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving.
+- Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
@@ -33,7 +34,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Start screen with selectable court and rival cards, saved player level, total XP, win-loss record, best rally, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Start screen with selectable court cards, selectable rival cards, saved settings, saved player level, total XP, win-loss record, best rally, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Browser progress saving with localStorage for player level, total XP, unlocked courts, unlocked cosmetics, best rally, best combo, and match wins/losses.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
@@ -88,8 +89,7 @@ Current check notes verified on May 17, 2026:
 - `src/components/SettingsMenu.tsx` shows the saved settings controls for volume, motion, screen shake, contrast, and input help.
 - `src/settings/useGameSettings.ts` loads and saves game settings in browser localStorage.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start screen, court selection, rival selection, intro matchup, and game-over screens.
-- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens, including saved player progress.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start screen, court selection, rival selection, settings menu, intro matchup, and game-over screens, including saved player progress.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
 - `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin decay, and surface bounce math separate from the ball visuals.

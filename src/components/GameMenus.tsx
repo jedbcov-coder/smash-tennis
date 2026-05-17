@@ -5,7 +5,7 @@ import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { SettingsMenu } from './SettingsMenu';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
-import { OPPONENT_PROFILES, type OpponentId } from '../gameplay/opponents';
+import { OPPONENT_PROFILES, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { PLAYER_LEVEL_XP, type PlayerProgress } from '../progression/playerProgress';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
@@ -20,6 +20,7 @@ type GameMenusProps = {
   startGame: () => void;
   courtSurface: CourtSurface;
   setCourtSurface: (surface: CourtSurface) => void;
+  opponentProfile: OpponentProfile;
   opponentId: OpponentId;
   setOpponentId: (opponentId: OpponentId) => void;
   score: Score;
@@ -27,7 +28,7 @@ type GameMenusProps = {
   matchStats: MatchStats;
   playerProgress: PlayerProgress;
   settings: GameSettings;
-  setSettings: (nextSettings: Partial<GameSettings>) => void;
+  setSettings: (settings: Partial<GameSettings>) => void;
   resetSettings: () => void;
 };
 
@@ -39,7 +40,13 @@ type CourtSelectCardProps = {
 
 type MatchupIntroPanelProps = {
   courtSurface: CourtSurface;
-  opponentName: string;
+  opponentProfile: OpponentProfile;
+};
+
+type OpponentSelectCardProps = {
+  opponent: OpponentProfile;
+  isSelected: boolean;
+  onSelect: (opponentId: OpponentId) => void;
 };
 
 type GameOverStatsPanelProps = {
@@ -69,7 +76,7 @@ function CourtSelectCard({ surface, isSelected, onSelect }: CourtSelectCardProps
   );
 }
 
-function MatchupIntroPanel({ courtSurface, opponentName }: MatchupIntroPanelProps) {
+function MatchupIntroPanel({ courtSurface, opponentProfile }: MatchupIntroPanelProps) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   return (
@@ -83,7 +90,7 @@ function MatchupIntroPanel({ courtSurface, opponentName }: MatchupIntroPanelProp
         <div className="text-3xl font-black italic text-white/70">VS</div>
         <div className="rounded-2xl bg-red-600/25 p-5">
           <div className="text-sm uppercase tracking-widest text-red-100/70">Rival</div>
-          <div className="text-4xl font-black italic uppercase text-red-200">{opponentName}</div>
+          <div className="text-4xl font-black italic uppercase" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</div>
         </div>
       </div>
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
@@ -91,6 +98,23 @@ function MatchupIntroPanel({ courtSurface, opponentName }: MatchupIntroPanelProp
       </div>
       <div className="mt-6 animate-pulse text-2xl font-black italic uppercase tracking-[0.35em] text-orange-200">Get Ready</div>
     </div>
+  );
+}
+
+
+function OpponentSelectCard({ opponent, isSelected, onSelect }: OpponentSelectCardProps) {
+  return (
+    <button
+      onClick={() => onSelect(opponent.id)}
+      className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+      style={{ boxShadow: isSelected ? `0 0 28px ${opponent.theme.glowColor}66` : undefined }}
+    >
+      <div className="mb-2 h-2 rounded-full" style={{ background: opponent.theme.color }} />
+      <div className="text-sm font-black uppercase tracking-widest" style={{ color: opponent.theme.glowColor }}>{opponent.displayName}</div>
+      <div className="mt-1 text-[10px] font-black uppercase tracking-widest text-white/45">{opponent.theme.label}</div>
+      <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{opponent.description}</div>
+      <div className="mt-3 text-[10px] uppercase tracking-wider text-white/45">{opponent.preferredShotType} · {opponent.specialMoveStyle}</div>
+    </button>
   );
 }
 
@@ -144,6 +168,7 @@ export function GameMenus({
   startGame,
   courtSurface,
   setCourtSurface,
+  opponentProfile,
   opponentId,
   setOpponentId,
   score,
@@ -253,6 +278,28 @@ export function GameMenus({
             Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
           </div>
 
+          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-cyan-100/75">Choose rival</div>
+          <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
+            {OPPONENT_PROFILES.map((opponent) => (
+              <OpponentSelectCard
+                key={opponent.id}
+                opponent={opponent}
+                isSelected={opponent.id === opponentId}
+                onSelect={handleOpponentSelect}
+              />
+            ))}
+          </div>
+
+          <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+            Rival: <span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
+            <span className="mx-2 text-white/25">|</span>
+            Speed {(opponentProfile.movementSpeed * 10).toFixed(0)} · Accuracy {(opponentProfile.accuracy * 100).toFixed(0)}% · Aggression {(opponentProfile.aggression * 100).toFixed(0)}%
+          </div>
+
+          <div className="mb-6 w-full max-w-4xl">
+            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
+          </div>
+
           <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 rounded-2xl border border-cyan-200/20 bg-black/50 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
             <div><span className="block text-white/45">Level</span><span className="font-black text-white">{playerProgress.playerLevel}</span></div>
             <div><span className="block text-white/45">Total XP</span><span className="font-black text-white">{playerProgress.totalXp}</span></div>
@@ -275,24 +322,7 @@ export function GameMenus({
   if (gameState === GameState.INTRO) {
     return (
       <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-6 text-center text-white">
-        <div className="w-full max-w-3xl rounded-3xl border border-cyan-300/40 bg-slate-950/85 p-8 shadow-[0_0_50px_rgba(34,211,238,0.35)]">
-          <div className="mb-3 text-xs font-black uppercase tracking-[0.45em] text-cyan-200">Exhibition Match</div>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            <div className="rounded-2xl bg-blue-600/25 p-5">
-              <div className="text-sm uppercase tracking-widest text-blue-100/70">Player</div>
-              <div className="text-4xl font-black italic uppercase text-blue-200">{PLAYER_NAME}</div>
-            </div>
-            <div className="text-3xl font-black italic text-white/70">VS</div>
-            <div className="rounded-2xl p-5" style={{ background: `${opponentProfile.theme.color}33` }}>
-              <div className="text-sm uppercase tracking-widest text-white/70">Rival</div>
-              <div className="text-4xl font-black italic uppercase" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</div>
-            </div>
-          </div>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 uppercase tracking-widest text-white/80">
-            Tonight on <span className="font-black" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span> against <span className="font-black" style={{ color: opponentProfile.theme.glowColor }}>{opponentProfile.displayName}</span>
-          </div>
-          <div className="mt-6 animate-pulse text-2xl font-black italic uppercase tracking-[0.35em] text-orange-200">Get Ready</div>
-        </div>
+        <MatchupIntroPanel courtSurface={courtSurface} opponentProfile={opponentProfile} />
       </div>
     );
   }
@@ -301,6 +331,9 @@ export function GameMenus({
     const isWin = winner === 'PLAYER';
     const xpIntoLevel = playerProgress.totalXp % PLAYER_LEVEL_XP;
     const progressPercent = Math.min(100, (xpIntoLevel / PLAYER_LEVEL_XP) * 100);
+    const resultMessage = isWin
+      ? `You beat ${opponentProfile.displayName}!`
+      : `${opponentProfile.displayName} wins this match.`;
 
     return (
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/86 p-6 text-center">
