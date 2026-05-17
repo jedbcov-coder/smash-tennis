@@ -1,8 +1,10 @@
+import { useEffect, useRef } from 'react';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import { GameState, type CourtSurface, type PlayerType, type Score } from '../types';
 import type { MatchStats, PointReward } from '../serve/useTennisGame';
+import { playAudioEvent } from '../audio/audioManager';
 
 const COURT_SURFACES = Object.keys(COURT_SURFACE_SETTINGS) as CourtSurface[];
 const PLAYER_NAME = 'Blake';
@@ -53,8 +55,7 @@ export function GameMenus({
     playAudioEvent(winner === 'PLAYER' ? 'match.win' : 'match.defeat');
   }, [gameState, winner]);
 
-  if (gameState === GameState.MENU) {
-    const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   if (gameState === GameState.MENU) {
     return (
@@ -70,7 +71,7 @@ export function GameMenus({
             Neon Smash<br /><span>Tennis</span>
           </h1>
           <p className="mb-6 max-w-md text-sm uppercase tracking-widest text-slate-200">
-            Pick a readable neon court, then move with the mouse and click or press Space to serve, swing, and smash.
+            Pick a readable neon court, then move with the mouse and click the court or press Space to serve, swing, and smash.
           </p>
 
           <div className="mb-6 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -78,14 +79,35 @@ export function GameMenus({
               const settings = COURT_SURFACE_SETTINGS[surface];
               const isSelected = surface === courtSurface;
 
-        <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
-          Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
-          <span className="mx-2 text-white/25">|</span>
-          Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
-        </div>
+              return (
+                <button
+                  key={surface}
+                  onClick={() => handleSurfaceSelect(surface)}
+                  className={`rounded-xl border px-4 py-3 text-left transition-all hover:scale-105 ${isSelected ? 'bg-white/15' : 'bg-black/45'}`}
+                  style={{
+                    borderColor: isSelected ? settings.colors.lines : 'rgba(255,255,255,0.16)',
+                    boxShadow: isSelected ? `0 0 24px ${settings.colors.lines}66` : undefined
+                  }}
+                >
+                  <div className="mb-1 text-sm font-black uppercase tracking-widest" style={{ color: settings.colors.lines }}>
+                    {settings.label}
+                  </div>
+                  <div className="text-xs uppercase leading-relaxed tracking-wide text-white/70">
+                    {settings.description}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mb-8 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
+            Selected: <span className="font-black text-white" style={{ color: selectedSurface.colors.lines }}>{selectedSurface.label}</span>
+            <span className="mx-2 text-white/25">|</span>
+            Ball {(selectedSurface.ballSpeedMultiplier * 100).toFixed(0)}% · Bounce {(selectedSurface.bounceHeightMultiplier * 100).toFixed(0)}% · Slide {(selectedSurface.slideAmount * 100).toFixed(0)}% · Move {(selectedSurface.playerMovementMultiplier * 100).toFixed(0)}%
+          </div>
 
           <button
-            onClick={startGame}
+            onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
             style={{ background: GRADIENTS.button }}
           >
@@ -142,7 +164,7 @@ export function GameMenus({
             {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
           </p>
           <button
-            onClick={startGame}
+            onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
             style={{ background: GRADIENTS.button }}
           >

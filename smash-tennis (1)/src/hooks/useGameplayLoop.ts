@@ -22,7 +22,7 @@ export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
 }
 
-export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | `COMBO x${number}`;
+export type ArcadeCallout = 'PERFECT RETURN' | 'MEGA SMASH' | 'POWER READY' | 'FLAME SMASH' | `COMBO x${number}`;
 
 export interface ArcadeHudStats {
   serveSpeedMph: number;
@@ -123,6 +123,7 @@ export function useGameplayLoop({
   const [isAiMissing, setIsAiMissing] = useState(false);
   const [isSmashOpportunityVisible, setIsSmashOpportunityVisible] = useState(false);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>(createEmptyArcadeHudStats);
+  const [currentSpecialMove, setCurrentSpecialMove] = useState<SpecialMoveName | null>(null);
   const arcadeHudStatsRef = useRef<ArcadeHudStats>(createEmptyArcadeHudStats());
 
   const updateArcadeHudStats = useCallback((updater: (current: ArcadeHudStats) => ArcadeHudStats) => {
@@ -223,6 +224,7 @@ export function useGameplayLoop({
     setIsAiSwinging(false);
     setIsAiMissing(false);
     setCurrentSpecialMove(null);
+    clearSwingInput();
     clearSpecialMoveInput();
     if (specialMoveTimeout.current !== null) {
       window.clearTimeout(specialMoveTimeout.current);
@@ -233,7 +235,7 @@ export function useGameplayLoop({
       aiSwingTimeout.current = null;
     }
     playerFacingY.current = Math.PI;
-  }, [updateArcadeHudStats]);
+  }, [clearSpecialMoveInput, clearSwingInput, updateArcadeHudStats]);
 
   useEffect(() => {
     return () => {
