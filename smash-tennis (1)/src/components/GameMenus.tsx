@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-
 import { playAudioEvent } from '../audio/audioManager';
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { GRADIENTS } from '../design/gradients';
@@ -32,6 +31,7 @@ export function GameMenus({
 }) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
   const playedResultFor = useRef<PlayerType | null>(null);
+  const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
 
   const handleStartGame = () => {
     playAudioEvent('ui.select');
@@ -82,26 +82,13 @@ export function GameMenus({
               return (
                 <button
                   key={surface}
-                  type="button"
                   onClick={() => handleSurfaceSelect(surface)}
-                  className={`rounded-2xl border bg-black/60 p-4 text-left transition-all hover:-translate-y-1 hover:scale-105 ${
-                    isSelected ? 'border-white shadow-[0_0_28px_rgba(255,255,255,0.28)]' : 'border-white/15'
-                  }`}
-                  style={{ boxShadow: isSelected ? `0 0 32px ${settings.colors.lines}55` : undefined }}
+                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
+                  style={{ boxShadow: isSelected ? `0 0 28px ${settings.colors.lines}66` : undefined }}
                 >
-                  <div
-                    className="mb-3 h-16 rounded-xl border"
-                    style={{
-                      background: `linear-gradient(135deg, ${settings.colors.playingSurface}, ${settings.colors.surrounding})`,
-                      borderColor: settings.colors.lines
-                    }}
-                  />
-                  <div className="text-sm font-black uppercase tracking-widest text-white" style={{ color: settings.colors.lines }}>
-                    {settings.label}
-                  </div>
-                  <div className="mt-2 text-[10px] uppercase leading-relaxed tracking-wider text-white/60">
-                    {settings.description}
-                  </div>
+                  <div className="mb-2 h-2 rounded-full" style={{ background: settings.colors.lines }} />
+                  <div className="text-sm font-black uppercase tracking-widest text-white">{settings.label}</div>
+                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{settings.description}</div>
                 </button>
               );
             })}
@@ -167,9 +154,15 @@ export function GameMenus({
           >
             {isWin ? 'Match\nWon!' : 'Match\nLost'}
           </h2>
-          <p className="mb-8 text-xl uppercase tracking-widest text-slate-200">
+          <p className="mb-6 text-xl uppercase tracking-widest text-slate-200">
             {isWin ? 'You lit up the court, champion.' : 'Recharge and try one more rally.'}
           </p>
+          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointReward?.xpGained ?? 0}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
+          </div>
           <button
             onClick={handleStartGame}
             className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"

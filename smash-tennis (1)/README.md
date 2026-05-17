@@ -62,12 +62,12 @@ npm run build
 
 `npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
 
-Current check notes:
+Current check notes verified on May 17, 2026:
 
 - `npm run lint` passes.
-- `npm run build` passes.
-- The build can show a Vite chunk-size warning because the 3D/game libraries bundle into one large JavaScript file. This is a warning, not a build failure.
-- npm can show `Unknown env config "http-proxy"` in this environment. This is an environment warning, not a project error.
+- `npm run build` passes and copies `dist/index.html` to `dist/404.html`.
+- The build still shows a Vite chunk-size warning because the 3D/game libraries bundle into one large JavaScript file. This is a warning, not a build failure.
+- npm still shows `Unknown env config "http-proxy"` in this environment. This is an environment warning, not a project error.
 
 ## Project structure
 
