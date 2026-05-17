@@ -65,11 +65,13 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 Run these commands from the repository root folder:
 
 ```bash
+npm run test
+npm run test:watch
 npm run lint
 npm run build
 ```
 
-`npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+`npm run test` runs the lightweight Vite-powered tests for scoring rules and shot physics once. `npm run test:watch` keeps those tests running while you edit files. `npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
 
 Current check notes verified on May 17, 2026:
 

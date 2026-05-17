@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "deploy": "npm run build"
+    "deploy": "npm run build",
+    "test": "node scripts/run-tests.mjs",
+    "test:watch": "node --watch scripts/run-tests.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.3",
