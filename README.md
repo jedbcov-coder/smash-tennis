@@ -31,7 +31,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
-- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce court landing checks (with small arcade forgiveness) for out calls.
+- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce landing checks that now enforce diagonal service-box legality on serves (with small arcade forgiveness) for out calls.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - Unified VFX event wiring so AI hits, player hits, smash opportunities, overhead smashes, and Flame Smashes all trigger the intended visual effects consistently.
