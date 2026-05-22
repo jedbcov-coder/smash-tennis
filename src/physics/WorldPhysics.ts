@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { ARCADE_LANDING_FORGIVENESS, COURT_LENGTH, COURT_RENDERING, COURT_WIDTH, ERROR_MARGINS, NET_HEIGHT, OUT_OF_BOUNDS_LIMITS } from '../gameplay/gameTuning';
+import { NET_HEIGHT, OUT_OF_BOUNDS_LIMITS } from '../gameplay/gameTuning';
 import type { ServeSide } from './ShotPhysics';
 import type { PlayerType } from '../types';
+import { isFirstBounceLegalInSingles, isWithinDiagonalServiceBox } from '../rules/courtGeometry';
 
 export type LandingSide = 'PLAYER' | 'AI';
 export type ServeLandingContext = {
@@ -30,22 +31,7 @@ export function checkBaselineOut(ballPos: THREE.Vector3): 'PLAYER_OUT' | 'AI_OUT
 }
 
 function isServeBounceOut(ballPos: THREE.Vector3, serveSide: ServeSide, hitter: PlayerType): boolean {
-  const maxX = COURT_WIDTH / 2 + ERROR_MARGINS.width + ARCADE_LANDING_FORGIVENESS;
-  const serviceLineZ = COURT_RENDERING.serviceLineZ + ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
-  const centerLineMargin = ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
-
-  if (Math.abs(ballPos.x) > maxX) return true;
-
-  const onAiHalf = hitter === 'PLAYER';
-  if (onAiHalf) {
-    if (ballPos.z > -centerLineMargin || ballPos.z < -serviceLineZ) return true;
-  } else if (ballPos.z < centerLineMargin || ballPos.z > serviceLineZ) {
-    return true;
-  }
-
-  const shouldLandPositiveX = hitter === 'PLAYER' ? serveSide === 'DEUCE' : serveSide === 'AD';
-  if (shouldLandPositiveX) return ballPos.x < -centerLineMargin;
-  return ballPos.x > centerLineMargin;
+  return !isWithinDiagonalServiceBox(ballPos.x, ballPos.z, hitter, serveSide);
 }
 
 export function isFirstBounceOut(ballPos: THREE.Vector3, landingSide: LandingSide, serveContext?: ServeLandingContext): boolean {
@@ -53,18 +39,5 @@ export function isFirstBounceOut(ballPos: THREE.Vector3, landingSide: LandingSid
     return isServeBounceOut(ballPos, serveContext.serveSide, serveContext.hitter);
   }
 
-  const halfCourtWidth = COURT_WIDTH / 2;
-  const halfCourtLength = COURT_LENGTH / 2;
-  const maxX = halfCourtWidth + ERROR_MARGINS.width + ARCADE_LANDING_FORGIVENESS;
-  const maxPlayerZ = halfCourtLength + ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
-  const minAiZ = -halfCourtLength - ERROR_MARGINS.length - ARCADE_LANDING_FORGIVENESS;
-  const centerLineMargin = ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
-
-  if (Math.abs(ballPos.x) > maxX) return true;
-
-  if (landingSide === 'AI') {
-    return ballPos.z > centerLineMargin || ballPos.z < minAiZ;
-  }
-
-  return ballPos.z < -centerLineMargin || ballPos.z > maxPlayerZ;
+  return !isFirstBounceLegalInSingles(ballPos.x, ballPos.z, landingSide);
 }
