@@ -6,6 +6,37 @@ Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
 Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, saved settings, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
 
+## Gameplay rules (beginner-friendly)
+
+### Deterministic rules decision flow
+
+To keep outcomes fair and reproducible, the game resolves each shot in a clear order:
+
+1. **Serve or rally state check:** it first checks whether the shot is a serve or a rally ball.
+2. **First legal bounce check:** it checks where the first bounce lands (service box for serves, singles court for rally shots).
+3. **Fault/out handling:** if the bounce is illegal, it applies serve-fault or out rules immediately.
+4. **Return window check:** if the bounce is legal, the receiver gets a chance to return.
+5. **Second-bounce loss check:** if the receiver does not return and the ball bounces twice on their side, they lose the point.
+
+This flow is deterministic (same inputs produce the same rules result), which helps testing and bug reproduction.
+
+### First serve and second serve fault behavior
+
+- If a **first serve** lands out, it is a **fault** (no point is awarded yet).
+- If a **second serve** lands out, it is a **double fault**, and the receiver wins the point.
+- If a serve clips the net but still lands in the correct service box, it is treated as a **let** and the serve is replayed.
+
+### Singles-only in/out logic
+
+- The game uses **singles court boundaries** for in/out calls during points.
+- For serves, the ball must land in the **diagonal target service box**.
+- Shots touching the line are treated as **in**.
+
+### Key gameplay-rule outcomes
+
+- **Line is in:** a bounce on any valid boundary line counts as in.
+- **Double bounce loses point:** if the ball bounces twice on your side before you return it, you lose that point.
+
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
