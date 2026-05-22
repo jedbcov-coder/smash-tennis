@@ -23,6 +23,8 @@ export type PresentationHudCallout =
   | 'MATCH POINT'
   | 'YOU WIN'
   | 'TRY AGAIN'
+  | 'TOO LATE'
+  | 'SECOND BOUNCE'
   | `COMBO x${number}`;
 
 export type PresentationVfxEventName =

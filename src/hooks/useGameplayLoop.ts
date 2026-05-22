@@ -31,6 +31,7 @@ import {
   type SmashOpportunity
 } from '../gameplay/smashSystem';
 import { isFirstBounceOut } from '../physics/WorldPhysics';
+import { createInitialBounceState, getBounceSide, getDoubleBouncePointWinner, getSideBounceCount, recordBounce } from '../gameplay/bounceRules';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -141,6 +142,7 @@ export function useGameplayLoop({
   const previousBallY = useRef(5);
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
+  const bounceStateRef = useRef(createInitialBounceState());
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
@@ -314,6 +316,7 @@ export function useGameplayLoop({
     aiMissSwingTriggered.current = false;
     aiWillMissReturn.current = false;
     consecutiveReturns.current = 0;
+    bounceStateRef.current = createInitialBounceState();
     updateArcadeHudStats((current) => ({
       ...current,
       comboCount: 0,
@@ -437,6 +440,7 @@ export function useGameplayLoop({
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
       pendingBounceHitter.current = servingPlayer;
       pendingBounceIsServe.current = true;
+      bounceStateRef.current = createInitialBounceState();
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
@@ -571,6 +575,7 @@ export function useGameplayLoop({
       setLastHitter('AI');
       pendingBounceHitter.current = 'AI';
       pendingBounceIsServe.current = false;
+      bounceStateRef.current = createInitialBounceState();
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
@@ -602,6 +607,7 @@ export function useGameplayLoop({
         setLastHitter('PLAYER');
         pendingBounceHitter.current = 'PLAYER';
         pendingBounceIsServe.current = false;
+        bounceStateRef.current = createInitialBounceState();
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
@@ -630,8 +636,8 @@ export function useGameplayLoop({
       const justBounced = previousBallY.current > 0.1 && ballPos.y <= 0.1;
       if (justBounced && pendingBounceHitter.current) {
         const hitter = pendingBounceHitter.current;
-        const landingSide = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
-        const outOnLanding = isFirstBounceOut(ballPos, landingSide, {
+        const receiver = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
+        const outOnLanding = isFirstBounceOut(ballPos, receiver, {
           isServe: pendingBounceIsServe.current,
           serveSide,
           hitter
@@ -640,9 +646,19 @@ export function useGameplayLoop({
         if (outOnLanding) {
           const winner = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
           awardPoint(winner, winner === 'PLAYER');
+        } else {
+          const bounceSide = getBounceSide(ballPos.z);
+          bounceStateRef.current = recordBounce(bounceStateRef.current, bounceSide);
+
+          const bounceCount = getSideBounceCount(bounceStateRef.current, bounceSide);
+          const doubleBounceWinner = getDoubleBouncePointWinner(hitter, bounceSide, bounceCount);
+          if (doubleBounceWinner) {
+            presentationDirector.triggerHudCallout('TOO LATE');
+            presentationDirector.triggerHudCallout('SECOND BOUNCE');
+            awardPoint(doubleBounceWinner, doubleBounceWinner === 'PLAYER');
+          }
         }
 
-        pendingBounceHitter.current = null;
         pendingBounceIsServe.current = false;
       }
     }
