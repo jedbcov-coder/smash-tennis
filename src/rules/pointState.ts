@@ -20,10 +20,13 @@ export const createInitialPointState = (server: PlayerType): PointState => ({
 
 const getReceiver = (player: PlayerType): PlayerType => (player === 'PLAYER' ? 'AI' : 'PLAYER');
 
-const resetBouncesForReceiver = (_hitter: PlayerType): Record<PlayerType, number> => ({
-  PLAYER: 0,
-  AI: 0
-});
+const resetBouncesForReceiver = (hitter: PlayerType, current: Record<PlayerType, number>): Record<PlayerType, number> => {
+  const receiver = getReceiver(hitter);
+  return {
+    ...current,
+    [receiver]: 0
+  };
+};
 
 export const onServeHit = (state: PointState, server: PlayerType): PointState => ({
   ...state,
@@ -50,14 +53,14 @@ export const onReceiverReturn = (state: PointState, receiver: PlayerType): Point
   ...state,
   phase: 'rally',
   striker: receiver,
-  bounceCounts: resetBouncesForReceiver(receiver)
+  bounceCounts: resetBouncesForReceiver(receiver, state.bounceCounts)
 });
 
 export const onRallyShot = (state: PointState, hitter: PlayerType): PointState => ({
   ...state,
   phase: 'rally',
   striker: hitter,
-  bounceCounts: resetBouncesForReceiver(hitter)
+  bounceCounts: resetBouncesForReceiver(hitter, state.bounceCounts)
 });
 
 export const onBounce = (state: PointState, bounceSide: PlayerType): PointState => {
