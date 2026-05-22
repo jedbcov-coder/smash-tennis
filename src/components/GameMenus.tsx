@@ -49,17 +49,6 @@ type OpponentSelectCardProps = {
   onSelect: (opponentId: OpponentId) => void;
 };
 
-type GameOverStatsPanelProps = {
-  score: Score;
-  pointReward: PointReward | null;
-  matchStats: MatchStats;
-};
-
-type PrimaryMenuButtonProps = {
-  children: string;
-  onClick: () => void;
-};
-
 function CourtSelectCard({ surface, isSelected, onSelect }: CourtSelectCardProps) {
   const settings = COURT_SURFACE_SETTINGS[surface];
 
@@ -118,50 +107,6 @@ function OpponentSelectCard({ opponent, isSelected, onSelect }: OpponentSelectCa
   );
 }
 
-function GameOverStatsPanel({ score, pointReward, matchStats }: GameOverStatsPanelProps) {
-  const pointXp = pointReward?.xpGained ?? 0;
-  const progressPercent = Math.min(100, pointXp);
-
-  return (
-    <>
-      <div className="mb-6 grid w-full grid-cols-2 gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
-        <div><span className="block text-white/45">Score</span><span className="font-black text-white">{score.playerSets}-{score.aiSets} sets</span></div>
-        <div><span className="block text-white/45">Points won</span><span className="font-black text-white">{matchStats.playerPointsWon}-{matchStats.aiPointsWon}</span></div>
-        <div><span className="block text-white/45">Best combo</span><span className="font-black text-white">x{matchStats.bestCombo}</span></div>
-        <div><span className="block text-white/45">Longest rally</span><span className="font-black text-white">{matchStats.longestRally}</span></div>
-      </div>
-
-      {pointReward && (
-        <div className="mb-4 text-sm font-black uppercase tracking-widest text-orange-200">
-          Last point: {pointReward.styleBonus} · +{pointReward.xpGained} XP
-        </div>
-      )}
-      <div className="mb-8 h-2 w-full max-w-sm overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full" style={{ width: `${progressPercent}%`, background: GRADIENTS.energy }} />
-      </div>
-
-      <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Score</span>{score.playerSets}-{score.aiSets} sets</div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Games</span>{score.playerGames}-{score.aiGames}</div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">XP</span>+{pointXp}</div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3"><span className="block text-white/45">Next</span>{progressPercent}%</div>
-      </div>
-    </>
-  );
-}
-
-function PrimaryMenuButton({ children, onClick }: PrimaryMenuButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
-      style={{ background: GRADIENTS.button }}
-    >
-      {children}
-    </button>
-  );
-}
-
 export function GameMenus({
   gameState,
   winner,
@@ -180,9 +125,6 @@ export function GameMenus({
   resetSettings
 }: GameMenusProps) {
   const selectedSurface = COURT_SURFACE_SETTINGS[courtSurface];
-  const resultMessage = winner === 'PLAYER'
-    ? `You defeated ${opponentProfile.displayName}.`
-    : `${opponentProfile.displayName} takes this one.`;
   const playedResultFor = useRef<PlayerType | null>(null);
 
   const handleStartGame = () => {
@@ -241,34 +183,6 @@ export function GameMenus({
                 onSelect={handleSurfaceSelect}
               />
             ))}
-          </div>
-
-          <div className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-pink-100/75">Choose rival</div>
-          <div className="mb-6 grid w-full max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
-            {OPPONENT_PROFILES.map((opponent) => {
-              const isSelected = opponent.id === opponentId;
-
-              return (
-                <button
-                  key={opponent.id}
-                  onClick={() => handleOpponentSelect(opponent.id)}
-                  className={`rounded-2xl border bg-black/55 p-4 text-left transition-all hover:-translate-y-1 hover:bg-white/10 ${isSelected ? 'border-white shadow-[0_0_24px_rgba(255,255,255,0.28)]' : 'border-white/15'}`}
-                  style={{ boxShadow: isSelected ? `0 0 28px ${opponent.theme.glowColor}66` : undefined }}
-                >
-                  <div className="mb-2 h-2 rounded-full" style={{ background: opponent.theme.glowColor }} />
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-sm font-black uppercase tracking-widest text-white">{opponent.displayName}</div>
-                    <div className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-widest ${isSelected ? 'border-white text-white' : 'border-white/15 text-white/45'}`}>
-                      {isSelected ? 'Selected' : 'Pick'}
-                    </div>
-                  </div>
-                  <div className="mt-2 text-[11px] uppercase leading-relaxed tracking-wider text-white/60">{opponent.description}</div>
-                  <div className="mt-3 text-[10px] font-black uppercase tracking-widest" style={{ color: opponent.theme.glowColor }}>
-                    {opponent.theme.label} · {opponent.preferredShotType} · {opponent.specialMoveStyle}
-                  </div>
-                </button>
-              );
-            })}
           </div>
 
           <div className="mb-4 rounded-lg border border-white/15 bg-black/55 px-4 py-3 text-xs uppercase tracking-widest text-white/70">
