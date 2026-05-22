@@ -31,7 +31,15 @@ import {
   type SmashOpportunity
 } from '../gameplay/smashSystem';
 import { isFirstBounceOut } from '../physics/WorldPhysics';
-import { createInitialBounceState, getBounceSide, getDoubleBouncePointWinner, getSideBounceCount, recordBounce } from '../gameplay/bounceRules';
+import {
+  createInitialPointState,
+  onBounce,
+  onIllegalServeBounce,
+  onLegalServeBounce,
+  onRallyShot,
+  onReceiverReturn,
+  onServeHit
+} from '../rules/pointState';
 import { getReturnZoneCrossing } from '../gameplay/hitDetection';
 import { decideFirstBounceOutcome } from '../rules/tennisRules';
 
@@ -146,7 +154,7 @@ export function useGameplayLoop({
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
   const serveTouchedNetRef = useRef(false);
-  const bounceStateRef = useRef(createInitialBounceState());
+  const pointStateRef = useRef(createInitialPointState(servingPlayer));
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
@@ -321,7 +329,7 @@ export function useGameplayLoop({
     aiMissSwingTriggered.current = false;
     aiWillMissReturn.current = false;
     consecutiveReturns.current = 0;
-    bounceStateRef.current = createInitialBounceState();
+    pointStateRef.current = createInitialPointState(servingPlayer);
     updateArcadeHudStats((current) => ({
       ...current,
       comboCount: 0,
@@ -446,7 +454,7 @@ export function useGameplayLoop({
       pendingBounceHitter.current = servingPlayer;
       pendingBounceIsServe.current = true;
       serveTouchedNetRef.current = false;
-      bounceStateRef.current = createInitialBounceState();
+      pointStateRef.current = createInitialPointState(servingPlayer);
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
@@ -582,7 +590,7 @@ export function useGameplayLoop({
       setLastHitter('AI');
       pendingBounceHitter.current = 'AI';
       pendingBounceIsServe.current = false;
-      bounceStateRef.current = createInitialBounceState();
+      pointStateRef.current = createInitialPointState(servingPlayer);
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
@@ -622,7 +630,7 @@ export function useGameplayLoop({
         pendingBounceHitter.current = 'PLAYER';
         pendingBounceIsServe.current = false;
         serveTouchedNetRef.current = false;
-        bounceStateRef.current = createInitialBounceState();
+        pointStateRef.current = createInitialPointState(servingPlayer);
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
@@ -670,6 +678,9 @@ export function useGameplayLoop({
         });
 
         if (decision.type === 'fault') {
+          if (pendingBounceIsServe.current) {
+            pointStateRef.current = onIllegalServeBounce(pointStateRef.current);
+          }
           onFault();
         } else if (decision.type === 'point') {
           awardPoint(decision.winner, decision.winner === 'PLAYER');
@@ -678,17 +689,19 @@ export function useGameplayLoop({
           resetBall(servingPlayer);
           setLastHitter(null);
           pendingBounceHitter.current = null;
-          bounceStateRef.current = createInitialBounceState();
+          pointStateRef.current = createInitialPointState(servingPlayer);
         } else {
-          const bounceSide = getBounceSide(ballPos.z);
-          bounceStateRef.current = recordBounce(bounceStateRef.current, bounceSide);
+          const bounceSide = ballPos.z >= 0 ? 'PLAYER' : 'AI';
+          pointStateRef.current = onBounce(pointStateRef.current, bounceSide);
 
-          const bounceCount = getSideBounceCount(bounceStateRef.current, bounceSide);
-          const doubleBounceWinner = getDoubleBouncePointWinner(hitter, bounceSide, bounceCount);
-          if (doubleBounceWinner) {
+          if (pendingBounceIsServe.current) {
+            pointStateRef.current = onLegalServeBounce(pointStateRef.current);
+          }
+
+          if (pointStateRef.current.winner) {
             presentationDirector.triggerHudCallout('TOO LATE');
             presentationDirector.triggerHudCallout('SECOND BOUNCE');
-            awardPoint(doubleBounceWinner, doubleBounceWinner === 'PLAYER');
+            awardPoint(pointStateRef.current.winner, pointStateRef.current.winner === 'PLAYER');
           }
         }
 
