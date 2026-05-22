@@ -401,6 +401,9 @@ export function useGameplayLoop({
       }, 550);
     }
     setLastHitter('PLAYER');
+    pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
+      ? onReceiverReturn(pointStateRef.current, 'PLAYER')
+      : onRallyShot(pointStateRef.current, 'PLAYER');
     aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
     consecutiveReturns.current++;
     cameraShakeUntil.current = settings.reducedMotion ? now : now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration * (isFlameSmash ? 1.45 : 1);
@@ -424,6 +427,9 @@ export function useGameplayLoop({
     ballRef.current?.setVelocity(weakReturnVel, 0.45);
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
+    pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
+      ? onReceiverReturn(pointStateRef.current, 'PLAYER')
+      : onRallyShot(pointStateRef.current, 'PLAYER');
     aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
     consecutiveReturns.current++;
     playAudioEvent('hit.normal');
@@ -454,7 +460,7 @@ export function useGameplayLoop({
       pendingBounceHitter.current = servingPlayer;
       pendingBounceIsServe.current = true;
       serveTouchedNetRef.current = false;
-      pointStateRef.current = createInitialPointState(servingPlayer);
+      pointStateRef.current = onServeHit(pointStateRef.current, servingPlayer);
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
@@ -590,7 +596,9 @@ export function useGameplayLoop({
       setLastHitter('AI');
       pendingBounceHitter.current = 'AI';
       pendingBounceIsServe.current = false;
-      pointStateRef.current = createInitialPointState(servingPlayer);
+      pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
+        ? onReceiverReturn(pointStateRef.current, 'AI')
+        : onRallyShot(pointStateRef.current, 'AI');
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
@@ -630,7 +638,9 @@ export function useGameplayLoop({
         pendingBounceHitter.current = 'PLAYER';
         pendingBounceIsServe.current = false;
         serveTouchedNetRef.current = false;
-        pointStateRef.current = createInitialPointState(servingPlayer);
+        pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
+          ? onReceiverReturn(pointStateRef.current, 'PLAYER')
+          : onRallyShot(pointStateRef.current, 'PLAYER');
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
