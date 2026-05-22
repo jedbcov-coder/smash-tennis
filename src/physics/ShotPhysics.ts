@@ -92,7 +92,7 @@ export function calculateShotPhysics(
 ): ShotPhysicsResult {
   const shotType = options.shotType ?? 'flat';
   const quality = options.quality ?? 'good';
-  const random = options.random ?? Math.random;
+  const random = options.random ?? (() => 0.5);
   const shotTuning = SHOT_TYPE_TUNING[shotType];
   const qualityTuning = HIT_QUALITY_TUNING[quality];
   const targetRisk = shotTuning.riskMultiplier * qualityTuning.riskMultiplier;

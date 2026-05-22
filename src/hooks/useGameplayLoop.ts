@@ -21,7 +21,7 @@ import type { OpponentProfile } from '../gameplay/opponents';
 import { updateArcadeCamera } from '../gameplay/cameraController';
 import type { GameSettings } from '../settings/useGameSettings';
 import { dispatchGameEvent } from '../gameplay/gameEvents';
-import { random as gameplayRandom } from '../gameplay/random';
+import { random as gameplayRandom, setRandomSeed } from '../gameplay/random';
 import {
   calculateOverheadSmash,
   calculateWeakSmashReturn,
@@ -81,6 +81,7 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 interface UseGameplayLoopOptions {
+  matchSeed: number;
   onScore: (winner: PlayerType) => void;
   onFault: () => void;
   gameState: GameState;
@@ -111,7 +112,8 @@ export function useGameplayLoop({
   opponentProfile,
   onArcadeHudStatsChange,
   onServeMeterChange,
-  settings
+  settings,
+  matchSeed
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
@@ -364,7 +366,7 @@ export function useGameplayLoop({
       difficultyStats,
       surfaceSettings,
       isFlameSmash,
-      random: Math.random
+      random: gameplayRandom
     });
     ballRef.current?.setVelocity(smashVelocity, smashSpin);
     recordShot(smashVelocity, { combo: true, rally: true, energy: isFlameSmash ? 0 : 28, callout: isFlameSmash ? undefined : 'MEGA SMASH' });
@@ -380,7 +382,7 @@ export function useGameplayLoop({
       }, 550);
     }
     setLastHitter('PLAYER');
-    aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
+    aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
     consecutiveReturns.current++;
     cameraShakeUntil.current = settings.reducedMotion ? now : now + OVERHEAD_SMASH_CONFIG.cameraShakeDuration * (isFlameSmash ? 1.45 : 1);
     smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
@@ -403,7 +405,7 @@ export function useGameplayLoop({
     ballRef.current?.setVelocity(weakReturnVel, 0.45);
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
-    aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
+    aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
     consecutiveReturns.current++;
     playAudioEvent('hit.normal');
   };
@@ -431,7 +433,7 @@ export function useGameplayLoop({
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
       if (servingPlayer === 'PLAYER') {
-        aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
+        aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
     },
     onServeMeterChange: handleServeMeterChange
@@ -547,7 +549,7 @@ export function useGameplayLoop({
       forceMiss: aiWillMissReturn.current,
       missSwingAlreadyTriggered: aiMissSwingTriggered.current,
       lastHitter,
-      random: Math.random
+      random: gameplayRandom
     });
     aiPos.current.copy(aiUpdate.nextPosition);
 
@@ -591,7 +593,7 @@ export function useGameplayLoop({
           callout: undefined
         });
         setLastHitter('PLAYER');
-        aiWillMissReturn.current = Math.random() < opponentProfile.missChance;
+        aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
           presentationDirector.presentMoment('return.perfect');
@@ -634,7 +636,7 @@ export function useGameplayLoop({
       now,
       cameraShakeUntil: cameraShakeUntil.current,
       smashOpportunityActive: smashOpportunity.current.active,
-      random: Math.random,
+      random: gameplayRandom,
       screenShakeAmount: settings.reducedMotion ? 0 : settings.screenShakeAmount
     });
   });
