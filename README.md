@@ -22,9 +22,9 @@ This flow is deterministic (same inputs produce the same rules result), which he
 
 ### First serve and second serve fault behavior
 
-- If a **first serve** lands out, it is a **fault** (no point is awarded yet).
+- If a **first serve** lands out, it is a **fault** (no point is awarded yet), the rally stops immediately, and the same server replays a second serve.
 - If a **second serve** lands out, it is a **double fault**, and the receiver wins the point.
-- If a serve clips the net but still lands in the correct service box, it is treated as a **let** and the serve is replayed.
+- If a serve clips the net but still lands in the correct service box, it is treated as a **let** and the serve is replayed without adding a fault.
 
 ### Singles-only in/out logic
 
