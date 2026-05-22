@@ -1,19 +1,9 @@
 export type GameEventName =
-  | 'hit.normal'
-  | 'smash.opportunity'
-  | 'smash.activated'
-  | 'smash.missed'
-  | 'vfx.overheadSmash'
-  | 'vfx.flameSmash';
+  | 'vfx:hit.normal'
+  | 'vfx:smash-opportunity'
+  | 'vfx:overhead-smash'
+  | 'vfx:flame-smash';
 
 export function dispatchGameEvent(name: GameEventName) {
   window.dispatchEvent(new CustomEvent(name));
-}
-
-export function subscribeToGameEvent(name: GameEventName, handler: EventListener) {
-  window.addEventListener(name, handler);
-
-  return () => {
-    window.removeEventListener(name, handler);
-  };
 }

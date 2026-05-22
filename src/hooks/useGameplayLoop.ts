@@ -387,7 +387,7 @@ export function useGameplayLoop({
     setIsVisualSmashing(true);
     setTimeout(() => setIsVisualSmashing(false), isFlameSmash ? 460 : 320);
     endSmashOpportunity();
-    dispatchGameEvent('smash.activated');
+    dispatchGameEvent('vfx:overhead-smash');
     if (isFlameSmash) {
       presentationDirector.presentMoment('smash.flame');
     } else {
@@ -522,7 +522,6 @@ export function useGameplayLoop({
           const closeEnoughForWeakReturn = isCloseEnoughForWeakSmashReturn(ballPos, playerPos.current.x);
           endSmashOpportunity();
           smashCooldownUntil.current = now + OVERHEAD_SMASH_CONFIG.retriggerCooldown;
-          dispatchGameEvent('smash.missed');
           if (closeEnoughForWeakReturn) {
             performWeakSmashFailReturn(ballPos);
           }
@@ -566,7 +565,7 @@ export function useGameplayLoop({
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
-      dispatchGameEvent('hit.normal');
+      dispatchGameEvent('vfx:hit.normal');
     }
 
     // Player Hit Detection (Guaranteed legal shot)
