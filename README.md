@@ -32,6 +32,7 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce landing checks that now enforce diagonal service-box legality on serves (with small arcade forgiveness) for out calls, plus automatic double-bounce point awards with TOO LATE / SECOND BOUNCE HUD feedback when the receiver lets the ball bounce twice.
+- Fast-ball return detection now checks whether the ball crosses the player or AI return zone between frames, so very quick shots cannot skip through the hit window.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
 - Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
 - Unified VFX event wiring so AI hits, player hits, smash opportunities, overhead smashes, and Flame Smashes all trigger the intended visual effects consistently.
@@ -113,7 +114,8 @@ Current check notes verified on May 17, 2026:
 - `src/audio/sounds.ts` plays the Tone.js sound effects using only the decibel adjustment it receives from the audio manager.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
-- `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, hit detection, and AI return shots using the selected opponent profile.
+- `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, crossing-based hit detection, and AI return shots using the selected opponent profile.
+- `src/gameplay/hitDetection.ts` provides shared helper logic to detect when a fast-moving ball crosses a return zone between frames.
 - `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
 - `src/gameplay/gameEvents.ts` keeps shared typed browser event names and helper functions for gameplay visual effects.
