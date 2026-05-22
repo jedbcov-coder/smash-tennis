@@ -16,6 +16,27 @@ function getCenterLineMargin() {
   return ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
 }
 
+export function getDiagonalServiceBoxTarget({ hitter, serveSide }: { hitter: PlayerType; serveSide: ServeSide }) {
+  const serviceLineZ = COURT_RENDERING.serviceLineZ;
+  const targetZ = hitter === 'PLAYER' ? -serviceLineZ * 0.6 : serviceLineZ * 0.6;
+  const targetX =
+    hitter === 'PLAYER'
+      ? serveSide === 'DEUCE'
+        ? SINGLES_HALF_WIDTH * 0.5
+        : -SINGLES_HALF_WIDTH * 0.5
+      : serveSide === 'DEUCE'
+        ? -SINGLES_HALF_WIDTH * 0.5
+        : SINGLES_HALF_WIDTH * 0.5;
+
+  return {
+    targetX,
+    targetZ,
+    minZ: hitter === 'PLAYER' ? -getServiceLineWithMargin() : getCenterLineMargin(),
+    maxZ: hitter === 'PLAYER' ? -getCenterLineMargin() : getServiceLineWithMargin(),
+    landsOnPositiveX: targetX >= 0
+  };
+}
+
 export function isWithinSinglesBounds(x: number, z: number): boolean {
   const halfWidth = getSinglesHalfWidthWithMargin();
   const halfLength = COURT_LENGTH / 2 + ERROR_MARGINS.length + ARCADE_LANDING_FORGIVENESS;
@@ -28,19 +49,11 @@ export function isWithinDiagonalServiceBox(x: number, z: number, hitter: PlayerT
     return false;
   }
 
-  const serviceLineZ = getServiceLineWithMargin();
   const centerLineMargin = getCenterLineMargin();
+  const targetBox = getDiagonalServiceBoxTarget({ hitter, serveSide });
 
-  const isPlayerServe = hitter === 'PLAYER';
-
-  if (isPlayerServe) {
-    if (z > -centerLineMargin || z < -serviceLineZ) return false;
-  } else {
-    if (z < centerLineMargin || z > serviceLineZ) return false;
-  }
-
-  const shouldLandPositiveX = isPlayerServe ? serveSide === 'DEUCE' : serveSide === 'AD';
-  if (shouldLandPositiveX) return x >= -centerLineMargin;
+  if (z < targetBox.minZ || z > targetBox.maxZ) return false;
+  if (targetBox.landsOnPositiveX) return x >= -centerLineMargin;
   return x <= centerLineMargin;
 }
 

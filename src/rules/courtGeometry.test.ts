@@ -1,18 +1,29 @@
-describe('courtGeometry (phased test plan scaffold)', () => {
-  describe('court bounds', () => {
-    it('identifies when a bounce is inside singles boundaries', () => {});
-    it('identifies when a bounce is outside court boundaries', () => {});
-    it('treats line-contact as in-bounds for gameplay checks', () => {});
+import { getDiagonalServiceBoxTarget, isWithinDiagonalServiceBox, isWithinSinglesBounds } from './courtGeometry';
+
+describe('courtGeometry', () => {
+  test('player deuce serve legal target', () => {
+    const target = getDiagonalServiceBoxTarget({ hitter: 'PLAYER', serveSide: 'DEUCE' });
+    expect(isWithinDiagonalServiceBox(target.targetX, target.targetZ, 'PLAYER', 'DEUCE')).toBe(true);
   });
 
-  describe('service boxes', () => {
-    it('validates diagonal service-box targeting for serves', () => {});
-    it('rejects serves that land outside the target service box', () => {});
-    it('applies small arcade forgiveness near service-box edges', () => {});
+  test('player ad serve legal target', () => {
+    const target = getDiagonalServiceBoxTarget({ hitter: 'PLAYER', serveSide: 'AD' });
+    expect(isWithinDiagonalServiceBox(target.targetX, target.targetZ, 'PLAYER', 'AD')).toBe(true);
   });
 
-  describe('court sides', () => {
-    it('maps bounce positions to player side or AI side', () => {});
-    it('handles center-line and net-adjacent edge cases consistently', () => {});
+  test('AI deuce serve legal target', () => {
+    const target = getDiagonalServiceBoxTarget({ hitter: 'AI', serveSide: 'DEUCE' });
+    expect(isWithinDiagonalServiceBox(target.targetX, target.targetZ, 'AI', 'DEUCE')).toBe(true);
+  });
+
+  test('AI ad serve legal target', () => {
+    const target = getDiagonalServiceBoxTarget({ hitter: 'AI', serveSide: 'AD' });
+    expect(isWithinDiagonalServiceBox(target.targetX, target.targetZ, 'AI', 'AD')).toBe(true);
+  });
+
+  test('line-contact counts as in', () => {
+    const playerDeuceTarget = getDiagonalServiceBoxTarget({ hitter: 'PLAYER', serveSide: 'DEUCE' });
+    expect(isWithinSinglesBounds(0, 0)).toBe(true);
+    expect(isWithinDiagonalServiceBox(0, playerDeuceTarget.maxZ, 'PLAYER', 'DEUCE')).toBe(true);
   });
 });
