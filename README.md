@@ -44,6 +44,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Move Blake: move your mouse around the game screen.
 - Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
+- Swing timing window: each click/Space/gamepad swing input is now short-lived (about 260ms), so very early swings expire instead of waiting for the ball.
 - Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
 - Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
 

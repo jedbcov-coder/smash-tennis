@@ -7,6 +7,7 @@ const KEYBOARD_MOVEMENT_SPEED = 1.65;
 const GAMEPAD_MOVEMENT_SPEED = 1.8;
 const GAMEPAD_DEAD_ZONE = 0.18;
 const SWING_ANIMATION_MS = 260;
+const SWING_INPUT_WINDOW_MS = 260;
 const GAMEPAD_SWING_BUTTONS = [0, 7]; // A / Cross, or right trigger
 const GAMEPAD_SPECIAL_BUTTONS = [3]; // Y / Triangle
 
@@ -37,6 +38,7 @@ export function usePlayerInput() {
   const animationFrameId = useRef<number | null>(null);
   const previousFrameTime = useRef<number | null>(null);
   const swingAnimationTimeout = useRef<number | null>(null);
+  const swingInputTimeout = useRef<number | null>(null);
   const inputSourceRef = useRef<PlayerInputSource>('mouse');
 
   const [inputSource, setInputSource] = useState<PlayerInputSource>('mouse');
@@ -57,6 +59,16 @@ export function usePlayerInput() {
     }
 
     setIsSwinging(true);
+
+    if (swingInputTimeout.current !== null) {
+      window.clearTimeout(swingInputTimeout.current);
+    }
+
+    swingInputTimeout.current = window.setTimeout(() => {
+      setIsSwinging(false);
+      swingInputTimeout.current = null;
+    }, SWING_INPUT_WINDOW_MS);
+
     setIsVisualSwinging(true);
 
     if (swingAnimationTimeout.current !== null) {
@@ -70,6 +82,11 @@ export function usePlayerInput() {
   }, [setActiveInputSource]);
 
   const clearSwingInput = useCallback(() => {
+    if (swingInputTimeout.current !== null) {
+      window.clearTimeout(swingInputTimeout.current);
+      swingInputTimeout.current = null;
+    }
+
     setIsSwinging(false);
   }, []);
 
@@ -204,6 +221,10 @@ export function usePlayerInput() {
 
       if (swingAnimationTimeout.current !== null) {
         window.clearTimeout(swingAnimationTimeout.current);
+      }
+
+      if (swingInputTimeout.current !== null) {
+        window.clearTimeout(swingInputTimeout.current);
       }
     };
   }, [setActiveInputSource, triggerSwing]);
