@@ -153,6 +153,7 @@ export function useGameplayLoop({
   const previousBallPos = useRef(new THREE.Vector3(0, 5, 0));
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
+  const shotFirstBounceResolved = useRef(false);
   const serveTouchedNetRef = useRef(false);
   const pointStateRef = useRef(createInitialPointState(servingPlayer));
   const pointEndedRef = useRef(false);
@@ -314,6 +315,14 @@ export function useGameplayLoop({
     }, missing ? AI_MISS_SWING_DURATION_MS : 260);
   }, []);
 
+
+  const markNewShotPendingBounce = useCallback((hitter: PlayerType, isServe: boolean) => {
+    pendingBounceHitter.current = hitter;
+    pendingBounceIsServe.current = isServe;
+    shotFirstBounceResolved.current = false;
+    serveTouchedNetRef.current = false;
+  }, []);
+
   const resetBall = useCallback((server: PlayerType) => {
     if (!ballRef.current) return;
     if (server === 'PLAYER') {
@@ -322,6 +331,9 @@ export function useGameplayLoop({
       ballRef.current.reset([aiPos.current.x - SERVE_POSITIONS.ballXOffset, SERVE_POSITIONS.ballHeight, aiPos.current.z + SERVE_POSITIONS.ballZOffset], [0, 0, 0]);
     }
     setLastHitter(null);
+    pendingBounceHitter.current = null;
+    pendingBounceIsServe.current = false;
+    shotFirstBounceResolved.current = false;
     previousBallZ.current = server === 'PLAYER' ? playerPos.current.z - SERVE_POSITIONS.ballZOffset : aiPos.current.z + SERVE_POSITIONS.ballZOffset;
     previousBallPos.current.set(ballRef.current.getPosition().x, ballRef.current.getPosition().y, previousBallZ.current);
     pointEndedRef.current = false;
@@ -401,6 +413,7 @@ export function useGameplayLoop({
       }, 550);
     }
     setLastHitter('PLAYER');
+    markNewShotPendingBounce('PLAYER', false);
     pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
       ? onReceiverReturn(pointStateRef.current, 'PLAYER')
       : onRallyShot(pointStateRef.current, 'PLAYER');
@@ -427,6 +440,7 @@ export function useGameplayLoop({
     ballRef.current?.setVelocity(weakReturnVel, 0.45);
     recordShot(weakReturnVel, { combo: true, rally: true, energy: 6 });
     setLastHitter('PLAYER');
+    markNewShotPendingBounce('PLAYER', false);
     pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
       ? onReceiverReturn(pointStateRef.current, 'PLAYER')
       : onRallyShot(pointStateRef.current, 'PLAYER');
@@ -457,9 +471,7 @@ export function useGameplayLoop({
     addFault: onFault,
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
-      pendingBounceHitter.current = servingPlayer;
-      pendingBounceIsServe.current = true;
-      serveTouchedNetRef.current = false;
+      markNewShotPendingBounce(servingPlayer, true);
       pointStateRef.current = onServeHit(pointStateRef.current, servingPlayer);
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
@@ -594,8 +606,7 @@ export function useGameplayLoop({
       ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
       recordShot(finalAiReturnVel, { rally: true });
       setLastHitter('AI');
-      pendingBounceHitter.current = 'AI';
-      pendingBounceIsServe.current = false;
+      markNewShotPendingBounce('AI', false);
       pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
         ? onReceiverReturn(pointStateRef.current, 'AI')
         : onRallyShot(pointStateRef.current, 'AI');
@@ -635,9 +646,7 @@ export function useGameplayLoop({
           callout: undefined
         });
         setLastHitter('PLAYER');
-        pendingBounceHitter.current = 'PLAYER';
-        pendingBounceIsServe.current = false;
-        serveTouchedNetRef.current = false;
+        markNewShotPendingBounce('PLAYER', false);
         pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
           ? onReceiverReturn(pointStateRef.current, 'PLAYER')
           : onRallyShot(pointStateRef.current, 'PLAYER');
@@ -671,56 +680,62 @@ export function useGameplayLoop({
       }
     } else {
       const justBounced = previousBallY.current > 0.1 && ballPos.y <= 0.1;
-      if (justBounced && pendingBounceHitter.current) {
-        const hitter = pendingBounceHitter.current;
-        const receiver = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
-        const outOnLanding = isFirstBounceOut(ballPos, receiver, {
-          isServe: pendingBounceIsServe.current,
-          serveSide,
-          hitter
-        });
+      if (justBounced) {
+        if (!shotFirstBounceResolved.current && pendingBounceHitter.current) {
+          const hitter = pendingBounceHitter.current;
+          const receiver = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
+          const outOnLanding = isFirstBounceOut(ballPos, receiver, {
+            isServe: pendingBounceIsServe.current,
+            serveSide,
+            hitter
+          });
 
-        const decision = decideFirstBounceOutcome({
-          hitter,
-          isServe: pendingBounceIsServe.current,
-          landedInBounds: !outOnLanding,
-          serveTouchedNet: serveTouchedNetRef.current
-        });
+          const decision = decideFirstBounceOutcome({
+            hitter,
+            isServe: pendingBounceIsServe.current,
+            landedInBounds: !outOnLanding,
+            serveTouchedNet: serveTouchedNetRef.current
+          });
 
-        if (decision.type === 'fault') {
-          if (pendingBounceIsServe.current) {
-            pointStateRef.current = onIllegalServeBounce(pointStateRef.current);
+          if (decision.type === 'fault') {
+            if (pendingBounceIsServe.current) {
+              pointStateRef.current = onIllegalServeBounce(pointStateRef.current);
+              resetBall(servingPlayer);
+              setLastHitter(null);
+            }
+            onFault();
+          } else if (decision.type === 'point') {
+            awardPoint(decision.winner, decision.winner === 'PLAYER');
+          } else if (decision.type === 'let') {
+            presentationDirector.triggerHudCallout('LET');
             resetBall(servingPlayer);
             setLastHitter(null);
+            pointStateRef.current = createInitialPointState(servingPlayer);
+            setGameState(GameState.SERVE_COUNTDOWN);
+          } else {
+            shotFirstBounceResolved.current = true;
             pendingBounceHitter.current = null;
+            serveTouchedNetRef.current = false;
+
+            const bounceSide = ballPos.z >= 0 ? 'PLAYER' : 'AI';
+            pointStateRef.current = onBounce(pointStateRef.current, bounceSide);
+
+            if (pendingBounceIsServe.current) {
+              pointStateRef.current = onLegalServeBounce(pointStateRef.current);
+            }
           }
-          onFault();
-        } else if (decision.type === 'point') {
-          awardPoint(decision.winner, decision.winner === 'PLAYER');
-        } else if (decision.type === 'let') {
-          presentationDirector.triggerHudCallout('LET');
-          resetBall(servingPlayer);
-          setLastHitter(null);
-          pendingBounceHitter.current = null;
-          pointStateRef.current = createInitialPointState(servingPlayer);
-          setGameState(GameState.SERVE_COUNTDOWN);
+
+          pendingBounceIsServe.current = false;
         } else {
           const bounceSide = ballPos.z >= 0 ? 'PLAYER' : 'AI';
           pointStateRef.current = onBounce(pointStateRef.current, bounceSide);
-
-          if (pendingBounceIsServe.current) {
-            pointStateRef.current = onLegalServeBounce(pointStateRef.current);
-          }
-
-          if (pointStateRef.current.winner) {
-            presentationDirector.triggerHudCallout('TOO LATE');
-            presentationDirector.triggerHudCallout('SECOND BOUNCE');
-            awardPoint(pointStateRef.current.winner, pointStateRef.current.winner === 'PLAYER');
-          }
         }
 
-        pendingBounceIsServe.current = false;
-        serveTouchedNetRef.current = false;
+        if (pointStateRef.current.winner) {
+          presentationDirector.triggerHudCallout('TOO LATE');
+          presentationDirector.triggerHudCallout('SECOND BOUNCE');
+          awardPoint(pointStateRef.current.winner, pointStateRef.current.winner === 'PLAYER');
+        }
       }
     }
     previousBallZ.current = ballPos.z;
