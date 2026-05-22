@@ -140,6 +140,7 @@ export function useGameplayLoop({
   const previousBallZ = useRef(0);
   const previousBallY = useRef(5);
   const pendingBounceHitter = useRef<PlayerType | null>(null);
+  const pendingBounceIsServe = useRef(false);
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
@@ -435,6 +436,7 @@ export function useGameplayLoop({
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
       pendingBounceHitter.current = servingPlayer;
+      pendingBounceIsServe.current = true;
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
@@ -568,6 +570,7 @@ export function useGameplayLoop({
       recordShot(finalAiReturnVel, { rally: true });
       setLastHitter('AI');
       pendingBounceHitter.current = 'AI';
+      pendingBounceIsServe.current = false;
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
@@ -598,6 +601,7 @@ export function useGameplayLoop({
         });
         setLastHitter('PLAYER');
         pendingBounceHitter.current = 'PLAYER';
+        pendingBounceIsServe.current = false;
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
@@ -627,7 +631,11 @@ export function useGameplayLoop({
       if (justBounced && pendingBounceHitter.current) {
         const hitter = pendingBounceHitter.current;
         const landingSide = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
-        const outOnLanding = isFirstBounceOut(ballPos, landingSide);
+        const outOnLanding = isFirstBounceOut(ballPos, landingSide, {
+          isServe: pendingBounceIsServe.current,
+          serveSide,
+          hitter
+        });
 
         if (outOnLanding) {
           const winner = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
@@ -635,6 +643,7 @@ export function useGameplayLoop({
         }
 
         pendingBounceHitter.current = null;
+        pendingBounceIsServe.current = false;
       }
     }
     previousBallZ.current = ballPos.z;
