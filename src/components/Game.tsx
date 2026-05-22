@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, useCallback, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Court } from '../environment/Court';
@@ -23,6 +23,15 @@ const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   qualityLabel: 'Ready',
   servingPlayer: null
 };
+
+function createMatchSeed(matchCount: number) {
+  const today = new Date();
+  const yyyy = today.getUTCFullYear();
+  const mm = String(today.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(today.getUTCDate()).padStart(2, '0');
+  const dateNumber = Number(`${yyyy}${mm}${dd}`);
+  return (dateNumber * 1000 + matchCount) >>> 0;
+}
 
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
@@ -85,7 +94,8 @@ function GameScene({
   courtSurface,
   opponentProfile,
   onArcadeHudStatsChange,
-  settings
+  settings,
+  matchSeed
 }: {
   onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
   onFault: () => void;
@@ -103,6 +113,7 @@ function GameScene({
   opponentProfile: OpponentProfile;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
   settings: GameSettings;
+  matchSeed: number;
 }) {
   const {
     ballRef,
@@ -127,7 +138,8 @@ function GameScene({
     courtSurface,
     opponentProfile,
     onArcadeHudStatsChange,
-    settings
+    settings,
+    matchSeed
   });
 
   return (
@@ -215,6 +227,14 @@ export function Game() {
     difficultyStats
   } = useTennisGame();
 
+  const [matchSeed, setMatchSeed] = useState(() => createMatchSeed(0));
+
+  const handleStartGame = useCallback(() => {
+    const historicalMatches = playerProgress.matchWins + playerProgress.matchLosses;
+    setMatchSeed(createMatchSeed(historicalMatches + 1));
+    startGame();
+  }, [playerProgress.matchLosses, playerProgress.matchWins, startGame]);
+
   useEffect(() => {
     setAudioSettings(getAudioSettingsFromGameSettings(settings));
   }, [settings.masterVolume, settings.musicVolume, settings.sfxVolume]);
@@ -244,6 +264,7 @@ export function Game() {
           opponentProfile={opponentProfile}
           onArcadeHudStatsChange={setArcadeHudStats}
           settings={settings}
+          matchSeed={matchSeed}
         />
       </Canvas>
 
@@ -265,7 +286,7 @@ export function Game() {
       <GameMenus
         gameState={gameState}
         winner={winner}
-        startGame={startGame}
+        startGame={handleStartGame}
         courtSurface={courtSurface}
         setCourtSurface={setCourtSurface}
         opponentId={opponentId}
