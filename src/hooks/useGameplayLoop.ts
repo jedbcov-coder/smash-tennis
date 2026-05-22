@@ -33,6 +33,7 @@ import {
 import { isFirstBounceOut } from '../physics/WorldPhysics';
 import { createInitialBounceState, getBounceSide, getDoubleBouncePointWinner, getSideBounceCount, recordBounce } from '../gameplay/bounceRules';
 import { getReturnZoneCrossing } from '../gameplay/hitDetection';
+import { handleOutOnLanding } from '../gameplay/outOnLanding';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -655,8 +656,12 @@ export function useGameplayLoop({
         });
 
         if (outOnLanding) {
-          const winner = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
-          awardPoint(winner, winner === 'PLAYER');
+          handleOutOnLanding({
+            hitter,
+            pendingBounceIsServe: pendingBounceIsServe.current,
+            onFault,
+            awardPoint
+          });
         } else {
           const bounceSide = getBounceSide(ballPos.z);
           bounceStateRef.current = recordBounce(bounceStateRef.current, bounceSide);
