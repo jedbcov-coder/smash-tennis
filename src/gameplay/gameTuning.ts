@@ -42,6 +42,7 @@ export const ERROR_MARGINS = {
   width: 0.5,
   length: 0.5
 };
+export const ARCADE_LANDING_FORGIVENESS = 0.2;
 export const AI_BASELINE_POSITION = { x: 0, z: -10, wobbleAmount: 2 };
 export const AI_MISS_DRAMA = {
   lungeSpeedMultiplier: 1.5,
