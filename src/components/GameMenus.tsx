@@ -209,24 +209,34 @@ export function GameMenus({
             Speed {(opponentProfile.movementSpeed * 10).toFixed(0)} · Accuracy {(opponentProfile.accuracy * 100).toFixed(0)}% · Aggression {(opponentProfile.aggression * 100).toFixed(0)}%
           </div>
 
-          <div className="mb-6 w-full max-w-4xl">
-            <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
-          </div>
-
-          <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3 rounded-2xl border border-cyan-200/20 bg-black/50 p-4 text-left text-xs uppercase tracking-widest text-white/70 md:grid-cols-4">
-            <div><span className="block text-white/45">Level</span><span className="font-black text-white">{playerProgress.playerLevel}</span></div>
-            <div><span className="block text-white/45">Total XP</span><span className="font-black text-white">{playerProgress.totalXp}</span></div>
-            <div><span className="block text-white/45">Record</span><span className="font-black text-white">{playerProgress.matchWins}-{playerProgress.matchLosses}</span></div>
-            <div><span className="block text-white/45">Best Rally</span><span className="font-black text-white">{playerProgress.bestRally}</span></div>
-          </div>
-
           <button
             onClick={handleStartGame}
-            className="neon-button rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
+            className="neon-button mb-4 rounded-lg px-12 py-4 text-xl font-black uppercase tracking-widest text-black transition-all hover:scale-105"
             style={{ background: GRADIENTS.button }}
           >
             Start Match
           </button>
+
+          <details className="mb-3 w-full max-w-2xl rounded-xl border border-white/15 bg-black/55 text-left">
+            <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.35em] text-cyan-100/80">
+              Player Progress
+            </summary>
+            <div className="grid grid-cols-2 gap-2 px-4 pb-4 text-[11px] uppercase tracking-widest text-white/70 sm:grid-cols-4">
+              <div><span className="block text-white/45">Level</span><span className="font-black text-white">{playerProgress.playerLevel}</span></div>
+              <div><span className="block text-white/45">Total XP</span><span className="font-black text-white">{playerProgress.totalXp}</span></div>
+              <div><span className="block text-white/45">Record</span><span className="font-black text-white">{playerProgress.matchWins}-{playerProgress.matchLosses}</span></div>
+              <div><span className="block text-white/45">Best Rally</span><span className="font-black text-white">{playerProgress.bestRally}</span></div>
+            </div>
+          </details>
+
+          <details className="w-full max-w-4xl rounded-xl border border-white/15 bg-black/55 text-left">
+            <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.35em] text-cyan-100/80">
+              Game Settings
+            </summary>
+            <div className="px-3 pb-3">
+              <SettingsMenu settings={settings} setSettings={setSettings} resetSettings={resetSettings} />
+            </div>
+          </details>
         </div>
       </div>
     );
