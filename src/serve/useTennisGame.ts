@@ -19,6 +19,7 @@ import {
   updateScoreOnPoint,
   type GameStatus
 } from './scoringRules';
+import { resolveServeFault } from './faultRules';
 
 const INTRO_DURATION_MS = 3200;
 const SERVE_COUNTDOWN_MS = 1600;
@@ -81,6 +82,7 @@ function isMatchPoint(status: GameStatus): boolean {
 function getReceiver(server: PlayerType): PlayerType {
   return server === 'PLAYER' ? 'AI' : 'PLAYER';
 }
+
 
 function getTotalGames(status: GameStatus): number {
   return status.score.playerGames + status.score.aiGames + status.score.playerSets + status.score.aiSets;
@@ -220,19 +222,20 @@ export function useTennisGame() {
 
   const addFault = useCallback(() => {
     setStatus((currentStatus) => {
-      if (currentStatus.serverFaults === 0) {
-        return { ...currentStatus, serverFaults: 1 };
+      const resolution = resolveServeFault(currentStatus.serverFaults, currentStatus.servingPlayer);
+      if (!resolution.pointWinner) {
+        queueServeCountdown();
+        return { ...currentStatus, serverFaults: resolution.nextServerFaults };
       }
 
-      const pointWinner = getReceiver(currentStatus.servingPlayer);
-      setLastPointWinner(pointWinner);
-      recordPointPresentation(pointWinner, {
+      setLastPointWinner(resolution.pointWinner);
+      recordPointPresentation(resolution.pointWinner, {
         rallyCount: 0,
         comboCount: 0,
         energyPercent: 0,
         serveSpeedMph: 0
       });
-      const nextStatus = updateScoreOnPoint(currentStatus, pointWinner);
+      const nextStatus = updateScoreOnPoint(currentStatus, resolution.pointWinner);
       const matchWinner = nextStatus.winner;
       if (matchWinner) {
         setPlayerProgress((current) => recordMatchProgress(current, matchWinner));
@@ -240,7 +243,7 @@ export function useTennisGame() {
       queueNextPoint(nextStatus);
       return nextStatus;
     });
-  }, [queueNextPoint, recordPointPresentation]);
+  }, [queueNextPoint, queueServeCountdown, recordPointPresentation]);
 
   useEffect(() => clearTimers, [clearTimers]);
 

@@ -690,6 +690,9 @@ export function useGameplayLoop({
         if (decision.type === 'fault') {
           if (pendingBounceIsServe.current) {
             pointStateRef.current = onIllegalServeBounce(pointStateRef.current);
+            resetBall(servingPlayer);
+            setLastHitter(null);
+            pendingBounceHitter.current = null;
           }
           onFault();
         } else if (decision.type === 'point') {
@@ -700,6 +703,7 @@ export function useGameplayLoop({
           setLastHitter(null);
           pendingBounceHitter.current = null;
           pointStateRef.current = createInitialPointState(servingPlayer);
+          setGameState(GameState.SERVE_COUNTDOWN);
         } else {
           const bounceSide = ballPos.z >= 0 ? 'PLAYER' : 'AI';
           pointStateRef.current = onBounce(pointStateRef.current, bounceSide);
