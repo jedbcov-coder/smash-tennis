@@ -33,7 +33,7 @@ import {
 import { isFirstBounceOut } from '../physics/WorldPhysics';
 import { createInitialBounceState, getBounceSide, getDoubleBouncePointWinner, getSideBounceCount, recordBounce } from '../gameplay/bounceRules';
 import { getReturnZoneCrossing } from '../gameplay/hitDetection';
-import { handleOutOnLanding } from '../gameplay/outOnLanding';
+import { decideFirstBounceOutcome } from '../rules/tennisRules';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -145,6 +145,7 @@ export function useGameplayLoop({
   const previousBallPos = useRef(new THREE.Vector3(0, 5, 0));
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
+  const serveTouchedNetRef = useRef(false);
   const bounceStateRef = useRef(createInitialBounceState());
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
@@ -444,6 +445,7 @@ export function useGameplayLoop({
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
       pendingBounceHitter.current = servingPlayer;
       pendingBounceIsServe.current = true;
+      serveTouchedNetRef.current = false;
       bounceStateRef.current = createInitialBounceState();
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
@@ -619,6 +621,7 @@ export function useGameplayLoop({
         setLastHitter('PLAYER');
         pendingBounceHitter.current = 'PLAYER';
         pendingBounceIsServe.current = false;
+        serveTouchedNetRef.current = false;
         bounceStateRef.current = createInitialBounceState();
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
@@ -643,7 +646,11 @@ export function useGameplayLoop({
     // Net collision: if the ball crosses the net too low, the hitter loses the point.
     const crossedNet = (previousBallZ.current <= 0 && ballPos.z > 0) || (previousBallZ.current >= 0 && ballPos.z < 0);
     if (crossedNet && ballPos.y < NET_HEIGHT && lastHitter) {
-      awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter === 'AI');
+      if (pendingBounceIsServe.current) {
+        serveTouchedNetRef.current = true;
+      } else {
+        awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter === 'AI');
+      }
     } else {
       const justBounced = previousBallY.current > 0.1 && ballPos.y <= 0.1;
       if (justBounced && pendingBounceHitter.current) {
@@ -655,13 +662,23 @@ export function useGameplayLoop({
           hitter
         });
 
-        if (outOnLanding) {
-          handleOutOnLanding({
-            hitter,
-            pendingBounceIsServe: pendingBounceIsServe.current,
-            onFault,
-            awardPoint
-          });
+        const decision = decideFirstBounceOutcome({
+          hitter,
+          isServe: pendingBounceIsServe.current,
+          landedInBounds: !outOnLanding,
+          serveTouchedNet: serveTouchedNetRef.current
+        });
+
+        if (decision.type === 'fault') {
+          onFault();
+        } else if (decision.type === 'point') {
+          awardPoint(decision.winner, decision.winner === 'PLAYER');
+        } else if (decision.type === 'let') {
+          presentationDirector.triggerHudCallout('LET');
+          resetBall(servingPlayer);
+          setLastHitter(null);
+          pendingBounceHitter.current = null;
+          bounceStateRef.current = createInitialBounceState();
         } else {
           const bounceSide = getBounceSide(ballPos.z);
           bounceStateRef.current = recordBounce(bounceStateRef.current, bounceSide);
@@ -676,6 +693,7 @@ export function useGameplayLoop({
         }
 
         pendingBounceIsServe.current = false;
+        serveTouchedNetRef.current = false;
       }
     }
     previousBallZ.current = ballPos.z;
