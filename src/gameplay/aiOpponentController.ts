@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { AI_BASELINE_POSITION, AI_MISS_DRAMA, OUT_OF_BOUNDS_LIMITS, PLAYER_MOVEMENT_LIMITS, COURT_SURFACE_SETTINGS } from './gameTuning';
+import { getReturnZoneCrossing } from './hitDetection';
 import type { ShotDifficultyStats } from '../physics/ShotPhysics';
 import type { PlayerType } from '../types';
 import type { OpponentProfile } from './opponents';
@@ -117,6 +118,7 @@ function calculateAiReturn(input: AiReturnInput): AiReturnResult {
 
 export interface UpdateAiOpponentInput {
   aiPosition: THREE.Vector3;
+  previousBallPosition: THREE.Vector3;
   ballPosition: THREE.Vector3;
   consecutiveReturns: number;
   targetRallyLength: number;
@@ -165,20 +167,27 @@ export function updateAiOpponent(input: UpdateAiOpponentInput): UpdateAiOpponent
     aiX: nextPosition.x
   });
 
+  const aiCrossing = getReturnZoneCrossing({
+    previousBallPos: input.previousBallPosition,
+    currentBallPos: input.ballPosition,
+    minZ: -9.5,
+    maxZ: -8
+  });
+
   if (
-    input.ballPosition.z < -8 &&
-    input.ballPosition.z > -9.5 &&
+    aiCrossing.crossed &&
+    aiCrossing.crossingPos &&
     input.lastHitter === 'PLAYER' &&
-    input.ballPosition.y < 3.5 &&
+    aiCrossing.crossingPos.y < 3.5 &&
     !aiMovement.isMercyMiss &&
-    Math.abs(input.ballPosition.x - nextPosition.x) < 2.0
+    Math.abs(aiCrossing.crossingPos.x - nextPosition.x) < 2.0
   ) {
     return {
       nextPosition,
       swung: true,
       missed,
       returnShot: calculateAiReturn({
-        ballPos: input.ballPosition,
+        ballPos: aiCrossing.crossingPos,
         aiX: nextPosition.x,
         difficultyStats: input.difficultyStats,
         surfaceSettings: input.surfaceSettings,

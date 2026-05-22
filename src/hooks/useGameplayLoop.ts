@@ -32,6 +32,7 @@ import {
 } from '../gameplay/smashSystem';
 import { isFirstBounceOut } from '../physics/WorldPhysics';
 import { createInitialBounceState, getBounceSide, getDoubleBouncePointWinner, getSideBounceCount, recordBounce } from '../gameplay/bounceRules';
+import { getReturnZoneCrossing } from '../gameplay/hitDetection';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -140,6 +141,7 @@ export function useGameplayLoop({
   const consecutiveReturns = useRef(0);
   const previousBallZ = useRef(0);
   const previousBallY = useRef(5);
+  const previousBallPos = useRef(new THREE.Vector3(0, 5, 0));
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
   const bounceStateRef = useRef(createInitialBounceState());
@@ -311,6 +313,7 @@ export function useGameplayLoop({
     }
     setLastHitter(null);
     previousBallZ.current = server === 'PLAYER' ? playerPos.current.z - SERVE_POSITIONS.ballZOffset : aiPos.current.z + SERVE_POSITIONS.ballZOffset;
+    previousBallPos.current.set(ballRef.current.getPosition().x, ballRef.current.getPosition().y, previousBallZ.current);
     pointEndedRef.current = false;
     aiServeReadyAt.current = 0;
     aiMissSwingTriggered.current = false;
@@ -547,6 +550,7 @@ export function useGameplayLoop({
 
     const aiUpdate = updateAiOpponent({
       aiPosition: aiPos.current,
+      previousBallPosition: previousBallPos.current,
       ballPosition: ballPos,
       consecutiveReturns: consecutiveReturns.current,
       targetRallyLength,
@@ -583,20 +587,27 @@ export function useGameplayLoop({
     }
 
     // Player Hit Detection (Guaranteed legal shot)
-    if (!smashOpportunity.current.active && isSwinging && ballPos.z > 3.0 && ballPos.z < 11.0 && lastHitter !== 'PLAYER' && ballPos.y < 4.0) {
+    const playerCrossing = getReturnZoneCrossing({
+      previousBallPos: previousBallPos.current,
+      currentBallPos: ballPos,
+      minZ: 3.0,
+      maxZ: 11.0
+    });
+
+    if (!smashOpportunity.current.active && isSwinging && playerCrossing.crossed && playerCrossing.crossingPos && lastHitter !== 'PLAYER' && playerCrossing.crossingPos.y < 4.0) {
       // Hit radius shrinks as games progress.
-      if (Math.abs(ballPos.x - playerPos.current.x) < difficultyStats.racketAccuracyRadius * 2.8) {
-        const hitDistance = Math.abs(ballPos.x - playerPos.current.x);
+      if (Math.abs(playerCrossing.crossingPos.x - playerPos.current.x) < difficultyStats.racketAccuracyRadius * 2.8) {
+        const hitDistance = Math.abs(playerCrossing.crossingPos.x - playerPos.current.x);
         const isPerfectReturn = hitDistance < difficultyStats.racketAccuracyRadius * 0.45;
-        const hitQuality = isPerfectReturn ? 'perfect' : hitDistance < difficultyStats.racketAccuracyRadius * 1.35 ? 'good' : ballPos.x < playerPos.current.x ? 'early' : 'late';
+        const hitQuality = isPerfectReturn ? 'perfect' : hitDistance < difficultyStats.racketAccuracyRadius * 1.35 ? 'good' : playerCrossing.crossingPos.x < playerPos.current.x ? 'early' : 'late';
         const shotType = isPerfectReturn ? 'topspin' : hitDistance > difficultyStats.racketAccuracyRadius * 1.8 ? 'slice' : 'flat';
-        const playerShot = calculateShotPhysics(ballPos, false, serveSide, difficultyStats, 'AI', courtSurface, {
+        const playerShot = calculateShotPhysics(playerCrossing.crossingPos, false, serveSide, difficultyStats, 'AI', courtSurface, {
           shotType,
           quality: hitQuality,
           spinDirection: Math.sign(playerPos.current.x - ballPos.x) || 1
         });
         const playerReturnVel = playerShot.velocity;
-        const playerSpin = THREE.MathUtils.clamp(playerShot.spin + (playerPos.current.x - ballPos.x) * 0.35, -2.4, 2.4);
+        const playerSpin = THREE.MathUtils.clamp(playerShot.spin + (playerPos.current.x - playerCrossing.crossingPos.x) * 0.35, -2.4, 2.4);
         ballRef.current?.setVelocity(playerReturnVel, playerSpin);
         recordShot(playerReturnVel, {
           combo: true,
@@ -664,6 +675,7 @@ export function useGameplayLoop({
     }
     previousBallZ.current = ballPos.z;
     previousBallY.current = ballPos.y;
+    previousBallPos.current.copy(ballPos);
 
     // Camera follow (Fixed-Height Arcade perspective)
     updateArcadeCamera(camera, {
