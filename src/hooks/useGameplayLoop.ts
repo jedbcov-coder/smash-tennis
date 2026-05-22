@@ -6,7 +6,6 @@ import { calculateShotPhysics, type ServeSide, type ShotDifficultyStats } from '
 import {
   OVERHEAD_SMASH_CONFIG,
   SERVE_POSITIONS,
-  OUT_OF_BOUNDS_LIMITS,
   NET_HEIGHT,
   COURT_SURFACE_SETTINGS
 } from '../gameplay/gameTuning';
@@ -31,6 +30,7 @@ import {
   isCloseEnoughForWeakSmashReturn,
   type SmashOpportunity
 } from '../gameplay/smashSystem';
+import { isFirstBounceOut } from '../physics/WorldPhysics';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -138,6 +138,8 @@ export function useGameplayLoop({
   const elapsedTimeRef = useRef(0);
   const consecutiveReturns = useRef(0);
   const previousBallZ = useRef(0);
+  const previousBallY = useRef(5);
+  const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pointEndedRef = useRef(false);
   const aiServeReadyAt = useRef(0);
   const aiMissSwingTriggered = useRef(false);
@@ -432,6 +434,7 @@ export function useGameplayLoop({
     addFault: onFault,
     onServeLaunched: (serveVelocity) => {
       recordShot(serveVelocity, { rally: true, energy: servingPlayer === 'PLAYER' ? 4 : 0 });
+      pendingBounceHitter.current = servingPlayer;
       if (servingPlayer === 'PLAYER') {
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
       }
@@ -564,6 +567,7 @@ export function useGameplayLoop({
       ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
       recordShot(finalAiReturnVel, { rally: true });
       setLastHitter('AI');
+      pendingBounceHitter.current = 'AI';
       aiWillMissReturn.current = false;
       triggerAiSwing();
       playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
@@ -593,6 +597,7 @@ export function useGameplayLoop({
           callout: undefined
         });
         setLastHitter('PLAYER');
+        pendingBounceHitter.current = 'PLAYER';
         aiWillMissReturn.current = gameplayRandom() < opponentProfile.missChance;
         consecutiveReturns.current++;
         if (isPerfectReturn) {
@@ -617,15 +622,23 @@ export function useGameplayLoop({
     const crossedNet = (previousBallZ.current <= 0 && ballPos.z > 0) || (previousBallZ.current >= 0 && ballPos.z < 0);
     if (crossedNet && ballPos.y < NET_HEIGHT && lastHitter) {
       awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter === 'AI');
-    } else if (ballPos.z > OUT_OF_BOUNDS_LIMITS.playerBackZ) {
-      awardPoint('AI', false);
-    } else if (ballPos.z < OUT_OF_BOUNDS_LIMITS.aiBackZ) {
-      awardPoint('PLAYER', true);
-    } else if (Math.abs(ballPos.x) > OUT_OF_BOUNDS_LIMITS.x) {
-      // Out of bounds
-      awardPoint(lastHitter === 'PLAYER' ? 'AI' : 'PLAYER', lastHitter !== 'PLAYER');
+    } else {
+      const justBounced = previousBallY.current > 0.1 && ballPos.y <= 0.1;
+      if (justBounced && pendingBounceHitter.current) {
+        const hitter = pendingBounceHitter.current;
+        const landingSide = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
+        const outOnLanding = isFirstBounceOut(ballPos, landingSide);
+
+        if (outOnLanding) {
+          const winner = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
+          awardPoint(winner, winner === 'PLAYER');
+        }
+
+        pendingBounceHitter.current = null;
+      }
     }
     previousBallZ.current = ballPos.z;
+    previousBallY.current = ballPos.y;
 
     // Camera follow (Fixed-Height Arcade perspective)
     updateArcadeCamera(camera, {
