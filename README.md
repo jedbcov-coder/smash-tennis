@@ -113,6 +113,7 @@ Current check notes verified on May 17, 2026:
 - `src/audio/audioSettings.ts` stores the shared audio volume settings and converts combined volume to decibels for playback.
 - `src/audio/sounds.ts` plays the Tone.js sound effects using only the decibel adjustment it receives from the audio manager.
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
+- `src/rules/pointState.ts` stores pure point-lifecycle transitions (serve phase, legal/illegal serve bounce flow, rally bounce resets, and second-bounce point awards) so gameplay logic stays separate from rendering.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, crossing-based hit detection, and AI return shots using the selected opponent profile.
 - `src/gameplay/hitDetection.ts` provides shared helper logic to detect when a fast-moving ball crosses a return zone between frames.
