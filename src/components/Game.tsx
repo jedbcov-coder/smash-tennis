@@ -58,6 +58,13 @@ function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | n
 
 
 function ServeTargetGuide({ visible, servingPlayer, serveSide }: { visible: boolean; servingPlayer: PlayerType; serveSide: 'DEUCE' | 'AD' }) {
+  const targetRingRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!targetRingRef.current || !visible) return;
+    targetRingRef.current.rotation.y += 0.012;
+  });
+
   if (!visible) return null;
 
   const targetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
@@ -65,7 +72,7 @@ function ServeTargetGuide({ visible, servingPlayer, serveSide }: { visible: bool
   const glowColor = servingPlayer === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.magentaHot;
 
   return (
-    <group position={[targetX, 0.07, targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group ref={targetRingRef} position={[targetX, 0.07, targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
         <ringGeometry args={[0.9, 1.08, 48]} />
         <meshBasicMaterial color={glowColor} transparent opacity={0.7} />
