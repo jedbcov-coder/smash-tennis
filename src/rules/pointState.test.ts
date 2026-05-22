@@ -7,6 +7,7 @@ import {
   onReceiverReturn,
   onServeHit
 } from './pointState';
+import { decideFirstBounceOutcome } from './tennisRules';
 
 describe('pointState', () => {
   it('starts a point with clean default state values', () => {
@@ -52,13 +53,50 @@ describe('pointState', () => {
     expect(afterRallyShot.bounceCounts.AI).toBe(0);
   });
 
-  it('awards point to hitter when receiver side gets a second bounce', () => {
-    const rallyState = onRallyShot(createInitialPointState('PLAYER'), 'PLAYER');
-    const oneBounce = onBounce(rallyState, 'AI');
-    const twoBounces = onBounce(oneBounce, 'AI');
+  it('rally first bounce out awards opponent', () => {
+    const decision = decideFirstBounceOutcome({
+      hitter: 'PLAYER',
+      isServe: false,
+      landedInBounds: false,
+      serveTouchedNet: false
+    });
 
-    expect(oneBounce.winner).toBe(null);
-    expect(twoBounces.winner).toBe('PLAYER');
-    expect(twoBounces.phase).toBe('pointOver');
+    expect(decision).toEqual({ type: 'point', winner: 'AI' });
+  });
+
+  it('rally first bounce in then second bounce in awards hitter', () => {
+    const rallyState = onRallyShot(createInitialPointState('PLAYER'), 'PLAYER');
+    const firstBounce = onBounce(rallyState, 'AI');
+    const secondBounce = onBounce(firstBounce, 'AI');
+
+    expect(firstBounce.winner).toBe(null);
+    expect(secondBounce.winner).toBe('PLAYER');
+    expect(secondBounce.phase).toBe('pointOver');
+  });
+
+  it('rally first bounce in then second bounce out still awards hitter', () => {
+    const rallyState = onRallyShot(createInitialPointState('AI'), 'AI');
+    const firstBounce = onBounce(rallyState, 'PLAYER');
+    const secondBounce = onBounce(firstBounce, 'PLAYER');
+
+    expect(firstBounce.winner).toBe(null);
+    expect(secondBounce.winner).toBe('AI');
+    expect(secondBounce.phase).toBe('pointOver');
+  });
+
+  it('serve first bounce out follows fault flow', () => {
+    const decision = decideFirstBounceOutcome({
+      hitter: 'PLAYER',
+      isServe: true,
+      landedInBounds: false,
+      serveTouchedNet: false
+    });
+
+    const afterServeHit = onServeHit(createInitialPointState('PLAYER'), 'PLAYER');
+    const afterIllegal = onIllegalServeBounce(afterServeHit);
+
+    expect(decision).toEqual({ type: 'fault' });
+    expect(afterIllegal.phase).toBe('awaitingServeHit');
+    expect(afterIllegal.striker).toBe(null);
   });
 });
