@@ -78,6 +78,8 @@ const createEmptyArcadeHudStats = (): ArcadeHudStats => ({
   inputSource: 'mouse'
 });
 
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
 interface UseGameplayLoopOptions {
   onScore: (winner: PlayerType) => void;
   onFault: () => void;
@@ -200,12 +202,21 @@ export function useGameplayLoop({
     const currentStats = arcadeHudStatsRef.current;
     const nextCombo = options.combo ? currentStats.comboCount + 1 : currentStats.comboCount;
     const nextRally = options.rally ? currentStats.rallyCount + 1 : currentStats.rallyCount;
+    const shotSpeedMph = Math.round(velocity.length() * 14);
+    const rallyProgress = clamp01(nextRally / Math.max(1, targetRallyLength));
+    const speedProgress = clamp01((shotSpeedMph - 35) / 70);
+    const targetBalance = clamp01(1 - Math.abs(nextRally - targetRallyLength) / Math.max(1, targetRallyLength));
+    const computedIntensity = clamp01((rallyProgress * 0.45) + (speedProgress * 0.35) + (targetBalance * 0.2));
+    const nextIntensity = options.rally
+      ? clamp01((currentStats.rallyIntensity * 0.45) + (computedIntensity * 0.55))
+      : clamp01(currentStats.rallyIntensity * 0.92);
 
     updateArcadeHudStats((current) => ({
       ...current,
-      serveSpeedMph: Math.round(velocity.length() * 14),
+      serveSpeedMph: shotSpeedMph,
       comboCount: nextCombo,
-      rallyCount: nextRally
+      rallyCount: nextRally,
+      rallyIntensity: nextIntensity
     }));
 
     if (options.energy) {
@@ -222,7 +233,7 @@ export function useGameplayLoop({
     } else if (options.combo && nextCombo > 1 && nextCombo % 3 === 0) {
       presentationDirector.triggerHudCallout(`COMBO x${nextCombo}`);
     }
-  }, [addEnergy, presentationDirector, updateArcadeHudStats]);
+  }, [addEnergy, presentationDirector, targetRallyLength, updateArcadeHudStats]);
 
   useEffect(() => {
     onArcadeHudStatsChange?.(arcadeHudStats);
@@ -298,7 +309,13 @@ export function useGameplayLoop({
     aiMissSwingTriggered.current = false;
     aiWillMissReturn.current = false;
     consecutiveReturns.current = 0;
-    updateArcadeHudStats((current) => ({ ...current, comboCount: 0, rallyCount: 0, callout: null }));
+    updateArcadeHudStats((current) => ({
+      ...current,
+      comboCount: 0,
+      rallyCount: 0,
+      rallyIntensity: current.rallyIntensity * 0.2,
+      callout: null
+    }));
     smashOpportunity.current = createEmptySmashOpportunity();
     setIsSmashOpportunityVisible(false);
     setIsVisualSmashing(false);
