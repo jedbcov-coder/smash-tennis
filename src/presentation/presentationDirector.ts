@@ -25,6 +25,7 @@ export type PresentationHudCallout =
   | 'TRY AGAIN'
   | 'TOO LATE'
   | 'SECOND BOUNCE'
+  | 'LET'
   | `COMBO x${number}`;
 
 export type PresentationVfxEventName =
