@@ -25,10 +25,10 @@ describe('ShotPhysics', () => {
     const aiDeuceServe = serveVelocity(-2, -12, 'DEUCE', 'PLAYER');
     const aiAdServe = serveVelocity(2, -12, 'AD', 'PLAYER');
 
-    expect(playerDeuceServe.x).toBeLessThan(0);
-    expect(playerAdServe.x).toBeGreaterThan(0);
-    expect(aiDeuceServe.x).toBeGreaterThan(0);
-    expect(aiAdServe.x).toBeLessThan(0);
+    expect(playerDeuceServe.x).toBeGreaterThan(0);
+    expect(playerAdServe.x).toBeLessThan(0);
+    expect(aiDeuceServe.x).toBeLessThan(0);
+    expect(aiAdServe.x).toBeGreaterThan(0);
   });
 
   test('sends returned shots to the opposite court', () => {

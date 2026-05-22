@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { COURT_SURFACE_SETTINGS, SHOT_TARGETS } from '../gameplay/gameTuning';
 import { HIT_QUALITY_TUNING, SHOT_TYPE_TUNING, type HitQuality, type ShotType } from '../gameplay/shotTypes';
 import type { CourtSurface } from '../types';
+import { getDiagonalServiceBoxTarget } from '../rules/courtGeometry';
 
 export type CourtSide = 'PLAYER' | 'AI';
 export type ServeSide = 'DEUCE' | 'AD';
@@ -56,14 +57,10 @@ function chooseTarget(
   }
 
   if (isServe) {
-    // Enforce diagonal serve cross-court.
-    if (toSide === 'AI') {
-      targetZ = SHOT_TARGETS.aiServeZ; // In service box (approx -1 to -7 range)
-      targetX = serveSide === 'DEUCE' ? SHOT_TARGETS.serveAdTargetX : SHOT_TARGETS.serveDeuceTargetX;
-    } else {
-      targetZ = SHOT_TARGETS.playerServeZ; // In service box (approx 1 to 7 range)
-      targetX = serveSide === 'DEUCE' ? SHOT_TARGETS.serveDeuceTargetX : SHOT_TARGETS.serveAdTargetX;
-    }
+    const hitter = toSide === 'AI' ? 'PLAYER' : 'AI';
+    const serveTarget = getDiagonalServiceBoxTarget({ hitter, serveSide });
+    targetZ = serveTarget.targetZ;
+    targetX = serveTarget.targetX;
     // Add slight randomness to serve target.
     targetX += (random() - 0.5) * SHOT_TARGETS.serveRandomXRange * targetRisk;
   }

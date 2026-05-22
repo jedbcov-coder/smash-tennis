@@ -15,6 +15,7 @@ import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type Opp
 import { COLOR_SCHEME } from '../design/colorScheme';
 import { setAudioSettings } from '../audio/audioManager';
 import { getAudioSettingsFromGameSettings, useGameSettings, type GameSettings } from '../settings/useGameSettings';
+import { getDiagonalServiceBoxTarget } from '../rules/courtGeometry';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -67,8 +68,7 @@ function ServeTargetGuide({ visible, servingPlayer, serveSide }: { visible: bool
 
   if (!visible) return null;
 
-  const targetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
-  const targetX = serveSide === 'DEUCE' ? 2.6 : -2.6;
+  const { targetX, targetZ } = getDiagonalServiceBoxTarget({ hitter: servingPlayer, serveSide });
   const glowColor = servingPlayer === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.magentaHot;
 
   return (
