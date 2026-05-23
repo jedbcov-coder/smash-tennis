@@ -79,6 +79,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - GitHub Pages deployment workflow now runs tests and lint checks before building and uploading `dist`, so failed quality checks block deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box with clearer spinning animation, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
 - Shared diagonal service-box targeting helper now drives serve legality checks, serve shot aiming, and the on-court serve target guide, so player/AI deuce and ad serves always agree on the same legal box.
+- Landing marker now predicts the next bounce point from live ball height, velocity, and gravity, then smoothly eases and fades the ring so bounce guidance stays stable and useful during rallies.
 - Seeded gameplay randomness for shot placement, AI return targeting, smash outcomes, and serve fault checks. The same match seed now gets re-applied at each serve/point sequence start (not every frame) so deterministic gameplay stays reproducible.
 - A small HUD seed label now shows the active match seed during play for easier bug reports and repro steps.
 - Visual-only effects are intentionally still allowed to vary so the game keeps a lively arcade feel while gameplay outcomes stay deterministic.

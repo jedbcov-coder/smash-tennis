@@ -16,6 +16,8 @@ import { COLOR_SCHEME } from '../design/colorScheme';
 import { setAudioSettings } from '../audio/audioManager';
 import { getAudioSettingsFromGameSettings, useGameSettings, type GameSettings } from '../settings/useGameSettings';
 import { getDiagonalServiceBoxTarget } from '../rules/courtGeometry';
+import { predictNextGroundContact } from '../physics/BallSimulation';
+import { DOUBLES_COURT_WIDTH, OUT_OF_BOUNDS_LIMITS } from '../gameplay/gameTuning';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -36,23 +38,40 @@ function createMatchSeed(matchCount: number) {
 
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
+  const markerMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  useFrame(() => {
-    if (!markerRef.current || !ballRef.current) return;
+  useFrame((_, delta) => {
+    if (!markerRef.current || !markerMaterialRef.current || !ballRef.current) return;
+
+    if (!visible) {
+      markerRef.current.visible = false;
+      return;
+    }
+
     const ballPos = ballRef.current.getPosition();
     const ballVel = ballRef.current.getVelocity();
-    markerRef.current.visible = visible;
-    markerRef.current.position.set(
-      ballPos.x,
-      0.05,
-      Math.max(-10, Math.min(10, ballPos.z + ballVel.z * 0.5))
-    );
+    const prediction = predictNextGroundContact(ballPos, ballVel);
+
+    const isUseful = Boolean(prediction) && prediction.timeToImpact <= 3.5;
+    markerRef.current.visible = isUseful;
+
+    if (!prediction || !isUseful) return;
+
+    const clampedX = THREE.MathUtils.clamp(prediction.position.x, -DOUBLES_COURT_WIDTH / 2, DOUBLES_COURT_WIDTH / 2);
+    const clampedZ = THREE.MathUtils.clamp(prediction.position.z, -OUT_OF_BOUNDS_LIMITS.z, OUT_OF_BOUNDS_LIMITS.z);
+
+    const targetPosition = new THREE.Vector3(clampedX, 0.05, clampedZ);
+    const smoothAmount = 1 - Math.exp(-delta * 16);
+    markerRef.current.position.lerp(targetPosition, smoothAmount);
+
+    const fade = THREE.MathUtils.clamp(1 - prediction.timeToImpact / 3.5, 0.2, 0.85);
+    markerMaterialRef.current.opacity = 0.15 + fade * 0.35;
   });
 
   return (
     <mesh ref={markerRef} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
       <ringGeometry args={[0.3, 0.4, 32]} />
-      <meshBasicMaterial color={COLOR_SCHEME.neon.cyanSoft} transparent opacity={0.38} />
+      <meshBasicMaterial ref={markerMaterialRef} color={COLOR_SCHEME.neon.cyanSoft} transparent opacity={0.38} />
     </mesh>
   );
 }
