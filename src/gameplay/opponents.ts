@@ -3,6 +3,7 @@ export type OpponentId = 'hidalgo' | 'nova' | 'racketron';
 export type PreferredShotType = 'flat drive' | 'topspin curve' | 'slice angle';
 
 export type SpecialMoveStyle = 'baseline blast' | 'neon rush' | 'glitch slice';
+export type OpponentMissStyle = 'late reaction' | 'over-hit' | 'angled miss';
 
 export interface OpponentProfile {
   id: OpponentId;
@@ -19,6 +20,7 @@ export interface OpponentProfile {
   preferredShotType: PreferredShotType;
   specialMoveStyle: SpecialMoveStyle;
   description: string;
+  missStyle: OpponentMissStyle;
 }
 
 export const OPPONENT_PROFILES: OpponentProfile[] = [
@@ -36,7 +38,8 @@ export const OPPONENT_PROFILES: OpponentProfile[] = [
     missChance: 0.08,
     preferredShotType: 'topspin curve',
     specialMoveStyle: 'baseline blast',
-    description: 'Balanced rallies with steady movement and curved returns.'
+    description: 'Balanced rallies with steady movement and curved returns.',
+    missStyle: 'late reaction'
   },
   {
     id: 'nova',
@@ -52,7 +55,8 @@ export const OPPONENT_PROFILES: OpponentProfile[] = [
     missChance: 0.12,
     preferredShotType: 'flat drive',
     specialMoveStyle: 'neon rush',
-    description: 'Fast feet and hard drives, but takes more risky swings.'
+    description: 'Fast feet and hard drives, but takes more risky swings.',
+    missStyle: 'over-hit'
   },
   {
     id: 'racketron',
@@ -68,7 +72,8 @@ export const OPPONENT_PROFILES: OpponentProfile[] = [
     missChance: 0.05,
     preferredShotType: 'slice angle',
     specialMoveStyle: 'glitch slice',
-    description: 'Slower court coverage with accurate angled slice shots.'
+    description: 'Slower court coverage with accurate angled slice shots.',
+    missStyle: 'angled miss'
   }
 ];
 
