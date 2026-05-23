@@ -65,8 +65,9 @@ export const AI_RALLY_MISS_TUNING = {
 export const OVERHEAD_SMASH_CONFIG = {
   timingWindow: 0.8,
   netDistanceThreshold: 7.0,
-  smashDownwardVelocity: -8.5,
-  smashSpeedMultiplier: 3.35,
+  smashDownwardVelocity: -6.9,
+  smashSpeedMultiplier: 2.75,
+  maxHorizontalSpeed: 18,
   cameraShakeDuration: 0.25,
   retriggerCooldown: 2,
   weakReturnSpeedMultiplier: 0.4,
