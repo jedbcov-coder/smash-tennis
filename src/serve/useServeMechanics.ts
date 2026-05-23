@@ -60,7 +60,7 @@ function getServeOutcome(position: number): ServeOutcome {
   }
 
   if (distanceFromSweetSpot <= 0.12) {
-    return { label: 'Perfect Serve', speedMultiplier: 1.2, accuracyWobble: 0.04, spinMultiplier: 1.25, faultChance: 0 };
+    return { label: 'Perfect Serve', speedMultiplier: 1.12, accuracyWobble: 0, spinMultiplier: 1.1, faultChance: 0 };
   }
 
   if (distanceFromSweetSpot <= 0.25) {
