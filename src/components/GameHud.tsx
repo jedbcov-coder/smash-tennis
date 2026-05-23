@@ -59,12 +59,11 @@ export function GameHud({
   const swingPrompt = inputSource === 'gamepad' ? 'A / Cross' : inputSource === 'keyboard' ? 'Space' : 'Click';
   const serveActionPrompt = inputSource === 'gamepad' ? 'press A / Cross' : inputSource === 'keyboard' ? 'press Space' : 'click';
   const movementPrompt = inputSource === 'gamepad' ? 'Left stick' : inputSource === 'keyboard' ? 'Arrow keys / WASD' : 'Mouse';
-  const specialPrompt = inputSource === 'gamepad' ? 'Y / Triangle' : 'E';
   const serveInstruction =
     serveMeter.phase === 'charging'
       ? `${serveActionPrompt} again when the marker reaches the big blue zone`
       : `${serveActionPrompt} once to toss, then again to serve`;
-  const powerReadyLabel = isPowerReady ? `POWER READY - ${specialPrompt}` : `Energy ${arcadeHudStats.energyPercent}%`;
+  const powerReadyLabel = isPowerReady ? 'Energy 100%' : `Energy ${arcadeHudStats.energyPercent}%`;
   const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
 
   useEffect(() => {
@@ -282,7 +281,7 @@ export function GameHud({
           <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
           <span>{serveActionPrompt}: Serve timing</span>
           <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
-          <span>{specialPrompt}: Flame Smash when ready</span>
+          <span>Special shots are currently archived</span>
         </div>
       )}
 
