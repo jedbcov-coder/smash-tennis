@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { COURT_SURFACE_SETTINGS, SHOT_TARGETS } from '../gameplay/gameTuning';
 import { HIT_QUALITY_TUNING, SHOT_TYPE_TUNING, type HitQuality, type ShotType } from '../gameplay/shotTypes';
 import type { CourtSurface } from '../types';
-import { getDiagonalServiceBoxTarget } from '../rules/courtGeometry';
+import { getDiagonalServiceBoxTarget, isFirstBounceLegalInSingles, isWithinDiagonalServiceBox } from '../rules/courtGeometry';
+import { predictNextGroundContact } from './BallSimulation';
 
 export type CourtSide = 'PLAYER' | 'AI';
 export type ServeSide = 'DEUCE' | 'AD';
@@ -18,6 +19,7 @@ export interface ShotPhysicsOptions {
   // Positive values curve right, negative values curve left.
   spinDirection?: number;
   random?: () => number;
+  guaranteeLegalFirstBounce?: boolean;
 }
 
 export interface ShotPhysicsResult {
@@ -65,8 +67,9 @@ function chooseTarget(
     targetX += (random() - 0.5) * SHOT_TARGETS.serveRandomXRange * targetRisk;
   }
 
-  const earlyLateAimDrift = quality === 'early' ? -0.75 : quality === 'late' ? 0.75 : 0;
-  const riskyWideAim = (random() - 0.5) * targetRisk * (isServe ? 0.18 : 0.55);
+  const isPerfect = quality === 'perfect';
+  const earlyLateAimDrift = isPerfect ? 0 : quality === 'early' ? -0.75 : quality === 'late' ? 0.75 : 0;
+  const riskyWideAim = isPerfect ? 0 : (random() - 0.5) * targetRisk * (isServe ? 0.18 : 0.55);
   targetX += earlyLateAimDrift + riskyWideAim;
 
   if (quality === 'miss') {
@@ -89,6 +92,8 @@ export function calculateShotPhysics(
 ): ShotPhysicsResult {
   const shotType = options.shotType ?? 'flat';
   const quality = options.quality ?? 'good';
+  const isPerfectShot = quality === 'perfect';
+  const guaranteeLegalFirstBounce = options.guaranteeLegalFirstBounce ?? isPerfectShot;
   const random = options.random ?? (() => 0.5);
   const shotTuning = SHOT_TYPE_TUNING[shotType];
   const qualityTuning = HIT_QUALITY_TUNING[quality];
@@ -112,16 +117,52 @@ export function calculateShotPhysics(
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const speedMultiplier =
     difficultyStats.gameDifficultyMultiplier * surfaceSettings.ballSpeedMultiplier * shotTuning.speedMultiplier * qualityTuning.speedMultiplier;
+  const speedScale = guaranteeLegalFirstBounce ? 1 : speedMultiplier;
 
   const spinDirection = options.spinDirection ?? (targetX >= fromPos.x ? 1 : -1);
   const spin = THREE.MathUtils.clamp(spinDirection * shotTuning.spinMultiplier * qualityTuning.spinMultiplier, -2.8, 2.8);
 
   // Apply game-level speed, court-surface speed boost, shot type, and hit-quality speed.
-  return {
-    velocity: finalVel.multiplyScalar(speedMultiplier),
+  const physicsResult: ShotPhysicsResult = {
+    velocity: finalVel.multiplyScalar(speedScale),
     spin,
     targetRisk
   };
+
+  if (!guaranteeLegalFirstBounce) {
+    return physicsResult;
+  }
+
+  const firstBounce = predictNextGroundContact(fromPos, physicsResult.velocity);
+  const isLegalFirstBounce = firstBounce
+    ? isServe
+      ? isWithinDiagonalServiceBox(
+          firstBounce.position.x,
+          firstBounce.position.z,
+          toSide === 'AI' ? 'PLAYER' : 'AI',
+          serveSide
+        )
+      : isFirstBounceLegalInSingles(firstBounce.position.x, firstBounce.position.z, toSide)
+    : false;
+
+  if (isLegalFirstBounce) {
+    return physicsResult;
+  }
+
+  const legalTarget = isServe
+    ? getDiagonalServiceBoxTarget({ hitter: toSide === 'AI' ? 'PLAYER' : 'AI', serveSide })
+    : {
+        targetX: 0,
+        targetZ: toSide === 'AI' ? -8.5 : 8.5
+      };
+
+  const safeTime = Math.max(0.25, t);
+  physicsResult.velocity.set(
+    (legalTarget.targetX - fromPos.x) / safeTime,
+    physicsResult.velocity.y,
+    (legalTarget.targetZ - fromPos.z) / safeTime
+  );
+  return physicsResult;
 }
 
 export function calculateLegalShot(
