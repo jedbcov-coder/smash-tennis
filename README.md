@@ -62,6 +62,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Point rewards now capture final rally count, combo count, energy percent, and serve speed from the exact frame when a point ends, so perfect-return finishes always award up-to-date style/XP data.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce landing checks that enforce singles sidelines and diagonal service-box legality on serves (with small arcade forgiveness) for out calls, plus automatic double-bounce point awards with TOO LATE / SECOND BOUNCE HUD feedback when the receiver lets the ball bounce twice. Serve outs now follow tennis fault flow: first-serve outs become faults, second-serve outs become double-fault points for the receiver, and rally outs still award the opponent point directly. Net-cord serves that still land in the correct service box now trigger a LET call and replay the serve without adding a fault.
@@ -183,4 +184,3 @@ Important GitHub Pages settings:
 6. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
 
 The app now lives directly at the repository root, so `package.json`, `index.html`, `vite.config.ts`, `src/`, and `scripts/` are no longer inside a nested folder. The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
-

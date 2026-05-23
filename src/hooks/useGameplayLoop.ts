@@ -42,6 +42,7 @@ import {
 } from '../rules/pointState';
 import { getReturnZoneCrossing } from '../gameplay/hitDetection';
 import { decideFirstBounceOutcome } from '../rules/tennisRules';
+import type { PointRewardInput } from '../serve/useTennisGame';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
   racketAccuracyRadius: number;
@@ -93,7 +94,7 @@ const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 interface UseGameplayLoopOptions {
   matchSeed: number;
-  onScore: (winner: PlayerType) => void;
+  onScore: (winner: PlayerType, rewardInput: PointRewardInput) => void;
   onFault: () => void;
   gameState: GameState;
   setGameState: (state: GameState) => void;
@@ -692,7 +693,13 @@ export function useGameplayLoop({
     const awardPoint = (winner: PlayerType, positiveForPlayer: boolean) => {
       if (pointEndedRef.current) return;
       pointEndedRef.current = true;
-      onScore(winner);
+      const { rallyCount, comboCount, energyPercent, serveSpeedMph } = arcadeHudStatsRef.current;
+      onScore(winner, {
+        rallyCount,
+        comboCount,
+        energyPercent,
+        serveSpeedMph
+      });
       playAudioEvent(positiveForPlayer ? 'point.player' : 'point.ai');
     };
 
