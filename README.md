@@ -42,6 +42,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
 - Choose rival: pick Hidalgo, Nova, or Racketron on the start screen. Each rival has its own color, speed, accuracy, aggression, miss chance, preferred shot, and special move style.
 - Move Blake: move your mouse around the game screen.
+- During AI serve: you can still move Blake with mouse/keyboard/gamepad to get into return position before the serve is hit.
 - Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
 - Swing timing window: each click/Space/gamepad swing input is now short-lived (about 260ms), so very early swings expire instead of waiting for the ball.
