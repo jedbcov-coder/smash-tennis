@@ -111,6 +111,7 @@ interface UseGameplayLoopOptions {
 }
 
 type SpecialMoveName = 'FLAME_SMASH';
+const SMASH_FEATURE_ENABLED = false;
 
 export function useGameplayLoop({
   onScore,
@@ -556,7 +557,7 @@ export function useGameplayLoop({
       return;
     }
 
-    if (gameState === GameState.PLAYING) {
+    if (gameState === GameState.PLAYING && SMASH_FEATURE_ENABLED) {
       const canStartSmash = canStartSmashOpportunity({
         activeSmash: smashOpportunity.current,
         now,
@@ -616,6 +617,14 @@ export function useGameplayLoop({
         }
         playerFacingY.current = THREE.MathUtils.lerp(playerFacingY.current, Math.PI, 0.12);
       }
+    } else if (gameState === GameState.PLAYING) {
+      if (smashOpportunity.current.active) {
+        endSmashOpportunity();
+      }
+      if (isSpecialMovePressed) {
+        clearSpecialMoveInput();
+      }
+      playerFacingY.current = THREE.MathUtils.lerp(playerFacingY.current, Math.PI, 0.12);
     }
 
     const aiUpdate = updateAiOpponent({

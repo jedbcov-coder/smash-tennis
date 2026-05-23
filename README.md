@@ -4,7 +4,7 @@
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, saved settings, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, tennis-style scoring, and saved player progress.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, saved settings, curved spin shots, easier tap-tap serving, core rally gameplay, tennis-style scoring, and saved player progress.
 
 ## Gameplay rules (beginner-friendly)
 
@@ -47,8 +47,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
 - Swing: click/tap the game court, use pointer press, or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
 - Swing timing window: each click/Space/gamepad swing input is now short-lived (about 260ms), so very early swings expire instead of waiting for the ball.
-- Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
-- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
+- Overhead smash and Flame Smash special are currently archived in a dormant state while the game focuses on core serve-and-rally mechanics.
 
 ## Main features
 
@@ -58,12 +57,11 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - In-match scoreboard and point-result banners now use the currently selected rival name and rival theme color (Hidalgo, Nova, or Racketron) instead of hardcoded labels.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, displayed theme color, and distinct miss behavior (Hidalgo late reactions, Nova over-hits, and Racketron angled misses) with a rising late-rally miss chance instead of guaranteed scripted misses.
-- Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
-- Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
+- Curved spin shots on serves, player returns, and AI returns.
+- Expanded browser-friendly synthesized audio for normal hits, curve hits, perfect returns, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving. The settings menu keeps beginner-friendly 0% to 100% sliders, while audio playback converts those values to the 0 to 1 scale used by the sound engine.
 - Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
-- Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN and combo callouts.
 - Input-help labels now automatically match keyboard or gamepad controls, and the bottom help strip wraps/compacts on smaller screens to reduce HUD crowding while keeping serve timing prompts readable.
 - Point rewards now capture final rally count, combo count, energy percent, and serve speed directly from the gameplay loop on the exact frame when a point ends, so perfect-return finishes always award up-to-date style/XP data.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
@@ -74,9 +72,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Overhead smash tuning now keeps winners decisive but more readable: lower smash launch/downward extremes, capped smash horizontal speed, and extra skid damping when very steep smash impacts hit the court, reducing instant post-bounce runaway across all court surfaces (grass, hard, neon, ice).
 - Serve meter helper text now matches the real serve behavior: **Blue center = guaranteed in**.
 - Fast-ball return detection now checks whether the ball crosses the player or AI return zone between frames, so very quick shots cannot skip through the hit window.
-- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
-- Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Unified VFX event wiring so AI hits, player hits, smash opportunities, overhead smashes, and Flame Smashes all trigger the intended visual effects consistently.
+- Special-shot systems (overhead smash and Flame Smash) are now intentionally archived in dormant state so only barebones tennis mechanics remain active during normal play.
 - Start screen with selectable court cards and rival cards near the top, an always-visible Start Match button, a collapsible settings panel, and a compact collapsible player-progress panel (level, XP, record, best rally), plus point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
 - Browser progress saving with localStorage for player level, total XP, unlocked courts, unlocked cosmetics, best rally, best combo, and match wins/losses.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
