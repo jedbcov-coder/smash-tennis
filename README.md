@@ -63,6 +63,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
 - Stronger overhead smash acceleration for more dramatic finishing shots.
 - Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Input-help labels now automatically match keyboard or gamepad controls, and the bottom help strip wraps/compacts on smaller screens to reduce HUD crowding while keeping serve timing prompts readable.
 - Point rewards now capture final rally count, combo count, energy percent, and serve speed directly from the gameplay loop on the exact frame when a point ends, so perfect-return finishes always award up-to-date style/XP data.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
