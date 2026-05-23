@@ -53,6 +53,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
 - Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron, shown as start-screen rival cards with descriptions, play styles, and a clear selected state.
+- In-match scoreboard and point-result banners now use the currently selected rival name and rival theme color (Hidalgo, Nova, or Racketron) instead of hardcoded labels.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
 - Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, and displayed theme color.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.

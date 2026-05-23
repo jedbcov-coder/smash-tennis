@@ -289,6 +289,7 @@ export function Game() {
         pointReward={pointReward}
         settings={settings}
         matchSeed={matchSeed}
+        opponentProfile={opponentProfile}
       />
 
       <GameMenus
