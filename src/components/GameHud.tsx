@@ -252,7 +252,7 @@ export function GameHud({
               <div className="mt-2 flex justify-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/55">
                 <span>Only the tiny red edges fault</span>
                 <span>•</span>
-                <span>Blue center = best serve</span>
+                <span>Blue center = guaranteed in</span>
               </div>
               {showServeQualityBadge && (
                 <div className="mt-3 inline-flex self-center rounded-full border border-cyan-200/40 bg-cyan-950/80 px-4 py-1 text-sm font-black uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)]">
