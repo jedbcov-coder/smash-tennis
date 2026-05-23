@@ -16,7 +16,8 @@ To keep outcomes fair and reproducible, the game resolves each shot in a clear o
 2. **First legal bounce check:** it checks where the first bounce lands (service box for serves, singles court for rally shots).
 3. **Fault/out handling:** if the bounce is illegal, it applies serve-fault or out rules immediately.
 4. **Return window check:** if the bounce is legal, the receiver gets a chance to return.
-5. **Second-bounce loss check:** if the receiver does not return and the ball bounces twice on their side, they lose the point.
+5. **Post-bounce escape check:** after a legal first bounce, if the receiver does not return and the ball exits behind their baseline, the striker wins immediately.
+6. **Second-bounce loss check:** if the receiver still keeps the ball in play area but does not return and it bounces twice, they lose the point.
 
 This flow is deterministic (same inputs produce the same rules result), which helps testing and bug reproduction.
 
@@ -69,7 +70,8 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
 - Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce landing checks that enforce singles sidelines and diagonal service-box legality on serves (with small arcade forgiveness) for out calls, plus automatic double-bounce point awards with TOO LATE / SECOND BOUNCE HUD feedback when the receiver lets the ball bounce twice. Serve outs now follow tennis fault flow: first-serve outs become faults, second-serve outs become double-fault points for the receiver, and rally outs still award the opponent point directly. Net-cord serves that still land in the correct service box now trigger a LET call and replay the serve without adding a fault.
 - Rally bounce resolution now checks in/out only on each shot's first bounce. After a legal first bounce, later bounces use pure second-bounce loss logic so a second bounce that lands outside cannot wrongly flip point awards.
-- Post-bounce winner safeguard: after a legal first bounce, if the receiver never returns and the ball exits beyond that receiver’s back boundary (or fully escapes the world bounds), the striker is immediately awarded the point so rallies cannot get stuck in PLAYING with an empty court.
+- Post-bounce winner safeguard: after a legal first bounce, if the receiver never returns and the ball exits beyond that receiver’s back boundary (or fully escapes the world bounds), the striker is immediately awarded the point so rallies cannot get stuck in PLAYING with an empty court. This means the point now resolves on boundary escape without waiting for a second bounce.
+- Overhead smash tuning now keeps winners decisive but more readable: lower smash launch/downward extremes, capped smash horizontal speed, and extra skid damping when very steep smash impacts hit the court, reducing instant post-bounce runaway across all court surfaces (grass, hard, neon, ice).
 - Serve meter helper text now matches the real serve behavior: **Blue center = guaranteed in**.
 - Fast-ball return detection now checks whether the ball crosses the player or AI return zone between frames, so very quick shots cannot skip through the hit window.
 - Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.

@@ -6,6 +6,8 @@ const BALL_GROUND_HEIGHT = 0.1;
 const SPIN_DECAY_PER_SECOND = 0.45;
 const MAX_SPIN_DECAY_PER_STEP = 0.9;
 const BOUNCE_SPIN_KEEP = 0.58;
+const SMASH_BOUNCE_VERTICAL_SPEED_THRESHOLD = -9;
+const SMASH_BOUNCE_SKID_MULTIPLIER = 0.82;
 
 
 export interface PredictedGroundContact {
@@ -122,8 +124,9 @@ function handleBounce(
 ): void {
   if (simulation.position.y >= BALL_GROUND_HEIGHT) return;
 
+  const incomingYVelocity = simulation.velocity.y;
   simulation.position.y = BALL_GROUND_HEIGHT;
-  applySurfaceBounce(simulation.velocity, surfaceSettings);
+  applySurfaceBounce(simulation.velocity, surfaceSettings, incomingYVelocity);
   simulation.spin *= BOUNCE_SPIN_KEEP;
 }
 
@@ -139,12 +142,16 @@ function applySpinCurve(
 
 function applySurfaceBounce(
   velocity: THREE.Vector3,
-  surfaceSettings: Pick<CourtSurfaceTuning, 'bounceHeightMultiplier' | 'slideAmount'>
+  surfaceSettings: Pick<CourtSurfaceTuning, 'bounceHeightMultiplier' | 'slideAmount'>,
+  incomingYVelocity: number
 ): void {
   velocity.y = Math.abs(velocity.y) * surfaceSettings.bounceHeightMultiplier;
 
   // slideAmount is easier to tune as "more slide = less slowdown".
   const skidMultiplier = THREE.MathUtils.clamp(1 - surfaceSettings.slideAmount, 0.65, 0.99);
-  velocity.x *= skidMultiplier;
-  velocity.z *= skidMultiplier;
+  // Hard downward smashes get extra post-bounce damping so winners stay readable instead of instantly rocketing out of view.
+  const smashDamping = incomingYVelocity <= SMASH_BOUNCE_VERTICAL_SPEED_THRESHOLD ? SMASH_BOUNCE_SKID_MULTIPLIER : 1;
+  const finalSkidMultiplier = skidMultiplier * smashDamping;
+  velocity.x *= finalSkidMultiplier;
+  velocity.z *= finalSkidMultiplier;
 }
