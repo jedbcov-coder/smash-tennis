@@ -7,6 +7,52 @@ const SPIN_DECAY_PER_SECOND = 0.45;
 const MAX_SPIN_DECAY_PER_STEP = 0.9;
 const BOUNCE_SPIN_KEEP = 0.58;
 
+
+export interface PredictedGroundContact {
+  timeToImpact: number;
+  position: THREE.Vector3;
+}
+
+export function predictNextGroundContact(
+  position: THREE.Vector3,
+  velocity: THREE.Vector3,
+  gravity = GRAVITY,
+  groundHeight = BALL_GROUND_HEIGHT
+): PredictedGroundContact | null {
+  const yOffset = position.y - groundHeight;
+
+  if (yOffset <= 0) {
+    return {
+      timeToImpact: 0,
+      position: new THREE.Vector3(position.x, groundHeight, position.z)
+    };
+  }
+
+  const a = 0.5 * gravity;
+  const b = velocity.y;
+  const c = yOffset;
+  const discriminant = b * b - 4 * a * c;
+
+  if (discriminant < 0) return null;
+
+  const root = Math.sqrt(discriminant);
+  const denominator = 2 * a;
+  const t1 = (-b - root) / denominator;
+  const t2 = (-b + root) / denominator;
+  const timeToImpact = [t1, t2].filter((time) => Number.isFinite(time) && time >= 0).sort((left, right) => left - right)[0];
+
+  if (timeToImpact === undefined) return null;
+
+  return {
+    timeToImpact,
+    position: new THREE.Vector3(
+      position.x + velocity.x * timeToImpact,
+      groundHeight,
+      position.z + velocity.z * timeToImpact
+    )
+  };
+}
+
 export interface BallSimulationState {
   position: THREE.Vector3;
   velocity: THREE.Vector3;
