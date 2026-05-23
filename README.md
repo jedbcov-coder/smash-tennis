@@ -28,7 +28,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 
 ### Singles-only in/out logic
 
-- The game uses **singles court boundaries** for in/out calls during points.
+- The game uses **singles court boundaries** for in/out calls during points, and the court now highlights singles sidelines more strongly than doubles alleys so the active boundary is easier to see.
 - For serves, the ball must land in the **diagonal target service box**.
 - Shots touching the line are treated as **in**.
 

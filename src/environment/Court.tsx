@@ -15,7 +15,9 @@ import type { CourtSurface } from '../types';
 export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
   const surfaceColors = COURT_SURFACE_SETTINGS[courtSurface].colors;
   const lineGlowWidth = COURT_RENDERING.lineWidth * 2.25;
+  const singlesGlowWidth = COURT_RENDERING.lineWidth * 3.1;
   const borderGlowWidth = COURT_RENDERING.lineWidth * 3.2;
+  const doublesLaneWidth = (DOUBLES_COURT_WIDTH - SINGLES_COURT_WIDTH) / 2;
 
   return (
     <group>
@@ -40,6 +42,32 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
           roughness={TEXTURE_RULES.court.roughness}
         />
       </mesh>
+
+      {/* Doubles alleys are decorative in singles mode, so keep them visible but quieter. */}
+      <group position={[0, -0.02, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(SINGLES_COURT_WIDTH + DOUBLES_COURT_WIDTH) / 4, 0, 0]} receiveShadow>
+          <planeGeometry args={[doublesLaneWidth, COURT_LENGTH]} />
+          <meshStandardMaterial
+            color={surfaceColors.surrounding}
+            emissive={surfaceColors.surrounding}
+            emissiveIntensity={0.07}
+            roughness={TEXTURE_RULES.court.roughness}
+            transparent
+            opacity={0.52}
+          />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-(SINGLES_COURT_WIDTH + DOUBLES_COURT_WIDTH) / 4, 0, 0]} receiveShadow>
+          <planeGeometry args={[doublesLaneWidth, COURT_LENGTH]} />
+          <meshStandardMaterial
+            color={surfaceColors.surrounding}
+            emissive={surfaceColors.surrounding}
+            emissiveIntensity={0.07}
+            roughness={TEXTURE_RULES.court.roughness}
+            transparent
+            opacity={0.52}
+          />
+        </mesh>
+      </group>
 
       {/* Soft neon border glow just outside the court. */}
       <group position={[0, 0.004, 0]}>
@@ -81,10 +109,10 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
           <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
-        {/* Doubles Sidelines */}
+        {/* Doubles Sidelines (decorative in singles play) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2, -0.004, 0]}>
           <planeGeometry args={[lineGlowWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.12} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
@@ -92,17 +120,25 @@ export function Court({ courtSurface }: { courtSurface: CourtSurface }) {
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2, -0.004, 0]}>
           <planeGeometry args={[lineGlowWidth, COURT_LENGTH]} />
-          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.28} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.12} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-DOUBLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
           <meshBasicMaterial color={surfaceColors.lines} />
         </mesh>
 
-        {/* Singles Sidelines */}
+        {/* Singles Sidelines (gameplay boundaries) */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SINGLES_COURT_WIDTH / 2, -0.004, 0]}>
+          <planeGeometry args={[singlesGlowWidth, COURT_LENGTH]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.38} blending={THREE.AdditiveBlending} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SINGLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />
           <meshBasicMaterial color={surfaceColors.lines} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-SINGLES_COURT_WIDTH / 2, -0.004, 0]}>
+          <planeGeometry args={[singlesGlowWidth, COURT_LENGTH]} />
+          <meshBasicMaterial color={surfaceColors.lines} transparent opacity={0.38} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-SINGLES_COURT_WIDTH / 2, 0, 0]}>
           <planeGeometry args={[COURT_RENDERING.lineWidth, COURT_LENGTH]} />

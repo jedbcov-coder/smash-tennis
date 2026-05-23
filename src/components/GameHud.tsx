@@ -192,6 +192,9 @@ export function GameHud({
         <div className="w-fit bg-black/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
           Seed {matchSeed}
         </div>
+        <div className="w-fit bg-black/65 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">
+          Singles rules: inside singles sidelines is in
+        </div>
       </div>
 
       {/* Point Result Banner */}
