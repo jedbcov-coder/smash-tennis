@@ -7,6 +7,7 @@ import { formatTennisScore } from '../serve/scoringRules';
 import type { PointReward } from '../serve/useTennisGame';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
 import type { GameSettings } from '../settings/useGameSettings';
+import type { OpponentProfile } from '../gameplay/opponents';
 
 interface GameHudProps {
   score: Score;
@@ -22,6 +23,7 @@ interface GameHudProps {
   pointReward: PointReward | null;
   settings: GameSettings;
   matchSeed: number;
+  opponentProfile: OpponentProfile;
 }
 
 export function GameHud({
@@ -37,7 +39,8 @@ export function GameHud({
   arcadeHudStats,
   pointReward,
   settings,
-  matchSeed
+  matchSeed,
+  opponentProfile
 }: GameHudProps) {
   const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
@@ -45,7 +48,7 @@ export function GameHud({
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
   const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
-  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : opponentProfile.theme.glowColor;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
   const serveMeter = arcadeHudStats.serveMeter;
   const showServeMeter = gameState === GameState.SERVING && servingPlayer === 'PLAYER';
@@ -173,11 +176,16 @@ export function GameHud({
             <div className="mr-2 w-2">
               {servingPlayer === 'AI' && <div className="h-1.5 w-1.5 rounded-full bg-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.95)]" />}
             </div>
-            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">Hidalgo (AI)</div>
+            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">{opponentProfile.displayName} (AI)</div>
             <div className="flex h-full bg-black/45">
               <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiSets}</div>
               <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiGames}</div>
-              <div className="flex w-12 items-center justify-center bg-fuchsia-200 text-[14px] font-black text-black">{aiLabel}</div>
+              <div
+                className="flex w-12 items-center justify-center text-[14px] font-black text-black"
+                style={{ backgroundColor: opponentProfile.theme.color }}
+              >
+                {aiLabel}
+              </div>
             </div>
           </div>
         </div>
@@ -193,7 +201,7 @@ export function GameHud({
             className="neon-callout px-8 py-5 text-5xl font-black italic uppercase tracking-tighter text-white"
             style={{ background: `linear-gradient(90deg, ${pointWinnerColor}, ${COLOR_SCHEME.neon.magentaHot})` }}
           >
-            {lastPointWinner === 'PLAYER' ? 'Blake Point' : 'Hidalgo Point'}
+            {lastPointWinner === 'PLAYER' ? 'Blake Point' : `${opponentProfile.displayName} Point`}
           </div>
         </div>
       )}
