@@ -136,9 +136,9 @@ export function GameHud({
       )}
 
       {/* Scoreboard - Lower Left */}
-      <div className="absolute bottom-12 left-8 flex flex-col gap-0.5 pointer-events-none drop-shadow-lg">
+      <div className="absolute bottom-12 left-8 flex max-w-[min(90vw,560px)] flex-col gap-0.5 pointer-events-none drop-shadow-lg sm:max-w-none">
         {/* Header Ribbon */}
-        <div className="flex gap-0.5">
+        <div className="hidden flex-wrap gap-0.5 sm:flex">
           <div className="bg-cyan-300 px-2 py-0.5 text-[9px] font-black italic text-black w-fit shadow-[0_0_14px_rgba(34,211,238,0.65)]">
             NEON SMASH - GAME {score.playerGames + score.aiGames + 1}
           </div>
@@ -261,7 +261,7 @@ export function GameHud({
         </div>
       )}
 
-      <div className="neon-panel absolute right-4 top-4 max-w-[220px] rounded-lg border border-cyan-200/25 bg-black/60 p-3 text-left text-white pointer-events-none">
+      <div className="neon-panel pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-cyan-200/25 bg-black/60 p-3 text-left text-white md:block">
         <div className="text-[10px] font-black uppercase tracking-widest text-white/60">Court Surface</div>
         <div className="text-lg font-black uppercase italic" style={{ color: surfaceSettings.colors.lines, textShadow: `0 0 12px ${surfaceSettings.colors.lines}` }}>
           {surfaceSettings.label}
@@ -272,12 +272,14 @@ export function GameHud({
       </div>
 
       {settings.showInputHelp && (
-        <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
-          <span>MOUSE: MOVE PLAYER</span>
-          <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-          <span>CLICK: SWING / TAP-TAP SERVE</span>
-          <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-          <span>E: FLAME SMASH WHEN READY</span>
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-black/45 px-3 py-2 text-[10px] text-white/65 backdrop-blur-sm sm:inset-x-auto sm:right-4 sm:max-w-[min(520px,85vw)] sm:justify-end">
+          <span>{movementPrompt}: Move player</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>{swingPrompt}: Swing</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>{serveActionPrompt}: Serve timing</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>{specialPrompt}: Flame Smash when ready</span>
         </div>
       )}
 
