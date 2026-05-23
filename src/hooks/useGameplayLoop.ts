@@ -42,6 +42,7 @@ import {
 } from '../rules/pointState';
 import { getReturnZoneCrossing } from '../gameplay/hitDetection';
 import { decideFirstBounceOutcome } from '../rules/tennisRules';
+import { getEscapePointWinner, type LiveRallyShot } from '../rules/rallyEscape';
 import type { PointRewardInput } from '../serve/useTennisGame';
 
 export interface GameplayDifficultyStats extends ShotDifficultyStats {
@@ -155,6 +156,7 @@ export function useGameplayLoop({
   const pendingBounceHitter = useRef<PlayerType | null>(null);
   const pendingBounceIsServe = useRef(false);
   const shotFirstBounceResolved = useRef(false);
+  const liveRallyShot = useRef<LiveRallyShot | null>(null);
   const serveTouchedNetRef = useRef(false);
   const pointStateRef = useRef(createInitialPointState(servingPlayer));
   const pointEndedRef = useRef(false);
@@ -321,9 +323,16 @@ export function useGameplayLoop({
 
 
   const markNewShotPendingBounce = useCallback((hitter: PlayerType, isServe: boolean) => {
+    const receiver = hitter === 'PLAYER' ? 'AI' : 'PLAYER';
     pendingBounceHitter.current = hitter;
     pendingBounceIsServe.current = isServe;
     shotFirstBounceResolved.current = false;
+    liveRallyShot.current = {
+      hitter,
+      receiver,
+      firstBounceResolved: false,
+      firstBounceLegal: false
+    };
     serveTouchedNetRef.current = false;
   }, []);
 
@@ -338,6 +347,7 @@ export function useGameplayLoop({
     pendingBounceHitter.current = null;
     pendingBounceIsServe.current = false;
     shotFirstBounceResolved.current = false;
+    liveRallyShot.current = null;
     previousBallZ.current = server === 'PLAYER' ? playerPos.current.z - SERVE_POSITIONS.ballZOffset : aiPos.current.z + SERVE_POSITIONS.ballZOffset;
     previousBallPos.current.set(ballRef.current.getPosition().x, ballRef.current.getPosition().y, previousBallZ.current);
     pointEndedRef.current = false;
@@ -705,6 +715,7 @@ export function useGameplayLoop({
         serveSpeedMph
       });
       playAudioEvent(positiveForPlayer ? 'point.player' : 'point.ai');
+      liveRallyShot.current = null;
     };
 
     // Net collision: if the ball crosses the net too low, the hitter loses the point.
@@ -735,6 +746,7 @@ export function useGameplayLoop({
           });
 
           if (decision.type === 'fault') {
+            liveRallyShot.current = null;
             if (pendingBounceIsServe.current) {
               pointStateRef.current = onIllegalServeBounce(pointStateRef.current);
               resetBall(servingPlayer);
@@ -742,8 +754,10 @@ export function useGameplayLoop({
             }
             onFault();
           } else if (decision.type === 'point') {
+            liveRallyShot.current = null;
             awardPoint(decision.winner, decision.winner === 'PLAYER');
           } else if (decision.type === 'let') {
+            liveRallyShot.current = null;
             presentationDirector.triggerHudCallout('LET');
             resetBall(servingPlayer);
             setLastHitter(null);
@@ -751,7 +765,10 @@ export function useGameplayLoop({
             setGameState(GameState.SERVE_COUNTDOWN);
           } else {
             shotFirstBounceResolved.current = true;
-            pendingBounceHitter.current = null;
+            if (liveRallyShot.current) {
+              liveRallyShot.current.firstBounceResolved = true;
+              liveRallyShot.current.firstBounceLegal = true;
+            }
             serveTouchedNetRef.current = false;
 
             const bounceSide = ballPos.z >= 0 ? 'PLAYER' : 'AI';
@@ -774,6 +791,12 @@ export function useGameplayLoop({
           awardPoint(pointStateRef.current.winner, pointStateRef.current.winner === 'PLAYER');
         }
       }
+    }
+
+    const escapeWinner = getEscapePointWinner(liveRallyShot.current, ballPos);
+    if (escapeWinner) {
+      presentationDirector.triggerHudCallout('TOO LATE');
+      awardPoint(escapeWinner, escapeWinner === 'PLAYER');
     }
     previousBallZ.current = ballPos.z;
     previousBallY.current = ballPos.y;

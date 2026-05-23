@@ -23,6 +23,11 @@ export const SINGLES_COURT_WIDTH = 8.23;
 export const SERVE_BOX_LENGTH = 6.4;
 export const BACK_COURT_LENGTH_OFFSET = 3;
 export const OUT_OF_BOUNDS_LIMITS = { x: 10, y: 10, z: 15, playerBackZ: 15, aiBackZ: -15 };
+export const BALL_ESCAPE_LIMITS = {
+  x: 22,
+  y: 18,
+  z: 30
+};
 export const SHOT_TARGETS = {
   SERVE_DEUCE: { x: 2, z: -5 },
   SERVE_AD: { x: -2, z: -5 },
