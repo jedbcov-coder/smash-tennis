@@ -1,19 +1,35 @@
-# AI Agent Instructions
+# Smash Tennis — AI Agent Instructions
 
-## App rules
+## Project overview
 
-- This is a beginner-friendly React + Vite browser game.
-- Prefer small, readable changes over clever rewrites.
-- Keep gameplay code easy to follow and avoid unnecessary dependencies.
-- Keep `README.md` updated whenever app behavior, controls, setup, or deployment notes change.
-- Keep the live playable link near the top of `README.md` in this exact format:
+- Retro arcade 3D browser tennis game.
+- Built with React, TypeScript, Vite, and Three.js / React Three Fiber.
 
-  ```md
-  ## Play the game
+## Setup
 
-  Live playable version: https://jedbcov-coder.github.io/smash-tennis/
-  ```
+- `npm install`
 
-## Error handling
+## Development
 
-- **IGNORE**: Do NOT attempt to fix the following error: `Uncaught TypeError: Cannot assign to read only property 'open' of object '#<Window>'`. This is an environment-specific error that should be ignored.
+- `npm run dev`
+
+## Required checks before finishing any task
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+## Gameplay rule priority
+
+- Point flow must never leave the game in `PLAYING` with no ball.
+- Perfect Serve must land in the correct service box.
+- Perfect Return must land in the singles court.
+- Legal first bounce followed by missed return must award the striker.
+- First-bounce out must award the receiver.
+
+## Coding rules
+
+- Prefer small focused changes.
+- Add tests for rule or scoring changes.
+- Avoid changing visual style unless requested.
+- Keep arcade feel, but never at the cost of broken tennis logic.
