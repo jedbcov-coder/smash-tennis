@@ -74,8 +74,9 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Lightweight Vite build for local testing and GitHub Pages deployment.
 - Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box with clearer spinning animation, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
 - Shared diagonal service-box targeting helper now drives serve legality checks, serve shot aiming, and the on-court serve target guide, so player/AI deuce and ad serves always agree on the same legal box.
-- Seeded gameplay randomness for shot placement, AI return targeting, smash outcomes, and serve fault checks, while visual effects still stay visually varied.
-- Each new match now starts with a clear daily seed value (UTC date plus match count), so gameplay tests and bug reports can reproduce the same outcomes more reliably.
+- Seeded gameplay randomness for shot placement, AI return targeting, smash outcomes, and serve fault checks. The same match seed now gets re-applied at each serve/point sequence start (not every frame) so deterministic gameplay stays reproducible.
+- A small HUD seed label now shows the active match seed during play for easier bug reports and repro steps.
+- Visual-only effects are intentionally still allowed to vary so the game keeps a lively arcade feel while gameplay outcomes stay deterministic.
 - Match flow uses a small shared state-machine helper so menu, intro, serve countdown, point result, and game-over transitions stay easy to follow.
 - Duplicate-import cleanup in serve flow hook keeps source imports tidy without changing gameplay behavior.
 

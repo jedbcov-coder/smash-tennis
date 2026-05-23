@@ -288,6 +288,7 @@ export function Game() {
         arcadeHudStats={arcadeHudStats}
         pointReward={pointReward}
         settings={settings}
+        matchSeed={matchSeed}
       />
 
       <GameMenus

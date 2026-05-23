@@ -21,6 +21,7 @@ interface GameHudProps {
   arcadeHudStats: ArcadeHudStats;
   pointReward: PointReward | null;
   settings: GameSettings;
+  matchSeed: number;
 }
 
 export function GameHud({
@@ -35,7 +36,8 @@ export function GameHud({
   courtSurface,
   arcadeHudStats,
   pointReward,
-  settings
+  settings,
+  matchSeed
 }: GameHudProps) {
   const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
@@ -178,6 +180,9 @@ export function GameHud({
               <div className="flex w-12 items-center justify-center bg-fuchsia-200 text-[14px] font-black text-black">{aiLabel}</div>
             </div>
           </div>
+        </div>
+        <div className="w-fit bg-black/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
+          Seed {matchSeed}
         </div>
       </div>
 
