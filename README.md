@@ -162,7 +162,7 @@ Current check notes verified on May 17, 2026:
 - `src/progression/playerProgress.ts` saves player level, XP, unlocks, best rally, best combo, and match record in browser localStorage.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
 - `src/rules/courtGeometry.ts` keeps reusable pure helpers for singles-court bounds and diagonal service-box checks used by world-physics out calls.
-- `src/rules/tennisRules.test.ts`, `src/rules/courtGeometry.test.ts`, and `src/rules/pointState.test.ts` are scaffold test-plan files with descriptive TODO test cases for upcoming rules-phase commits.
+- `src/rules/tennisRules.test.ts`, `src/rules/courtGeometry.test.ts`, and `src/rules/pointState.test.ts` now contain real assertion-based rules tests for scoring flow and court legality checks.
 - `src/physics/ShotPhysics.ts` calculates shot direction, speed, arc, spin, and target risk.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
 - `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
@@ -181,3 +181,4 @@ Important GitHub Pages settings:
 6. Open https://jedbcov-coder.github.io/smash-tennis/ after the deployment finishes.
 
 The app now lives directly at the repository root, so `package.json`, `index.html`, `vite.config.ts`, `src/`, and `scripts/` are no longer inside a nested folder. The Vite base path stays set to `/smash-tennis/` during GitHub Actions builds because GitHub Pages serves this project from `https://jedbcov-coder.github.io/smash-tennis/`, not from the root of the domain.
+
