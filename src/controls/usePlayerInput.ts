@@ -10,6 +10,7 @@ const SWING_ANIMATION_MS = 260;
 const SWING_INPUT_WINDOW_MS = 260;
 const GAMEPAD_SWING_BUTTONS = [0, 7]; // A / Cross, or right trigger
 const GAMEPAD_SPECIAL_BUTTONS = [3]; // Y / Triangle
+const POINTER_MOUSE_COMPAT_BLOCK_MS = 450;
 
 function isMenuOrFormTarget(target: EventTarget | null) {
   return target instanceof Element && target.closest('button, a, input, select, textarea, [role="button"]');
@@ -32,6 +33,8 @@ export function usePlayerInput() {
   const mouseX = useRef(0);
   const mouseY = useRef(0);
   const isMouseDown = useRef(false);
+  const activePointerId = useRef<number | null>(null);
+  const shouldBlockMouseEventsUntil = useRef(0);
   const pressedKeys = useRef(new Set<string>());
   const gamepadSwingWasPressed = useRef(false);
   const gamepadSpecialWasPressed = useRef(false);
@@ -95,13 +98,31 @@ export function usePlayerInput() {
   }, []);
 
   useEffect(() => {
+    const updateInputFromClientPoint = (clientX: number, clientY: number) => {
+      mouseX.current = clampInputAxis((clientX / window.innerWidth) * 2 - 1);
+      mouseY.current = clampInputAxis(-(clientY / window.innerHeight) * 2 + 1);
+    };
+
+    const blockMouseCompatEvents = () => {
+      shouldBlockMouseEventsUntil.current = Date.now() + POINTER_MOUSE_COMPAT_BLOCK_MS;
+    };
+
+    const shouldIgnoreMouseEvent = () => Date.now() <= shouldBlockMouseEventsUntil.current;
+
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX.current = clampInputAxis((e.clientX / window.innerWidth) * 2 - 1);
-      mouseY.current = clampInputAxis(-(e.clientY / window.innerHeight) * 2 + 1);
+      if (shouldIgnoreMouseEvent()) {
+        return;
+      }
+
+      updateInputFromClientPoint(e.clientX, e.clientY);
       setActiveInputSource('mouse');
     };
 
     const handleMouseDown = (e: MouseEvent) => {
+      if (shouldIgnoreMouseEvent()) {
+        return;
+      }
+
       if (isMenuOrFormTarget(e.target)) {
         return;
       }
@@ -111,7 +132,70 @@ export function usePlayerInput() {
     };
 
     const handleMouseUp = () => {
+      if (shouldIgnoreMouseEvent()) {
+        return;
+      }
+
       isMouseDown.current = false;
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (isMenuOrFormTarget(e.target)) {
+        return;
+      }
+
+      updateInputFromClientPoint(e.clientX, e.clientY);
+      setActiveInputSource('mouse');
+
+      if (e.pointerType !== 'mouse') {
+        e.preventDefault();
+      }
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (isMenuOrFormTarget(e.target)) {
+        return;
+      }
+
+      activePointerId.current = e.pointerId;
+      isMouseDown.current = true;
+      updateInputFromClientPoint(e.clientX, e.clientY);
+      setActiveInputSource('mouse');
+      triggerSwing('mouse');
+
+      if (e.pointerType !== 'mouse') {
+        blockMouseCompatEvents();
+        e.preventDefault();
+      }
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (activePointerId.current !== null && activePointerId.current !== e.pointerId) {
+        return;
+      }
+
+      activePointerId.current = null;
+      isMouseDown.current = false;
+
+      if (e.pointerType !== 'mouse') {
+        blockMouseCompatEvents();
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isMenuOrFormTarget(e.target)) {
+        return;
+      }
+
+      if (e.touches.length === 0) {
+        return;
+      }
+
+      const primaryTouch = e.touches[0];
+      updateInputFromClientPoint(primaryTouch.clientX, primaryTouch.clientY);
+      setActiveInputSource('mouse');
+      e.preventDefault();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -204,6 +288,11 @@ export function usePlayerInput() {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp, { passive: false });
+    window.addEventListener('pointercancel', handlePointerUp, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     animationFrameId.current = window.requestAnimationFrame(pollGamepads);
@@ -212,6 +301,11 @@ export function usePlayerInput() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
 
