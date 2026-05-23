@@ -224,8 +224,8 @@ export function GameHud({
 
       {/* Serving Instruction */}
       {(gameState === GameState.SERVING || gameState === GameState.SERVE_COUNTDOWN) && (
-        <div className="absolute bottom-1/4 left-1/2 flex -translate-x-1/2 flex-col items-center pointer-events-none">
-          <div className="neon-text-cyan neon-pulse text-3xl font-black italic uppercase tracking-tighter">
+        <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center pointer-events-none">
+          <div className="neon-text-cyan neon-pulse text-center text-2xl font-black italic uppercase tracking-tighter sm:text-3xl">
             {gameState === GameState.SERVE_COUNTDOWN ? serveCountdown : serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
