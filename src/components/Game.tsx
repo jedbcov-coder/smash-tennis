@@ -246,13 +246,8 @@ export function Game() {
     setAudioSettings(getAudioSettingsFromGameSettings(settings));
   }, [settings.masterVolume, settings.musicVolume, settings.sfxVolume]);
 
-  const scorePoint = (winner: PlayerType) => {
-    addPoint(winner, {
-      rallyCount: arcadeHudStats.rallyCount,
-      comboCount: arcadeHudStats.comboCount,
-      energyPercent: arcadeHudStats.energyPercent,
-      serveSpeedMph: arcadeHudStats.serveSpeedMph
-    });
+  const scorePoint = (winner: PlayerType, rewardInput?: PointRewardInput) => {
+    addPoint(winner, rewardInput);
   };
 
   return (
