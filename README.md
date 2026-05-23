@@ -56,7 +56,7 @@ This flow is deterministic (same inputs produce the same rules result), which he
 - Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron, shown as start-screen rival cards with descriptions, play styles, and a clear selected state.
 - In-match scoreboard and point-result banners now use the currently selected rival name and rival theme color (Hidalgo, Nova, or Racketron) instead of hardcoded labels.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
-- Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, and displayed theme color.
+- Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, displayed theme color, and distinct miss behavior (Hidalgo late reactions, Nova over-hits, and Racketron angled misses) with a rising late-rally miss chance instead of guaranteed scripted misses.
 - Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
 - Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
 - Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving. The settings menu keeps beginner-friendly 0% to 100% sliders, while audio playback converts those values to the 0 to 1 scale used by the sound engine.

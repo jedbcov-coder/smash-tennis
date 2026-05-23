@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { AI_BASELINE_POSITION, AI_MISS_DRAMA, OUT_OF_BOUNDS_LIMITS, PLAYER_MOVEMENT_LIMITS, COURT_SURFACE_SETTINGS } from './gameTuning';
+import { AI_BASELINE_POSITION, AI_MISS_DRAMA, AI_RALLY_MISS_TUNING, OUT_OF_BOUNDS_LIMITS, PLAYER_MOVEMENT_LIMITS, COURT_SURFACE_SETTINGS } from './gameTuning';
 import { getReturnZoneCrossing } from './hitDetection';
 import type { ShotDifficultyStats } from '../physics/ShotPhysics';
 import type { PlayerType } from '../types';
@@ -13,52 +13,69 @@ interface AiMovementInput {
   aiZ: number;
   ballX: number;
   ballZ: number;
-  consecutiveReturns: number;
-  targetRallyLength: number;
+  shouldMiss: boolean;
+  missOffsetX: number;
   difficultyStats: ShotDifficultyStats;
   surfaceSettings: (typeof COURT_SURFACE_SETTINGS)[keyof typeof COURT_SURFACE_SETTINGS];
   elapsedTime: number;
   delta: number;
   opponentProfile: OpponentProfile;
-  forceMiss: boolean;
 }
 
 interface AiMovementResult {
   x: number;
   z: number;
-  isMercyMiss: boolean;
+  shouldMiss: boolean;
 }
 
 function calculateAiMovement(input: AiMovementInput): AiMovementResult {
-  const isMercyMiss = input.forceMiss || input.consecutiveReturns >= input.targetRallyLength;
   const isBallOnAiSide = input.ballZ < 0;
   const aiBaseSpeed = input.opponentProfile.movementSpeed;
   const aiSpeed =
     aiBaseSpeed *
-    (isMercyMiss ? AI_MISS_DRAMA.lungeSpeedMultiplier : 1) *
+    (input.shouldMiss ? AI_MISS_DRAMA.lungeSpeedMultiplier : 1) *
     input.difficultyStats.gameDifficultyMultiplier *
     input.surfaceSettings.playerMovementMultiplier *
     input.delta;
+
+  const idealTargetX = input.ballX + (input.shouldMiss ? input.missOffsetX : 0);
   const aiTargetX = isBallOnAiSide
-    ? isMercyMiss
-      ? THREE.MathUtils.clamp(
-          input.ballX - (Math.sign(input.ballX - input.aiX) || 1) * AI_MISS_DRAMA.nearMissDistance,
-          PLAYER_MOVEMENT_LIMITS.minX,
-          PLAYER_MOVEMENT_LIMITS.maxX
-        )
-      : input.ballX
+    ? THREE.MathUtils.clamp(idealTargetX, PLAYER_MOVEMENT_LIMITS.minX, PLAYER_MOVEMENT_LIMITS.maxX)
     : 0;
   const aiTargetZ = AI_BASELINE_POSITION.z + Math.sin(input.elapsedTime) * AI_BASELINE_POSITION.wobbleAmount;
 
   return {
     x: input.aiX + Math.sign(aiTargetX - input.aiX) * Math.min(Math.abs(aiTargetX - input.aiX), aiSpeed),
     z: input.aiZ + Math.sign(aiTargetZ - input.aiZ) * Math.min(Math.abs(aiTargetZ - input.aiZ), aiSpeed),
-    isMercyMiss
+    shouldMiss: input.shouldMiss
   };
 }
 
+function calculateLateRallyMissChance(consecutiveReturns: number, targetRallyLength: number): number {
+  if (targetRallyLength <= 0) return AI_RALLY_MISS_TUNING.maxRampMissBonus;
+
+  const rallyRatio = consecutiveReturns / targetRallyLength;
+  const rampStart = AI_RALLY_MISS_TUNING.startRampAtTargetRatio;
+  if (rallyRatio <= rampStart) return 0;
+
+  const normalizedRamp = THREE.MathUtils.clamp((rallyRatio - rampStart) / Math.max(0.01, 1 - rampStart), 0, 1);
+  return Math.pow(normalizedRamp, AI_RALLY_MISS_TUNING.lateRallyExponent) * AI_RALLY_MISS_TUNING.maxRampMissBonus;
+}
+
+function getMissOffsetX(opponentProfile: OpponentProfile, random: () => number): number {
+  if (opponentProfile.id === 'nova') {
+    return (AI_MISS_DRAMA.nearMissDistance + 0.65) * (random() < 0.5 ? -1 : 1);
+  }
+
+  if (opponentProfile.id === 'hidalgo') {
+    return (AI_MISS_DRAMA.nearMissDistance * 0.4) * (random() < 0.5 ? -1 : 1);
+  }
+
+  return (AI_MISS_DRAMA.nearMissDistance + 0.35) * (random() < 0.5 ? -1 : 1);
+}
+
 interface AiNearMissInput {
-  isMercyMiss: boolean;
+  shouldMiss: boolean;
   alreadyTriggered: boolean;
   lastHitter: PlayerType | null;
   ballX: number;
@@ -69,7 +86,7 @@ interface AiNearMissInput {
 
 function shouldShowAiNearMiss(input: AiNearMissInput): boolean {
   return (
-    input.isMercyMiss &&
+    input.shouldMiss &&
     !input.alreadyTriggered &&
     input.lastHitter === 'PLAYER' &&
     input.ballZ <= AI_MISS_DRAMA.desperationZoneZ &&
@@ -141,24 +158,29 @@ export interface UpdateAiOpponentResult {
 }
 
 export function updateAiOpponent(input: UpdateAiOpponentInput): UpdateAiOpponentResult {
+  const safeMissChance = THREE.MathUtils.clamp(input.opponentProfile.missChance, 0, 1);
+  const lateRallyMissChance = calculateLateRallyMissChance(input.consecutiveReturns, input.targetRallyLength);
+  const totalMissChance = THREE.MathUtils.clamp(safeMissChance + lateRallyMissChance, 0, 0.95);
+  const shouldMiss = input.forceMiss || input.random() < totalMissChance;
+  const missOffsetX = shouldMiss ? getMissOffsetX(input.opponentProfile, input.random) : 0;
+
   const aiMovement = calculateAiMovement({
     aiX: input.aiPosition.x,
     aiZ: input.aiPosition.z,
     ballX: input.ballPosition.x,
     ballZ: input.ballPosition.z,
-    consecutiveReturns: input.consecutiveReturns,
-    targetRallyLength: input.targetRallyLength,
+    shouldMiss,
+    missOffsetX,
     difficultyStats: input.difficultyStats,
     surfaceSettings: input.surfaceSettings,
     elapsedTime: input.elapsedTime,
     delta: input.delta,
-    opponentProfile: input.opponentProfile,
-    forceMiss: input.forceMiss
+    opponentProfile: input.opponentProfile
   });
   const nextPosition = new THREE.Vector3(aiMovement.x, input.aiPosition.y, aiMovement.z);
 
   const missed = shouldShowAiNearMiss({
-    isMercyMiss: aiMovement.isMercyMiss,
+    shouldMiss: aiMovement.shouldMiss,
     alreadyTriggered: input.missSwingAlreadyTriggered,
     lastHitter: input.lastHitter,
     ballX: input.ballPosition.x,
@@ -179,7 +201,7 @@ export function updateAiOpponent(input: UpdateAiOpponentInput): UpdateAiOpponent
     aiCrossing.crossingPos &&
     input.lastHitter === 'PLAYER' &&
     aiCrossing.crossingPos.y < 3.5 &&
-    !aiMovement.isMercyMiss &&
+    !aiMovement.shouldMiss &&
     Math.abs(aiCrossing.crossingPos.x - nextPosition.x) < 2.0
   ) {
     return {

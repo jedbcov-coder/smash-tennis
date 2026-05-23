@@ -51,6 +51,12 @@ export const AI_MISS_DRAMA = {
   desperationZoneZ: -5,
   lateSwingDistance: 2
 };
+export const AI_RALLY_MISS_TUNING = {
+  startRampAtTargetRatio: 0.85,
+  maxRampMissBonus: 0.32,
+  lateRallyExponent: 1.35
+};
+
 export const OVERHEAD_SMASH_CONFIG = {
   timingWindow: 0.8,
   netDistanceThreshold: 7.0,
