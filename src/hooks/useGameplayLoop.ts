@@ -526,7 +526,7 @@ export function useGameplayLoop({
       });
     }
 
-    if (processServeFrame(delta, now)) return;
+    const serveFrameHandled = processServeFrame(delta, now);
 
     // Player Movement (High-response Mouse follow)
     const nextPlayerPos = calculatePlayerMovement({
@@ -541,6 +541,10 @@ export function useGameplayLoop({
     });
     playerPos.current.x = nextPlayerPos.x;
     playerPos.current.z = nextPlayerPos.z;
+
+    if (gameState === GameState.SERVING) {
+      return;
+    }
 
     if (gameState === GameState.PLAYING) {
       const canStartSmash = canStartSmashOpportunity({
