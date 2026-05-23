@@ -163,6 +163,9 @@ export function useGameplayLoop({
   const aiSwingTimeout = useRef<number | null>(null);
   const calloutTimeout = useRef<number | null>(null);
   const specialMoveTimeout = useRef<number | null>(null);
+  const seededSequenceKeyRef = useRef<string | null>(null);
+  const previousGameStateRef = useRef<GameState>(gameState);
+  const serveSequenceCountRef = useRef(0);
 
   const [lastHitter, setLastHitter] = useState<PlayerType | null>(null);
   const [isVisualSmashing, setIsVisualSmashing] = useState(false);
@@ -454,6 +457,29 @@ export function useGameplayLoop({
       resetBall(servingPlayer);
     }
   }, [gameState, resetBall, servingPlayer]);
+
+  useEffect(() => {
+    if (gameState !== GameState.SERVING && gameState !== GameState.SERVE_COUNTDOWN) {
+      previousGameStateRef.current = gameState;
+      return;
+    }
+
+    const cameFromServeFlow =
+      previousGameStateRef.current === GameState.SERVING || previousGameStateRef.current === GameState.SERVE_COUNTDOWN;
+    if (!cameFromServeFlow) {
+      serveSequenceCountRef.current += 1;
+    }
+
+    const seedSequenceKey = `${matchSeed}-${servingPlayer}-${serveSide}-${serveSequenceCountRef.current}`;
+    if (seededSequenceKeyRef.current === seedSequenceKey) {
+      previousGameStateRef.current = gameState;
+      return;
+    }
+
+    setRandomSeed(matchSeed);
+    seededSequenceKeyRef.current = seedSequenceKey;
+    previousGameStateRef.current = gameState;
+  }, [gameState, matchSeed, serveSide, servingPlayer]);
 
   const { processServeFrame } = useServeMechanics({
     gameState,
