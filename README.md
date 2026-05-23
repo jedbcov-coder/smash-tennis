@@ -1,5 +1,5 @@
 # Smash Tennis
-<img width="1774" height="887" alt="pe-jungledash" src="https://github.com/user-attachments/assets/a357a540-2877-4912-b64e-cbe342ed9484" />
+<img width="1774" height="887" alt="image" src="https://github.com/user-attachments/assets/a454fa4f-84ed-4df2-8b79-3c6a8e3344a7" />
 
 ## Play the game
 
