@@ -104,7 +104,7 @@ function GameScene({
   settings,
   matchSeed
 }: {
-  onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
+  onScore: (winner: PlayerType, rewardInput: PointRewardInput) => void;
   onFault: () => void;
   gameState: GameState;
   setGameState: (state: GameState) => void;
@@ -246,7 +246,7 @@ export function Game() {
     setAudioSettings(getAudioSettingsFromGameSettings(settings));
   }, [settings.masterVolume, settings.musicVolume, settings.sfxVolume]);
 
-  const scorePoint = (winner: PlayerType, rewardInput?: PointRewardInput) => {
+  const scorePoint = (winner: PlayerType, rewardInput: PointRewardInput) => {
     addPoint(winner, rewardInput);
   };
 
