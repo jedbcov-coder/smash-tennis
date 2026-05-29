@@ -159,6 +159,7 @@ Current check notes verified on May 17, 2026:
 - `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
 - `src/rules/pointState.ts` stores pure point-lifecycle transitions (serve phase, legal/illegal serve bounce flow, rally bounce resets, and second-bounce point awards), and the gameplay loop now calls these transitions directly for serve hits, legal serve bounces, returns, rally shots, and bounce-based point wins without mixing rendering concerns into rule-state functions.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
+- `src/gameplay/aiOpponentController.ts` handles AI opponent movement, near-miss swings, hit detection, and return shots.
 - `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, crossing-based hit detection, and AI return shots using the selected opponent profile.
 - `src/gameplay/hitDetection.ts` provides shared helper logic to detect when a fast-moving ball crosses a return zone between frames.
 - `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.

@@ -15,6 +15,8 @@ import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { usePlayerInput, type PlayerInputSource } from '../controls/usePlayerInput';
 import { useServeMechanics, type ServeMeterQuality, type ServeMeterState } from '../serve/useServeMechanics';
 import { calculatePlayerMovement, applySmashAssist } from '../gameplay/playerMovement';
+import { createInitialAiOpponentPosition, updateAiOpponent } from '../gameplay/aiOpponentController';
+import { updateRallyCamera, updateServeCamera } from '../gameplay/cameraController';
 import { AI_MISS_SWING_DURATION_MS, AI_START_POSITION, updateAiOpponent } from '../gameplay/aiOpponentController';
 import type { OpponentProfile } from '../gameplay/opponents';
 import { updateArcadeCamera } from '../gameplay/cameraController';
@@ -131,6 +133,7 @@ export function useGameplayLoop({
 }: UseGameplayLoopOptions) {
   const ballRef = useRef<BallHandle>(null);
   const playerPos = useRef(new THREE.Vector3(0, 0, 9));
+  const aiPos = useRef(createInitialAiOpponentPosition());
   const aiPos = useRef(AI_START_POSITION.clone());
   const playerFacingY = useRef(Math.PI);
   const { camera } = useThree();
@@ -308,7 +311,7 @@ export function useGameplayLoop({
     onServeMeterChange?.({ phase: 'idle', position: 0, qualityLabel: 'Ready', servingPlayer });
   }, [gameState, onServeMeterChange, servingPlayer, updateArcadeHudStats]);
 
-  const triggerAiSwing = useCallback((missing = false) => {
+  const triggerAiSwing = useCallback((missing = false, swingDurationMs = 260) => {
     if (aiSwingTimeout.current !== null) {
       window.clearTimeout(aiSwingTimeout.current);
     }
@@ -319,6 +322,7 @@ export function useGameplayLoop({
       setIsAiSwinging(false);
       setIsAiMissing(false);
       aiSwingTimeout.current = null;
+    }, swingDurationMs);
     }, missing ? AI_MISS_SWING_DURATION_MS : 260);
   }, []);
 
@@ -628,6 +632,9 @@ export function useGameplayLoop({
     }
 
     const aiUpdate = updateAiOpponent({
+      aiX: aiPos.current.x,
+      aiZ: aiPos.current.z,
+      ballPos,
       aiPosition: aiPos.current,
       previousBallPosition: previousBallPos.current,
       ballPosition: ballPos,
@@ -637,6 +644,12 @@ export function useGameplayLoop({
       surfaceSettings,
       elapsedTime: state.clock.getElapsedTime(),
       delta,
+      alreadyTriggeredMissSwing: aiMissSwingTriggered.current,
+      lastHitter,
+      random: Math.random
+    });
+    aiPos.current.x = aiUpdate.nextAiPosition.x;
+    aiPos.current.z = aiUpdate.nextAiPosition.z;
       opponentProfile,
       forceMiss: aiWillMissReturn.current,
       missSwingAlreadyTriggered: aiMissSwingTriggered.current,
@@ -647,7 +660,7 @@ export function useGameplayLoop({
 
     if (aiUpdate.missed) {
       aiMissSwingTriggered.current = true;
-      triggerAiSwing(true);
+      triggerAiSwing(true, aiUpdate.swingDurationMs);
       playAudioEvent('ai.nearMiss');
     }
 
@@ -656,6 +669,9 @@ export function useGameplayLoop({
       ballRef.current?.setVelocity(finalAiReturnVel, aiSpin);
       recordShot(finalAiReturnVel, { rally: true });
       setLastHitter('AI');
+      triggerAiSwing(false, aiUpdate.swingDurationMs);
+      playAudioEvent(Math.abs(aiSpin) > 0.6 ? 'hit.curve' : 'hit.normal');
+      triggerGameplayEvent('vfx:hit.normal');
       markNewShotPendingBounce('AI', false);
       pointStateRef.current = pointStateRef.current.phase === 'awaitingReturn'
         ? onReceiverReturn(pointStateRef.current, 'AI')
