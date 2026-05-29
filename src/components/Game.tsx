@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, useCallback, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Court } from '../environment/Court';
@@ -11,7 +11,13 @@ import { useTennisGame, type PointRewardInput } from '../serve/useTennisGame';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { VFXController } from './VFXController';
 import { DEFAULT_COURT_SURFACE } from '../gameplay/gameTuning';
+import { DEFAULT_OPPONENT_PROFILE, getOpponentProfile, type OpponentId, type OpponentProfile } from '../gameplay/opponents';
 import { COLOR_SCHEME } from '../design/colorScheme';
+import { setAudioSettings } from '../audio/audioManager';
+import { getAudioSettingsFromGameSettings, useGameSettings, type GameSettings } from '../settings/useGameSettings';
+import { getDiagonalServiceBoxTarget } from '../rules/courtGeometry';
+import { predictNextGroundContact } from '../physics/BallSimulation';
+import { DOUBLES_COURT_WIDTH, OUT_OF_BOUNDS_LIMITS } from '../gameplay/gameTuning';
 
 const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   active: false,
@@ -21,39 +27,71 @@ const DEFAULT_ARCADE_HUD_SERVE_METER: ArcadeHudStats['serveMeter'] = {
   servingPlayer: null
 };
 
+function createMatchSeed(matchCount: number) {
+  const today = new Date();
+  const yyyy = today.getUTCFullYear();
+  const mm = String(today.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(today.getUTCDate()).padStart(2, '0');
+  const dateNumber = Number(`${yyyy}${mm}${dd}`);
+  return (dateNumber * 1000 + matchCount) >>> 0;
+}
+
 function LandingMarker({ ballRef, visible }: { ballRef: RefObject<BallHandle | null>; visible: boolean }) {
   const markerRef = useRef<THREE.Mesh>(null);
+  const markerMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  useFrame(() => {
-    if (!markerRef.current || !ballRef.current) return;
+  useFrame((_, delta) => {
+    if (!markerRef.current || !markerMaterialRef.current || !ballRef.current) return;
+
+    if (!visible) {
+      markerRef.current.visible = false;
+      return;
+    }
+
     const ballPos = ballRef.current.getPosition();
     const ballVel = ballRef.current.getVelocity();
-    markerRef.current.visible = visible;
-    markerRef.current.position.set(
-      ballPos.x,
-      0.05,
-      Math.max(-10, Math.min(10, ballPos.z + ballVel.z * 0.5))
-    );
+    const prediction = predictNextGroundContact(ballPos, ballVel);
+
+    const isUseful = Boolean(prediction) && prediction.timeToImpact <= 3.5;
+    markerRef.current.visible = isUseful;
+
+    if (!prediction || !isUseful) return;
+
+    const clampedX = THREE.MathUtils.clamp(prediction.position.x, -DOUBLES_COURT_WIDTH / 2, DOUBLES_COURT_WIDTH / 2);
+    const clampedZ = THREE.MathUtils.clamp(prediction.position.z, -OUT_OF_BOUNDS_LIMITS.z, OUT_OF_BOUNDS_LIMITS.z);
+
+    const targetPosition = new THREE.Vector3(clampedX, 0.05, clampedZ);
+    const smoothAmount = 1 - Math.exp(-delta * 16);
+    markerRef.current.position.lerp(targetPosition, smoothAmount);
+
+    const fade = THREE.MathUtils.clamp(1 - prediction.timeToImpact / 3.5, 0.2, 0.85);
+    markerMaterialRef.current.opacity = 0.15 + fade * 0.35;
   });
 
   return (
     <mesh ref={markerRef} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
       <ringGeometry args={[0.3, 0.4, 32]} />
-      <meshBasicMaterial color={COLOR_SCHEME.neon.cyanSoft} transparent opacity={0.38} />
+      <meshBasicMaterial ref={markerMaterialRef} color={COLOR_SCHEME.neon.cyanSoft} transparent opacity={0.38} />
     </mesh>
   );
 }
 
 
 function ServeTargetGuide({ visible, servingPlayer, serveSide }: { visible: boolean; servingPlayer: PlayerType; serveSide: 'DEUCE' | 'AD' }) {
+  const targetRingRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!targetRingRef.current || !visible) return;
+    targetRingRef.current.rotation.y += 0.012;
+  });
+
   if (!visible) return null;
 
-  const targetZ = servingPlayer === 'PLAYER' ? -4.8 : 4.8;
-  const targetX = serveSide === 'DEUCE' ? 2.6 : -2.6;
+  const { targetX, targetZ } = getDiagonalServiceBoxTarget({ hitter: servingPlayer, serveSide });
   const glowColor = servingPlayer === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.magentaHot;
 
   return (
-    <group position={[targetX, 0.07, targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group ref={targetRingRef} position={[targetX, 0.07, targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
         <ringGeometry args={[0.9, 1.08, 48]} />
         <meshBasicMaterial color={glowColor} transparent opacity={0.7} />
@@ -80,9 +118,12 @@ function GameScene({
   targetRallyLength,
   difficultyStats,
   courtSurface,
-  onArcadeHudStatsChange
+  opponentProfile,
+  onArcadeHudStatsChange,
+  settings,
+  matchSeed
 }: {
-  onScore: (winner: PlayerType, rewardInput?: PointRewardInput) => void;
+  onScore: (winner: PlayerType, rewardInput: PointRewardInput) => void;
   onFault: () => void;
   gameState: GameState;
   setGameState: (state: GameState) => void;
@@ -95,7 +136,10 @@ function GameScene({
     racketAccuracyRadius: number;
   };
   courtSurface: CourtSurface;
+  opponentProfile: OpponentProfile;
   onArcadeHudStatsChange: (stats: ArcadeHudStats) => void;
+  settings: GameSettings;
+  matchSeed: number;
 }) {
   const {
     ballRef,
@@ -118,7 +162,10 @@ function GameScene({
     targetRallyLength,
     difficultyStats,
     courtSurface,
-    onArcadeHudStatsChange
+    opponentProfile,
+    onArcadeHudStatsChange,
+    settings,
+    matchSeed
   });
 
   return (
@@ -142,7 +189,7 @@ function GameScene({
       <Character
         initialPosition={[0, 0, -9]}
         positionRef={aiPos}
-        color={COLOR_SCHEME.characters.ai}
+        color={opponentProfile.theme.color}
         isAI
         isSwinging={isAiSwinging}
         isMissing={isAiMissing}
@@ -155,7 +202,7 @@ function GameScene({
         courtSurface={courtSurface}
       />
 
-      <VFXController ballRef={ballRef} />
+      <VFXController ballRef={ballRef} reducedMotion={settings.reducedMotion} />
 
       {isSmashOpportunityVisible && (
         <mesh position={[playerPos.current.x, 0.08, playerPos.current.z]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -171,7 +218,10 @@ function GameScene({
 }
 
 export function Game() {
+  const { settings, setSettings, resetSettings } = useGameSettings();
   const [courtSurface, setCourtSurface] = useState<CourtSurface>(DEFAULT_COURT_SURFACE);
+  const [opponentId, setOpponentId] = useState<OpponentId>(DEFAULT_OPPONENT_PROFILE.id);
+  const opponentProfile = getOpponentProfile(opponentId);
   const [arcadeHudStats, setArcadeHudStats] = useState<ArcadeHudStats>({
     serveSpeedMph: 0,
     energyPercent: 0,
@@ -179,7 +229,8 @@ export function Game() {
     rallyCount: 0,
     rallyIntensity: 0,
     callout: null,
-    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER }
+    serveMeter: { ...DEFAULT_ARCADE_HUD_SERVE_METER },
+    inputSource: 'mouse'
   });
 
   const {
@@ -193,6 +244,7 @@ export function Game() {
     lastPointWinner,
     pointReward,
     matchStats,
+    playerProgress,
     servingPlayer,
     serveSide,
     serverFaults,
@@ -201,17 +253,24 @@ export function Game() {
     difficultyStats
   } = useTennisGame();
 
-  const scorePoint = (winner: PlayerType) => {
-    addPoint(winner, {
-      rallyCount: arcadeHudStats.rallyCount,
-      comboCount: arcadeHudStats.comboCount,
-      energyPercent: arcadeHudStats.energyPercent,
-      serveSpeedMph: arcadeHudStats.serveSpeedMph
-    });
+  const [matchSeed, setMatchSeed] = useState(() => createMatchSeed(0));
+
+  const handleStartGame = useCallback(() => {
+    const historicalMatches = playerProgress.matchWins + playerProgress.matchLosses;
+    setMatchSeed(createMatchSeed(historicalMatches + 1));
+    startGame();
+  }, [playerProgress.matchLosses, playerProgress.matchWins, startGame]);
+
+  useEffect(() => {
+    setAudioSettings(getAudioSettingsFromGameSettings(settings));
+  }, [settings.masterVolume, settings.musicVolume, settings.sfxVolume]);
+
+  const scorePoint = (winner: PlayerType, rewardInput: PointRewardInput) => {
+    addPoint(winner, rewardInput);
   };
 
   return (
-    <div className="w-full h-full relative font-mono overflow-hidden bg-black select-none">
+    <div className={`w-full h-full relative font-mono overflow-hidden bg-black select-none ${settings.highContrastMode ? 'game-high-contrast' : ''} ${settings.reducedMotion ? 'game-reduced-motion' : ''}`}>
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <GameScene
           onScore={scorePoint}
@@ -223,7 +282,10 @@ export function Game() {
           targetRallyLength={targetRallyLength}
           difficultyStats={difficultyStats}
           courtSurface={courtSurface}
+          opponentProfile={opponentProfile}
           onArcadeHudStatsChange={setArcadeHudStats}
+          settings={settings}
+          matchSeed={matchSeed}
         />
       </Canvas>
 
@@ -239,17 +301,27 @@ export function Game() {
         courtSurface={courtSurface}
         arcadeHudStats={arcadeHudStats}
         pointReward={pointReward}
+        settings={settings}
+        matchSeed={matchSeed}
+        opponentProfile={opponentProfile}
       />
 
       <GameMenus
         gameState={gameState}
         winner={winner}
-        startGame={startGame}
+        startGame={handleStartGame}
         courtSurface={courtSurface}
         setCourtSurface={setCourtSurface}
+        opponentId={opponentId}
+        setOpponentId={setOpponentId}
         score={score}
         pointReward={pointReward}
         matchStats={matchStats}
+        playerProgress={playerProgress}
+        opponentProfile={opponentProfile}
+        settings={settings}
+        setSettings={setSettings}
+        resetSettings={resetSettings}
       />
     </div>
   );

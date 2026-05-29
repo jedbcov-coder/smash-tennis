@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GameState, type CourtSurface, type PlayerType } from '../types';
 import { SERVE_POSITIONS, PLAYER_MOVEMENT_LIMITS } from '../gameplay/gameTuning';
-import { calculateLegalShot, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
+import { calculateShotPhysics, type ServeSide, type ShotDifficultyStats } from '../physics/ShotPhysics';
 import { playAudioEvent } from '../audio/audioManager';
+import { chance, randomCentered } from '../gameplay/random';
 import type { BallHandle } from '../environment/Ball';
+import type { HitQuality, ShotType } from '../gameplay/shotTypes';
+import { beginRally } from '../gameplay/gameStateMachine';
 
 export type ServeMeterQuality = 'Weak Serve' | 'Standard Serve' | 'Perfect Serve' | 'Power Serve' | 'Fault';
 
@@ -57,7 +60,7 @@ function getServeOutcome(position: number): ServeOutcome {
   }
 
   if (distanceFromSweetSpot <= 0.12) {
-    return { label: 'Perfect Serve', speedMultiplier: 1.2, accuracyWobble: 0.04, spinMultiplier: 1.25, faultChance: 0 };
+    return { label: 'Perfect Serve', speedMultiplier: 1.12, accuracyWobble: 0, spinMultiplier: 1.1, faultChance: 0 };
   }
 
   if (distanceFromSweetSpot <= 0.25) {
@@ -71,12 +74,29 @@ function getServeOutcome(position: number): ServeOutcome {
   return { label: 'Weak Serve', speedMultiplier: 0.86, accuracyWobble: 0.62, spinMultiplier: 0.7, faultChance: 0 };
 }
 
+
+function getServeShotStyle(outcome: ServeOutcome): { shotType: ShotType; quality: HitQuality } {
+  switch (outcome.label) {
+    case 'Perfect Serve':
+      return { shotType: 'topspin', quality: 'perfect' };
+    case 'Power Serve':
+      return { shotType: 'flat', quality: 'good' };
+    case 'Weak Serve':
+      return { shotType: 'slice', quality: 'early' };
+    case 'Fault':
+      return { shotType: 'flat', quality: 'miss' };
+    case 'Standard Serve':
+    default:
+      return { shotType: 'flat', quality: 'good' };
+  }
+}
+
 function applyServeOutcome(serveVel: THREE.Vector3, outcome: ServeOutcome, difficultyMultiplier: number) {
   const tunedVelocity = serveVel.clone().multiplyScalar(outcome.speedMultiplier);
   const wobbleAmount = outcome.accuracyWobble * Math.min(difficultyMultiplier, 1.15);
 
-  tunedVelocity.x += (Math.random() - 0.5) * wobbleAmount;
-  tunedVelocity.z += (Math.random() - 0.5) * wobbleAmount * 0.35;
+  tunedVelocity.x += randomCentered(wobbleAmount);
+  tunedVelocity.z += randomCentered(wobbleAmount * 0.35);
 
   return tunedVelocity;
 }
@@ -154,7 +174,7 @@ export function useServeMechanics({
         const outcome = getServeOutcome(playerMeterPosition.current);
         publishServeMeterState({ phase: 'locked', position: playerMeterPosition.current, qualityLabel: outcome.label, servingPlayer: 'PLAYER' });
 
-        const isFault = Math.random() < Math.min(1, outcome.faultChance * difficultyStats.gameDifficultyMultiplier);
+        const isFault = chance(outcome.faultChance * difficultyStats.gameDifficultyMultiplier);
         playerMeterStartedAt.current = 0;
 
         if (isFault) {
@@ -164,7 +184,8 @@ export function useServeMechanics({
           return true; // Frame processed
         }
 
-        const serveVel = calculateLegalShot(
+        const serveStyle = getServeShotStyle(outcome);
+        const serveShot = calculateShotPhysics(
           new THREE.Vector3(
             playerPos.current.x + SERVE_POSITIONS.ballXOffset,
             SERVE_POSITIONS.ballHeight,
@@ -174,14 +195,18 @@ export function useServeMechanics({
           serveSide,
           difficultyStats,
           'AI',
-          courtSurface
+          courtSurface,
+          {
+            ...serveStyle,
+            spinDirection: serveSide === 'DEUCE' ? -1 : 1
+          }
         );
-        const tunedServeVel = applyServeOutcome(serveVel, outcome, difficultyStats.gameDifficultyMultiplier);
-        const serveSpin = (serveSide === 'DEUCE' ? -0.9 : 0.9) * outcome.spinMultiplier;
+        const tunedServeVel = applyServeOutcome(serveShot.velocity, outcome, difficultyStats.gameDifficultyMultiplier);
+        const serveSpin = serveShot.spin * outcome.spinMultiplier;
         ballRef.current?.setVelocity(tunedServeVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: playerMeterPosition.current, qualityLabel: outcome.label, servingPlayer: 'PLAYER' });
         onServeLaunched?.(tunedServeVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('PLAYER');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
         clearSwingInput();
@@ -203,7 +228,7 @@ export function useServeMechanics({
       }
       
       if (now >= aiServeReadyAt.current) {
-        const isFault = Math.random() < 0.10; // AI has 10% chance to fault
+        const isFault = chance(0.10); // AI has 10% chance to fault
         if (isFault) {
           publishServeMeterState({ phase: 'served', position: 0, qualityLabel: 'Fault', servingPlayer: 'AI' });
           addFault();
@@ -212,7 +237,7 @@ export function useServeMechanics({
           return true;
         }
 
-        const serveVel = calculateLegalShot(
+        const serveShot = calculateShotPhysics(
           new THREE.Vector3(
             aiPos.current.x - SERVE_POSITIONS.ballXOffset,
             SERVE_POSITIONS.ballHeight,
@@ -222,13 +247,19 @@ export function useServeMechanics({
           serveSide,
           difficultyStats,
           'PLAYER',
-          courtSurface
+          courtSurface,
+          {
+            shotType: 'flat',
+            quality: 'good',
+            spinDirection: serveSide === 'DEUCE' ? 1 : -1
+          }
         );
-        const serveSpin = serveSide === 'DEUCE' ? 0.7 : -0.7;
+        const serveVel = serveShot.velocity;
+        const serveSpin = serveShot.spin;
         ballRef.current?.setVelocity(serveVel, serveSpin);
         publishServeMeterState({ phase: 'served', position: 0.5, qualityLabel: 'Standard Serve', servingPlayer: 'AI' });
         onServeLaunched?.(serveVel);
-        setGameState(GameState.PLAYING);
+        beginRally(setGameState);
         setLastHitter('AI');
         playAudioEvent(Math.abs(serveSpin) > 0.75 ? 'hit.curve' : 'hit.normal');
       }

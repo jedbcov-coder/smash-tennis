@@ -81,6 +81,14 @@ export function calculateOverheadSmash(input: OverheadSmashInput): OverheadSmash
       input.difficultyStats.gameDifficultyMultiplier *
       input.surfaceSettings.ballSpeedMultiplier
   );
+
+  const horizontalSpeed = Math.hypot(velocity.x, velocity.z);
+  if (horizontalSpeed > OVERHEAD_SMASH_CONFIG.maxHorizontalSpeed) {
+    const scale = OVERHEAD_SMASH_CONFIG.maxHorizontalSpeed / horizontalSpeed;
+    velocity.x *= scale;
+    velocity.z *= scale;
+  }
+
   const spin = THREE.MathUtils.clamp((input.playerX - input.ballPos.x) * 0.8, -2.4, 2.4);
 
   return { velocity, spin };

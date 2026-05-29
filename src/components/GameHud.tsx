@@ -6,6 +6,8 @@ import { GRADIENTS } from '../design/gradients';
 import { formatTennisScore } from '../serve/scoringRules';
 import type { PointReward } from '../serve/useTennisGame';
 import { COURT_SURFACE_SETTINGS } from '../gameplay/gameTuning';
+import type { GameSettings } from '../settings/useGameSettings';
+import type { OpponentProfile } from '../gameplay/opponents';
 
 interface GameHudProps {
   score: Score;
@@ -19,6 +21,9 @@ interface GameHudProps {
   courtSurface: CourtSurface;
   arcadeHudStats: ArcadeHudStats;
   pointReward: PointReward | null;
+  settings: GameSettings;
+  matchSeed: number;
+  opponentProfile: OpponentProfile;
 }
 
 export function GameHud({
@@ -32,7 +37,10 @@ export function GameHud({
   serverFaults,
   courtSurface,
   arcadeHudStats,
-  pointReward
+  pointReward,
+  settings,
+  matchSeed,
+  opponentProfile
 }: GameHudProps) {
   const [serveCountdown, setServeCountdown] = useState(3);
   const playerLabel = formatTennisScore(score.playerScore, isTiebreak);
@@ -40,17 +48,22 @@ export function GameHud({
   const surfaceSettings = COURT_SURFACE_SETTINGS[courtSurface];
   const energyWidth = `${arcadeHudStats.energyPercent}%`;
   const intensityWidth = `${Math.round(arcadeHudStats.rallyIntensity * 100)}%`;
-  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : COLOR_SCHEME.neon.dangerHot;
+  const pointWinnerColor = lastPointWinner === 'PLAYER' ? COLOR_SCHEME.neon.cyan : opponentProfile.theme.glowColor;
   const isPowerReady = arcadeHudStats.energyPercent >= 100;
   const serveMeter = arcadeHudStats.serveMeter;
   const showServeMeter = gameState === GameState.SERVING && servingPlayer === 'PLAYER';
   const serveMeterPercent = Math.round(Math.min(1, Math.max(0, serveMeter.position)) * 100);
   const serveMeterMarkerLeft = `${serveMeterPercent}%`;
   const serveMeterFillWidth = `${serveMeterPercent}%`;
+  const inputSource = arcadeHudStats.inputSource;
+  const swingPrompt = inputSource === 'gamepad' ? 'A / Cross' : inputSource === 'keyboard' ? 'Space' : 'Click';
+  const serveActionPrompt = inputSource === 'gamepad' ? 'press A / Cross' : inputSource === 'keyboard' ? 'press Space' : 'click';
+  const movementPrompt = inputSource === 'gamepad' ? 'Left stick' : inputSource === 'keyboard' ? 'Arrow keys / WASD' : 'Mouse';
   const serveInstruction =
     serveMeter.phase === 'charging'
-      ? 'Tap again when the marker reaches the big blue zone'
-      : 'Tap once to toss, then tap again to serve';
+      ? `${serveActionPrompt} again when the marker reaches the big blue zone`
+      : `${serveActionPrompt} once to toss, then again to serve`;
+  const powerReadyLabel = isPowerReady ? 'Energy 100%' : `Energy ${arcadeHudStats.energyPercent}%`;
   const showServeQualityBadge = showServeMeter && serveMeter.phase === 'confirmed' && serveMeter.qualityLabel !== 'Ready';
 
   useEffect(() => {
@@ -95,7 +108,7 @@ export function GameHud({
               style={{ width: energyWidth, background: GRADIENTS.energy }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.25em] text-white drop-shadow">
-              {isPowerReady ? 'POWER READY - PRESS E' : `Energy ${arcadeHudStats.energyPercent}%`}
+              {powerReadyLabel}
             </div>
           </div>
           <div className="relative h-3 overflow-hidden rounded-full bg-white/10">
@@ -122,9 +135,9 @@ export function GameHud({
       )}
 
       {/* Scoreboard - Lower Left */}
-      <div className="absolute bottom-12 left-8 flex flex-col gap-0.5 pointer-events-none drop-shadow-lg">
+      <div className="absolute bottom-12 left-8 flex max-w-[min(90vw,560px)] flex-col gap-0.5 pointer-events-none drop-shadow-lg sm:max-w-none">
         {/* Header Ribbon */}
-        <div className="flex gap-0.5">
+        <div className="hidden flex-wrap gap-0.5 sm:flex">
           <div className="bg-cyan-300 px-2 py-0.5 text-[9px] font-black italic text-black w-fit shadow-[0_0_14px_rgba(34,211,238,0.65)]">
             NEON SMASH - GAME {score.playerGames + score.aiGames + 1}
           </div>
@@ -162,13 +175,24 @@ export function GameHud({
             <div className="mr-2 w-2">
               {servingPlayer === 'AI' && <div className="h-1.5 w-1.5 rounded-full bg-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.95)]" />}
             </div>
-            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">Hidalgo (AI)</div>
+            <div className="flex-1 text-[13px] font-black uppercase tracking-tighter text-white">{opponentProfile.displayName} (AI)</div>
             <div className="flex h-full bg-black/45">
               <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiSets}</div>
               <div className="flex w-8 items-center justify-center border-l border-white/10 text-[11px] font-bold text-white/55">{score.aiGames}</div>
-              <div className="flex w-12 items-center justify-center bg-fuchsia-200 text-[14px] font-black text-black">{aiLabel}</div>
+              <div
+                className="flex w-12 items-center justify-center text-[14px] font-black text-black"
+                style={{ backgroundColor: opponentProfile.theme.color }}
+              >
+                {aiLabel}
+              </div>
             </div>
           </div>
+        </div>
+        <div className="w-fit bg-black/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
+          Seed {matchSeed}
+        </div>
+        <div className="w-fit bg-black/65 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">
+          Singles rules: inside singles sidelines is in
         </div>
       </div>
 
@@ -179,7 +203,7 @@ export function GameHud({
             className="neon-callout px-8 py-5 text-5xl font-black italic uppercase tracking-tighter text-white"
             style={{ background: `linear-gradient(90deg, ${pointWinnerColor}, ${COLOR_SCHEME.neon.magentaHot})` }}
           >
-            {lastPointWinner === 'PLAYER' ? 'Blake Point' : 'Hidalgo Point'}
+            {lastPointWinner === 'PLAYER' ? 'Blake Point' : `${opponentProfile.displayName} Point`}
           </div>
         </div>
       )}
@@ -199,8 +223,8 @@ export function GameHud({
 
       {/* Serving Instruction */}
       {(gameState === GameState.SERVING || gameState === GameState.SERVE_COUNTDOWN) && (
-        <div className="absolute bottom-1/4 left-1/2 flex -translate-x-1/2 flex-col items-center pointer-events-none">
-          <div className="neon-text-cyan neon-pulse text-3xl font-black italic uppercase tracking-tighter">
+        <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center pointer-events-none">
+          <div className="neon-text-cyan neon-pulse text-center text-2xl font-black italic uppercase tracking-tighter sm:text-3xl">
             {gameState === GameState.SERVE_COUNTDOWN ? serveCountdown : serverFaults === 1 ? 'SECOND SERVE' : servingPlayer === 'PLAYER' ? 'Your Serve' : 'AI Service'}
           </div>
           {servingPlayer === 'PLAYER' && (
@@ -227,7 +251,7 @@ export function GameHud({
               <div className="mt-2 flex justify-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/55">
                 <span>Only the tiny red edges fault</span>
                 <span>•</span>
-                <span>Blue center = best serve</span>
+                <span>Blue center = guaranteed in</span>
               </div>
               {showServeQualityBadge && (
                 <div className="mt-3 inline-flex self-center rounded-full border border-cyan-200/40 bg-cyan-950/80 px-4 py-1 text-sm font-black uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)]">
@@ -239,7 +263,7 @@ export function GameHud({
         </div>
       )}
 
-      <div className="neon-panel absolute right-4 top-4 max-w-[220px] rounded-lg border border-cyan-200/25 bg-black/60 p-3 text-left text-white pointer-events-none">
+      <div className="neon-panel pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-cyan-200/25 bg-black/60 p-3 text-left text-white md:block">
         <div className="text-[10px] font-black uppercase tracking-widest text-white/60">Court Surface</div>
         <div className="text-lg font-black uppercase italic" style={{ color: surfaceSettings.colors.lines, textShadow: `0 0 12px ${surfaceSettings.colors.lines}` }}>
           {surfaceSettings.label}
@@ -249,13 +273,17 @@ export function GameHud({
         </div>
       </div>
 
-      <div className="absolute bottom-4 right-4 flex gap-4 text-white/45 text-[10px] items-center">
-        <span>MOUSE: MOVE PLAYER</span>
-        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>CLICK: SWING / TAP-TAP SERVE</span>
-        <span className="w-1.5 h-1.5 bg-white/20 rounded-full"></span>
-        <span>E: FLAME SMASH WHEN READY</span>
-      </div>
+      {settings.showInputHelp && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-black/45 px-3 py-2 text-[10px] text-white/65 backdrop-blur-sm sm:inset-x-auto sm:right-4 sm:max-w-[min(520px,85vw)] sm:justify-end">
+          <span>{movementPrompt}: Move player</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>{swingPrompt}: Swing</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>{serveActionPrompt}: Serve timing</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+          <span>Special shots are currently archived</span>
+        </div>
+      )}
 
       {/* CRT Scanline Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.05]" style={{ background: GRADIENTS.crtScanline, backgroundSize: '100% 2px, 3px 100%' }}></div>

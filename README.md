@@ -1,37 +1,93 @@
 # Smash Tennis
+<img width="1774" height="887" alt="image" src="https://github.com/user-attachments/assets/a454fa4f-84ed-4df2-8b79-3c6a8e3344a7" />
 
 ## Play the game
 
 Live playable version: https://jedbcov-coder.github.io/smash-tennis/
 
-Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against Hidalgo, an AI opponent, with selectable arcade court surfaces, curved spin shots, easier tap-tap serving, bigger overhead smashes, the Flame Smash special move, and tennis-style scoring.
+Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against a selectable AI rival, with selectable arcade court surfaces, saved settings, curved spin shots, easier tap-tap serving, core rally gameplay, tennis-style scoring, and saved player progress.
+
+## Gameplay rules (beginner-friendly)
+
+### Deterministic rules decision flow
+
+To keep outcomes fair and reproducible, the game resolves each shot in a clear order:
+
+1. **Serve or rally state check:** it first checks whether the shot is a serve or a rally ball.
+2. **First legal bounce check:** it checks where the first bounce lands (service box for serves, singles court for rally shots).
+3. **Fault/out handling:** if the bounce is illegal, it applies serve-fault or out rules immediately.
+4. **Return window check:** if the bounce is legal, the receiver gets a chance to return.
+5. **Post-bounce escape check:** after a legal first bounce, if the receiver does not return and the ball exits behind their baseline, the striker wins immediately.
+6. **Second-bounce loss check:** if the receiver still keeps the ball in play area but does not return and it bounces twice, they lose the point.
+
+This flow is deterministic (same inputs produce the same rules result), which helps testing and bug reproduction.
+
+### First serve and second serve fault behavior
+
+- If a **first serve** lands out, it is a **fault** (no point is awarded yet), the rally stops immediately, and the same server replays a second serve.
+- If a **second serve** lands out, it is a **double fault**, and the receiver wins the point.
+- If a serve clips the net but still lands in the correct service box, it is treated as a **let** and the serve is replayed without adding a fault.
+
+### Singles-only in/out logic
+
+- The game uses **singles court boundaries** for in/out calls during points, and the court now highlights singles sidelines more strongly than doubles alleys so the active boundary is easier to see.
+- For serves, the ball must land in the **diagonal target service box**.
+- Shots touching the line are treated as **in**.
+
+### Key gameplay-rule outcomes
+
+- **Line is in:** a bounce on any valid boundary line counts as in.
+- **Double bounce loses point:** if the ball bounces twice on your side before you return it, you lose that point.
 
 ## Controls
 
 - Choose court: pick Grass, Clay, Hard Court, Neon Court, or Ice Court on the start screen.
-- Move Blake: move your mouse around the game screen.
+- Choose rival: pick Hidalgo, Nova, or Racketron on the start screen. Each rival has its own color, speed, accuracy, aggression, miss chance, preferred shot, and special move style.
+- Move Blake: move your mouse around the game screen, or drag with touch/pointer input on phones and tablets.
+- During AI serve: you can still move Blake with mouse/keyboard/gamepad to get into return position before the serve is hit.
 - Serve: wait for the quick serve countdown, then tap-tap with click or Space. Tap once to toss the ball, then tap again when the marker reaches the large blue center zone. The meter is slower, the safe area is bigger, and only the tiny red edges fault.
-- Swing: click the game court or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
-- Overhead smash: move close to the net, wait for the yellow slow-motion smash chance, then click or press Space.
-- Flame Smash special: fill the energy meter until POWER READY appears, move into a valid smash chance, then press E to spend the meter on a faster fiery smash that resets the energy meter.
+- Swing: click/tap the game court, use pointer press, or press Space when the ball reaches your side. Menu and button clicks are ignored so they do not accidentally start a swing.
+- Swing timing window: each click/Space/gamepad swing input is now short-lived (about 260ms), so very early swings expire instead of waiting for the ball.
+- Overhead smash and Flame Smash special are currently archived in a dormant state while the game focuses on core serve-and-rally mechanics.
 
 ## Main features
 
 - Neon arcade visual identity with dark backgrounds, glowing court lines, bright UI borders, pulsing text, and colorful ball trails.
 - Five selectable court surfaces: Grass, Clay, Hard Court, Neon Court, and Ice Court.
+- Three selectable AI opponent profiles: Hidalgo, Nova, and Racketron, shown as start-screen rival cards with descriptions, play styles, and a clear selected state.
+- In-match scoreboard and point-result banners now use the currently selected rival name and rival theme color (Hidalgo, Nova, or Racketron) instead of hardcoded labels.
 - Surface-based gameplay changes for ball speed, bounce height, slide amount, player movement, and spin curve.
-- Curved spin shots on serves, player returns, AI returns, weak smash saves, and overhead smashes.
-- Expanded browser-friendly synthesized audio for normal hits, curve hits, smash hits, perfect returns, mega smashes, power ready, combo increases, match point, court selection, start/replay buttons, win, and defeat.
-- Stronger overhead smash acceleration for more dramatic finishing shots.
-- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, and animated PERFECT RETURN, MEGA SMASH, POWER READY, and FLAME SMASH callouts.
+- Opponent-based gameplay changes for AI movement speed, shot accuracy, aggression, miss chance, preferred shot type, displayed theme color, and distinct miss behavior (Hidalgo late reactions, Nova over-hits, and Racketron angled misses) with a rising late-rally miss chance instead of guaranteed scripted misses.
+- Curved spin shots on serves, player returns, and AI returns.
+- Expanded browser-friendly synthesized audio for normal hits, curve hits, perfect returns, combo increases, match point, court selection, start/replay buttons, win, and defeat.
+- Simple audio mixer settings for master, sound effects, UI sounds, a future music volume, mute, and safe browser saving. The settings menu keeps beginner-friendly 0% to 100% sliders, while audio playback converts those values to the 0 to 1 scale used by the sound engine.
+- Saved game settings for reduced motion, screen shake, high contrast, and input help are applied to the HUD and gameplay effects.
+- Neon arcade HUD with a serve/shot speedometer, larger beginner-friendly serve meter, tap-tap serve prompts, serve quality badges, energy meter, combo counter, rally counter, dynamic rally-intensity meter (based on rally length and shot pace), optional input help, and animated PERFECT RETURN and combo callouts.
+- Input-help labels now automatically match keyboard or gamepad controls, and the bottom help strip wraps/compacts on smaller screens to reduce HUD crowding while keeping serve timing prompts readable.
+- Point rewards now capture final rally count, combo count, energy percent, and serve speed directly from the gameplay loop on the exact frame when a point ends, so perfect-return finishes always award up-to-date style/XP data.
 - Low-poly 3D tennis court, ball, rackets, players, net, and camera with surface-specific court colors.
 - Player-vs-AI rallies with a gradually increasing rally target and speed.
-- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, and tiebreak support.
-- Net-front overhead smash chance with stronger ball acceleration, ball highlight, slow motion, assisted positioning, smash flash, screen shake, text feedback, and sound effects.
-- Flame Smash special move that spends a full energy meter during a valid smash chance to briefly slow time, flash the screen, boost ball speed, add fiery VFX, and play a special audio event.
-- Start screen with selectable court cards, point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Tennis scoring with points, games, sets, serving turns, second serves, double faults, more forgiving timing-based player serve outcomes, tiebreak support, and first-bounce landing checks that enforce singles sidelines and diagonal service-box legality on serves (with small arcade forgiveness) for out calls, plus automatic double-bounce point awards with TOO LATE / SECOND BOUNCE HUD feedback when the receiver lets the ball bounce twice. Serve outs now follow tennis fault flow: first-serve outs become faults, second-serve outs become double-fault points for the receiver, and rally outs still award the opponent point directly. Net-cord serves that still land in the correct service box now trigger a LET call and replay the serve without adding a fault.
+- Rally bounce resolution now checks in/out only on each shot's first bounce. After a legal first bounce, later bounces use pure second-bounce loss logic so a second bounce that lands outside cannot wrongly flip point awards.
+- Post-bounce winner safeguard: after a legal first bounce, if the receiver never returns and the ball exits beyond that receiver’s back boundary (or fully escapes the world bounds), the striker is immediately awarded the point so rallies cannot get stuck in PLAYING with an empty court. This means the point now resolves on boundary escape without waiting for a second bounce.
+- Overhead smash tuning now keeps winners decisive but more readable: lower smash launch/downward extremes, capped smash horizontal speed, and extra skid damping when very steep smash impacts hit the court, reducing instant post-bounce runaway across all court surfaces (grass, hard, neon, ice).
+- Serve meter helper text now matches the real serve behavior: **Blue center = guaranteed in**.
+- Fast-ball return detection now checks whether the ball crosses the player or AI return zone between frames, so very quick shots cannot skip through the hit window.
+- Special-shot systems (overhead smash and Flame Smash) are now intentionally archived in dormant state so only barebones tennis mechanics remain active during normal play.
+- Start screen with selectable court cards and rival cards near the top, an always-visible Start Match button, a collapsible settings panel, and a compact collapsible player-progress panel (level, XP, record, best rally), plus point-result banner, scoreboard, arcade HUD, server indicator, and replay button.
+- Browser progress saving with localStorage for player level, total XP, unlocked courts, unlocked cosmetics, best rally, best combo, and match wins/losses.
 - Lightweight Vite build for local testing and GitHub Pages deployment.
-- Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
+- GitHub Pages deployment workflow now runs tests and lint checks before building and uploading `dist`, so failed quality checks block deployment.
+- Serve mini-game improvements: closer over-the-shoulder serve camera, glowing target rings in the service box with clearer spinning animation, slower meter movement, wider perfect/power/safe zones, and fewer random faults.
+- Perfect-shot fairness update: **Perfect Serve** and **Perfect Return** now remove random aim drift/wobble and guarantee a legal first bounce (service box for serves, singles court for returns), while power/early/late/miss outcomes still keep risk.
+- Serve mini-game HUD overlay now sits around mid-court/net height so serve prompts and the meter stay clear of the player body while remaining readable on small screens.
+- Shared diagonal service-box targeting helper now drives serve legality checks, serve shot aiming, and the on-court serve target guide, so player/AI deuce and ad serves always agree on the same legal box.
+- Landing marker now predicts the next bounce point from live ball height, velocity, and gravity, then smoothly eases and fades the ring so bounce guidance stays stable and useful during rallies.
+- Seeded gameplay randomness for shot placement, AI return targeting, smash outcomes, and serve fault checks. The same match seed now gets re-applied at each serve/point sequence start (not every frame) so deterministic gameplay stays reproducible.
+- A small HUD seed label now shows the active match seed during play for easier bug reports and repro steps.
+- Visual-only effects are intentionally still allowed to vary so the game keeps a lively arcade feel while gameplay outcomes stay deterministic.
+- Match flow uses a small shared state-machine helper so menu, intro, serve countdown, point result, and game-over transitions stay easy to follow.
+- Duplicate-import cleanup in serve flow hook keeps source imports tidy without changing gameplay behavior.
 
 ## How to run locally
 
@@ -54,19 +110,32 @@ Smash Tennis is a retro-styled 3D browser tennis game. You play as Blake against
 
 ## Useful checks
 
-Run these commands from the repository root folder:
+Run these commands from the repository root folder before saying the app is ready:
 
 ```bash
+npm run test
 npm run lint
 npm run build
 ```
 
-`npm run lint` checks that TypeScript can understand the project. `npm run build` creates the production-ready files in `dist` and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+`npm run test` uses `scripts/run-tests.mjs` to run the lightweight Vite-powered helper tests for tennis scoring rules, shot physics, first-bounce court boundary checks, and double-bounce point-award rules. Keep using it for those focused checks, but do not treat it as the only safety check because it does not cover the full React app wiring.
+
+After `npm run test`, always run `npm run lint`. The lint command runs TypeScript across the full app, so it catches broken imports, type mistakes, and wiring problems that helper tests may miss. Before marking the app ready, always run `npm run build`. The build command checks the production app bundle, creates the files in `dist`, and copies `dist/index.html` to `dist/404.html` for GitHub Pages refresh support.
+
+Optional while editing:
+
+```bash
+npm run test:watch
+```
+
+`npm run test:watch` keeps the scoring and shot helper tests running while you edit files. It is useful during development, but the final readiness check is still `npm run test`, then `npm run lint`, then `npm run build`.
 
 Current check notes verified on May 17, 2026:
 
 - `npm install` passes from the repository root.
 - `npm run dev` starts successfully from the repository root.
+- `npm run test` passes from the repository root for scoring and shot helper logic.
+- `npm run lint` passes from the repository root and checks the full TypeScript app.
 - `npm run build` passes from the repository root and copies `dist/index.html` to `dist/404.html`.
 - The build may show a Vite chunk-size warning because the 3D/game libraries bundle into one large JavaScript file. This is a warning, not a build failure.
 
@@ -76,21 +145,35 @@ Current check notes verified on May 17, 2026:
 - `src/design/colorScheme.ts` keeps the shared neon palette in one place.
 - `src/design/gradients.ts` keeps reusable neon gradients in one place.
 - `src/components/Game.tsx` wires the 3D court, players, ball, menus, HUD, and initial arcade HUD defaults together.
-- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, and arcade callouts.
+- `src/components/GameHud.tsx` shows the in-game overlays, neon scoreboard, energy meter, optional input help, and arcade callouts.
+- `src/components/SettingsMenu.tsx` shows the saved settings controls for volume, motion, screen shake, contrast, and input help.
+- `src/settings/useGameSettings.ts` loads and saves game settings in browser localStorage.
 - `src/components/VFXController.tsx` listens for smash events and shows visual effects.
-- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start and game-over screens.
+- `src/components/GameMenus.tsx` shows the Neon Smash Tennis start screen, court selection, rival selection, settings menu, intro matchup, and game-over screens, including saved player progress.
 - `src/environment/Court.tsx` renders the dark court, glowing lines, neon border accents, net, and posts.
 - `src/environment/Ball.tsx` renders the ball, glow shell, shadow, and colorful speed/spin trails.
+- `src/physics/BallSimulation.ts` keeps the ball movement, gravity, spin decay, and surface bounce math separate from the ball visuals.
 - `src/audio/audioManager.ts` maps game events like hits, points, AI near misses, and start-button clicks to sound effects.
-- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems.
+- `src/audio/audioSettings.ts` stores the shared audio volume settings and converts combined volume to decibels for playback.
+- `src/audio/sounds.ts` plays the Tone.js sound effects using only the decibel adjustment it receives from the audio manager.
+- `src/hooks/useGameplayLoop.ts` coordinates the frame-by-frame gameplay loop and calls smaller gameplay systems, including the shared arcade camera controller.
+- `src/rules/pointState.ts` stores pure point-lifecycle transitions (serve phase, legal/illegal serve bounce flow, rally bounce resets, and second-bounce point awards), and the gameplay loop now calls these transitions directly for serve hits, legal serve bounces, returns, rally shots, and bounce-based point wins without mixing rendering concerns into rule-state functions.
 - `src/gameplay/playerMovement.ts` handles mouse-to-court movement, movement limits, serve positioning, and smash assist.
 - `src/gameplay/aiOpponentController.ts` handles AI opponent movement, near-miss swings, hit detection, and return shots.
+- `src/gameplay/aiOpponentController.ts` handles AI movement targets, near-miss checks, crossing-based hit detection, and AI return shots using the selected opponent profile.
+- `src/gameplay/hitDetection.ts` provides shared helper logic to detect when a fast-moving ball crosses a return zone between frames.
+- `src/gameplay/opponents.ts` defines the selectable AI opponent profiles, including display name, theme color, movement speed, accuracy, aggression, miss chance, preferred shot type, and special move style.
 - `src/gameplay/cameraController.ts` handles serve camera positioning, rally camera follow, zoom, and shake.
+- `src/gameplay/gameEvents.ts` keeps shared typed browser event names and helper functions for gameplay visual effects.
 - `src/gameplay/smashSystem.ts` handles smash opportunities, Flame Smash shot math, weak smash-save returns, and smash timing helpers.
+- `src/gameplay/gameStateMachine.ts` keeps named match-flow transitions like starting a match, serving, rallies, point results, and match over in one place.
 - `src/controls/usePlayerInput.ts` keeps keyboard, mouse, click, Space, and swing animation input handling in one place.
-- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, and reward stats.
+- `src/serve/useTennisGame.ts` manages tennis scoring, match presentation timing, local match XP, reward stats, and sends point/match rewards to saved progression.
+- `src/progression/playerProgress.ts` saves player level, XP, unlocks, best rally, best combo, and match record in browser localStorage.
 - `src/serve/scoringRules.ts` contains reusable tennis scoring rules.
-- `src/physics/ShotPhysics.ts` calculates shot direction and speed.
+- `src/rules/courtGeometry.ts` keeps reusable pure helpers for singles-court bounds and diagonal service-box checks used by world-physics out calls.
+- `src/rules/tennisRules.test.ts`, `src/rules/courtGeometry.test.ts`, and `src/rules/pointState.test.ts` now contain real assertion-based rules tests for scoring flow and court legality checks.
+- `src/physics/ShotPhysics.ts` calculates shot direction, speed, arc, spin, and target risk.
 - `src/gameplay/gameTuning.ts` keeps shared court, serve, boundary, movement, AI near-miss drama, and smash tuning numbers in one place.
 - `scripts/copy-404.mjs` copies the built app shell to `dist/404.html` after production builds so GitHub Pages refreshes work.
 
